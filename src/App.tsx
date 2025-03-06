@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import Performance from "./pages/Performance";
 import Markets from "./pages/Markets";
 import Strategies from "./pages/Strategies";
 import Cloud from "./pages/Cloud";
+import Trades from "./pages/Trades";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +51,7 @@ const App = () => {
             <Route path="/performance" element={<Performance />} />
             <Route path="/markets" element={<Markets />} />
             <Route path="/strategies" element={<Strategies />} />
+            <Route path="/trades" element={<Trades />} />
             <Route path="/cloud" element={<Cloud />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

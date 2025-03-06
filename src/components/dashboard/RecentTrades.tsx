@@ -2,7 +2,9 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 interface Trade {
   id: string;
@@ -61,9 +63,17 @@ const recentTrades: Trade[] = [
 export const RecentTrades = () => {
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Recent Trades</CardTitle>
-        <CardDescription>Latest trading activity from your bot</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Recent Trades</CardTitle>
+          <CardDescription>Latest trading activity from your bot</CardDescription>
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/trades" className="flex items-center gap-1">
+            <span>View all</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent className="px-2">
         <div className="space-y-4">

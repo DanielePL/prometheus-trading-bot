@@ -1,137 +1,197 @@
 
 import React from 'react';
-import { CheckCircle, AlertCircle, Clock, Activity, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { 
+  AlertCircle, 
+  CheckCircle, 
+  Info, 
+  PlayCircle, 
+  StopCircle, 
+  RefreshCw,
+  Database,
+  BookOpen,
+  Flame
+} from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from "@/hooks/use-toast";
 
-interface StatusItemProps {
-  icon: React.ReactNode;
-  text: string;
-}
-
-const StatusItem: React.FC<StatusItemProps> = ({ icon, text }) => {
-  return (
-    <div className="flex items-center space-x-2">
-      {icon}
-      <span className="text-sm">{text}</span>
-    </div>
-  );
-};
-
-interface BotStatusProps {
-  botRunning: boolean;
-  tradingMode: string;
-  systemLoad: number;
-  handleToggleBotStatus: () => void;
-}
-
-export const BotStatus: React.FC<BotStatusProps> = ({
-  botRunning,
-  tradingMode,
-  systemLoad,
-  handleToggleBotStatus
-}) => {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-bold">Prometheus Status</h2>
-          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-            Active
-          </span>
-        </div>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Current trading bot status</p>
-      </div>
+export const BotStatus = () => {
+  const [isRunning, setIsRunning] = React.useState(true);
+  const [progress, setProgress] = React.useState(78);
+  const [isPaperTrading, setIsPaperTrading] = React.useState(true);
+  const [isTraining, setIsTraining] = React.useState(false);
+  const { toast } = useToast();
+  
+  // Simulate progress change
+  React.useEffect(() => {
+    if (isRunning) {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          const change = Math.random() * 5 - 2;
+          return Math.max(0, Math.min(100, prev + change));
+        });
+      }, 3000);
       
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium">Bot Control</span>
-          <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full">
-            <input
-              type="checkbox"
-              id="toggle"
-              className="w-0 h-0 opacity-0"
-              checked={botRunning}
-              onChange={handleToggleBotStatus}
-            />
-            <label
-              htmlFor="toggle"
-              className={`absolute top-0 left-0 right-0 bottom-0 block rounded-full cursor-pointer ${
-                botRunning ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-            >
-              <span
-                className={`absolute left-1 bottom-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out ${
-                  botRunning ? 'transform translate-x-6' : ''
-                }`}
-              ></span>
-            </label>
+      return () => clearInterval(interval);
+    }
+  }, [isRunning]);
+  
+  const toggleBot = () => {
+    setIsRunning(!isRunning);
+    toast({
+      title: isRunning ? "Prometheus Stopped" : "Prometheus Started",
+      description: isRunning ? "Trading bot has been stopped" : "Trading bot is now running",
+    });
+  };
+  
+  const toggleTradingMode = () => {
+    setIsPaperTrading(!isPaperTrading);
+    toast({
+      title: "Trading Mode Changed",
+      description: isPaperTrading ? "Switched to Live Trading" : "Switched to Paper Trading",
+      variant: isPaperTrading ? "destructive" : "default",
+    });
+  };
+  
+  const trainModel = () => {
+    setIsTraining(true);
+    toast({
+      title: "Model Training Started",
+      description: "Training Prometheus ML model with latest data",
+    });
+    
+    // Simulate model training completion
+    setTimeout(() => {
+      setIsTraining(false);
+      toast({
+        title: "Model Training Complete",
+        description: "Model has been updated with 74.5% accuracy",
+      });
+    }, 3000);
+  };
+  
+  return (
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-amber-500" />
+            <div>
+              <CardTitle>Prometheus Status</CardTitle>
+              <CardDescription>Current trading bot status</CardDescription>
+            </div>
           </div>
-          <span className="ml-2 text-sm font-medium">Running</span>
+          <Badge 
+            variant="outline" 
+            className={isRunning 
+              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+            }
+          >
+            {isRunning ? "Active" : "Stopped"}
+          </Badge>
         </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium">Trading Mode</span>
-          <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 text-xs">
-            {tradingMode}
-          </span>
-        </div>
-        
-        <div className="space-y-2">
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">System Load</span>
-            <span className="text-sm font-medium">{systemLoad}%</span>
+            <span className="text-sm font-medium">Bot Control</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">
+                {isRunning ? "Running" : "Stopped"}
+              </span>
+              <Switch 
+                checked={isRunning} 
+                onCheckedChange={toggleBot} 
+                className={isRunning ? "bg-green-600" : ""} 
+              />
+            </div>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-indigo-600 h-2 rounded-full"
-              style={{ width: `${systemLoad}%` }}
-            ></div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Trading Mode</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">
+                {isPaperTrading ? "Paper Trading" : "Live Trading"}
+              </span>
+              <Switch 
+                checked={!isPaperTrading} 
+                onCheckedChange={toggleTradingMode} 
+                className={!isPaperTrading ? "bg-amber-600" : ""} 
+              />
+            </div>
+          </div>
+          
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-sm font-medium">System Load</span>
+              <span className="text-sm text-muted-foreground">{progress.toFixed(0)}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+          
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center text-sm">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
+              <span>Connected to Kraken API</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
+              <span>ML model loaded</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
+              <span>Last signal: BUY (0.73 confidence)</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2" />
+              <span>Social sentiment: Neutral</span>
+            </div>
+          </div>
+          
+          <div className="flex justify-center gap-2 pt-2">
+            <Button 
+              variant="outline" 
+              className={isRunning ? "text-red-600 border-red-600 hover:bg-red-100 dark:hover:bg-red-900/30" : "text-green-600 border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"}
+              onClick={toggleBot}
+            >
+              {isRunning ? (
+                <>
+                  <StopCircle className="mr-2 h-4 w-4" />
+                  Stop Bot
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Start Bot
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline"
+              disabled={isTraining}
+              onClick={trainModel}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isTraining ? 'animate-spin' : ''}`} />
+              {isTraining ? 'Training...' : 'Train Model'}
+            </Button>
+          </div>
+          
+          <div className="flex justify-center gap-2 pt-1">
+            <Button variant="outline" size="sm">
+              <Database className="mr-2 h-4 w-4" />
+              Historical Data
+            </Button>
+            <Button variant="outline" size="sm">
+              <BookOpen className="mr-2 h-4 w-4" />
+              View Logs
+            </Button>
           </div>
         </div>
-        
-        <div className="space-y-3">
-          <StatusItem 
-            icon={<CheckCircle size={16} className="text-green-500" />} 
-            text="Connected to Kraken API" 
-          />
-          <StatusItem 
-            icon={<CheckCircle size={16} className="text-green-500" />} 
-            text="ML model loaded" 
-          />
-          <StatusItem 
-            icon={<AlertCircle size={16} className="text-blue-500" />} 
-            text="Last signal: BUY (0.73 confidence)" 
-          />
-          <StatusItem 
-            icon={<AlertCircle size={16} className="text-yellow-500" />} 
-            text="Social sentiment: Neutral" 
-          />
-        </div>
-        
-        <div className="flex space-x-2 pt-2">
-          <button className="flex-1 flex items-center justify-center px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm">
-            <AlertCircle size={16} className="mr-1" /> Stop Bot
-          </button>
-          <button className="flex-1 flex items-center justify-center px-4 py-2 border border-indigo-500 text-indigo-500 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors text-sm">
-            <RefreshCw size={16} className="mr-1" /> Train Model
-          </button>
-        </div>
-        
-        <div className="flex space-x-2 pt-2">
-          <button className="flex-1 flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">
-            <Clock size={16} className="mr-1" /> Historical Data
-          </button>
-          <button className="flex-1 flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">
-            <Activity size={16} className="mr-1" /> View Logs
-          </button>
-        </div>
-      </div>
-      
-      <div className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-b-lg">
-        <h3 className="text-sm font-medium mb-2">Prometheus Trade Bot status</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Bot is running and monitoring markets
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

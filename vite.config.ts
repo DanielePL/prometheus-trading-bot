@@ -1,25 +1,22 @@
-
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: "::",
+    port: 8080,
+  },
+  plugins: [
+    react(),
+    mode === 'development' &&
+    componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    port: 8080,
-    allowedHosts: [
-      'cb7852ef-6913-437f-ab4f-cc9b1e6a0cb4.lovableproject.com'
-    ]
-  },
-  build: {
-    // Ensure TypeScript checking doesn't conflict with build
-    sourcemap: true,
-    outDir: 'dist',
-  }
-});
+}));

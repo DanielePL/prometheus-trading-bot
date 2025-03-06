@@ -7,12 +7,13 @@ import { TradingPairs } from '@/components/dashboard/TradingPairs';
 import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { BotStatus } from '@/components/dashboard/BotStatus';
 import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
-import { CloudConnection } from '@/components/dashboard/cloud-connection';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar, Cloud
+  Landmark, ClipboardCheck, Calendar, CloudCog
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   return (
@@ -51,10 +52,21 @@ const Dashboard = () => {
           />
         </div>
         
-        {/* Highlight Cloud Connection Card */}
+        {/* Cloud Connection Link */}
         <div className="grid grid-cols-1 gap-4">
-          <div className="relative p-1 rounded-lg bg-gradient-to-r from-amber-500/30 via-amber-400/20 to-amber-500/30 animate-pulse">
-            <CloudConnection />
+          <div className="bg-amber-500/10 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CloudCog className="h-6 w-6 text-amber-500" />
+              <div>
+                <h3 className="font-medium">Cloud Connection</h3>
+                <p className="text-sm text-muted-foreground">Manage your trading bot cloud infrastructure</p>
+              </div>
+            </div>
+            <Button asChild>
+              <Link to="/cloud-connection">
+                Configure
+              </Link>
+            </Button>
           </div>
         </div>
         

@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Performance from "./pages/Performance";
 import Markets from "./pages/Markets";
 import Strategies from "./pages/Strategies";
+import CloudConnectionPage from "./pages/CloudConnection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -17,7 +18,6 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 800);
@@ -48,7 +48,7 @@ const App = () => {
             <Route path="/performance" element={<Performance />} />
             <Route path="/markets" element={<Markets />} />
             <Route path="/strategies" element={<Strategies />} />
-            {/* Other routes will be added here */}
+            <Route path="/cloud-connection" element={<CloudConnectionPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

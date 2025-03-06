@@ -75,7 +75,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             {isOpen ? (
               <>
                 <Globe className="h-6 w-6 text-accent" />
-                <span className="font-bold text-lg">Trade Bot</span>
+                <span className="font-bold text-lg">Prometheus</span>
               </>
             ) : (
               <Globe className="h-6 w-6 mx-auto text-accent" />

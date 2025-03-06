@@ -21,7 +21,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     // Simulating a notification after component mount
     const timer = setTimeout(() => {
       toast({
-        title: "Trade bot status",
+        title: "Prometheus Trade Bot status",
         description: "Bot is running and monitoring markets",
       });
     }, 1500);
@@ -40,7 +40,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </main>
         <footer className="p-4 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Trade Bot Interface. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Prometheus Trade Bot Interface. All rights reserved.</p>
         </footer>
       </div>
     </div>

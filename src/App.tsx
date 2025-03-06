@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Performance from "./pages/Performance";
+import Markets from "./pages/Markets";
+import Strategies from "./pages/Strategies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +45,9 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/performance" element={<Performance />} />
+            <Route path="/markets" element={<Markets />} />
+            <Route path="/strategies" element={<Strategies />} />
             {/* Other routes will be added here */}
             <Route path="*" element={<NotFound />} />
           </Routes>

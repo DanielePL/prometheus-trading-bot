@@ -2,8 +2,9 @@
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CloudConnection } from '@/components/dashboard/cloud-connection';
+import { PythonCodeEditor } from '@/components/dashboard/PythonCodeEditor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Cloud, Server, Database, HardDrive } from 'lucide-react';
+import { Cloud, Server, Database, HardDrive, Code2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const CloudPage = () => {
@@ -22,6 +23,10 @@ const CloudPage = () => {
             <TabsTrigger value="connection">
               <Cloud className="h-4 w-4 mr-2" />
               Cloud Connection
+            </TabsTrigger>
+            <TabsTrigger value="python">
+              <Code2 className="h-4 w-4 mr-2" />
+              Python Code
             </TabsTrigger>
             <TabsTrigger value="resources">
               <Server className="h-4 w-4 mr-2" />
@@ -73,6 +78,10 @@ const CloudPage = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="python">
+            <PythonCodeEditor />
           </TabsContent>
           
           <TabsContent value="resources">

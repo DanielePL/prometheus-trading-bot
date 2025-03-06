@@ -17,4 +17,9 @@ export default defineConfig({
       'cb7852ef-6913-437f-ab4f-cc9b1e6a0cb4.lovableproject.com'
     ]
   },
+  build: {
+    // Ensure TypeScript checking doesn't conflict with build
+    sourcemap: true,
+    outDir: 'dist',
+  }
 });

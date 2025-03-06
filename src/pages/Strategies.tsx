@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,25 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   TrendingUp, Settings, PlayCircle, PauseCircle, AlertCircle, 
-  Check, Settings2, Edit, Trash2, Plus 
+  Check, Settings2, Edit, Trash2, Plus, Cloud, Server
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Strategy {
   id: string;
@@ -21,6 +38,7 @@ interface Strategy {
   profitFactor: number;
   trades: number;
   pairs: string[];
+  deployedTo?: string;
 }
 
 const strategies: Strategy[] = [
@@ -71,6 +89,56 @@ const strategies: Strategy[] = [
 ];
 
 const Strategies = () => {
+  const [strategiesList, setStrategiesList] = useState<Strategy[]>(strategies);
+  const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentServer, setDeploymentServer] = useState('digitalocean');
+  const { toast } = useToast();
+
+  const handleStatusChange = (strategyId: string, isActive: boolean) => {
+    setStrategiesList(prev => 
+      prev.map(strategy => 
+        strategy.id === strategyId 
+          ? { ...strategy, status: isActive ? 'active' : 'inactive' }
+          : strategy
+      )
+    );
+
+    toast({
+      title: isActive ? "Strategy Activated" : "Strategy Deactivated",
+      description: `The trading strategy has been ${isActive ? 'activated' : 'deactivated'}.`,
+    });
+  };
+
+  const handleDeployStrategy = (strategy: Strategy) => {
+    setSelectedStrategy(strategy);
+  };
+
+  const deployToServer = () => {
+    if (!selectedStrategy) return;
+
+    setIsDeploying(true);
+    
+    // Simulate deployment process
+    setTimeout(() => {
+      setStrategiesList(prev => 
+        prev.map(strategy => 
+          strategy.id === selectedStrategy.id 
+            ? { ...strategy, deployedTo: deploymentServer }
+            : strategy
+        )
+      );
+      
+      setIsDeploying(false);
+      setSelectedStrategy(null);
+      
+      toast({
+        title: "Strategy Deployed",
+        description: `${selectedStrategy.name} has been successfully deployed to your DigitalOcean Droplet.`,
+      });
+    }, 2000);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -88,7 +156,7 @@ const Strategies = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {strategies.map((strategy) => (
+          {strategiesList.map((strategy) => (
             <Card key={strategy.id} className="overflow-hidden">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
@@ -101,18 +169,26 @@ const Strategies = () => {
                       {strategy.description}
                     </CardDescription>
                   </div>
-                  <Badge 
-                    variant="outline" 
-                    className={`
-                      ${strategy.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : ''}
-                      ${strategy.status === 'inactive' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : ''}
-                      ${strategy.status === 'backtest' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : ''}
-                    `}
-                  >
-                    {strategy.status === 'active' && 'Active'}
-                    {strategy.status === 'inactive' && 'Inactive'}
-                    {strategy.status === 'backtest' && 'Backtest Mode'}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge 
+                      variant="outline" 
+                      className={`
+                        ${strategy.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : ''}
+                        ${strategy.status === 'inactive' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : ''}
+                        ${strategy.status === 'backtest' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : ''}
+                      `}
+                    >
+                      {strategy.status === 'active' && 'Active'}
+                      {strategy.status === 'inactive' && 'Inactive'}
+                      {strategy.status === 'backtest' && 'Backtest Mode'}
+                    </Badge>
+                    {strategy.deployedTo && (
+                      <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 flex items-center gap-1">
+                        <Cloud size={12} />
+                        Deployed
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               
@@ -159,6 +235,7 @@ const Strategies = () => {
                       id={`activate-${strategy.id}`} 
                       checked={strategy.status === 'active'} 
                       disabled={strategy.status === 'backtest'}
+                      onCheckedChange={(isChecked) => handleStatusChange(strategy.id, isChecked)}
                     />
                     <Label htmlFor={`activate-${strategy.id}`}>
                       {strategy.status === 'active' ? 'Active' : 'Inactive'}
@@ -174,6 +251,72 @@ const Strategies = () => {
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeployStrategy(strategy)}
+                          className={strategy.deployedTo ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400" : ""}
+                        >
+                          <Server className="h-4 w-4 mr-1" />
+                          {strategy.deployedTo ? "Deployed" : "Deploy"}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Deploy Strategy</DialogTitle>
+                          <DialogDescription>
+                            Deploy "{selectedStrategy?.name}" to your cloud server
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="deployment-server">Deployment Target</Label>
+                            <Select value={deploymentServer} onValueChange={setDeploymentServer}>
+                              <SelectTrigger id="deployment-server">
+                                <SelectValue placeholder="Select server" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="digitalocean">DigitalOcean Droplet</SelectItem>
+                                <SelectItem value="aws" disabled>AWS EC2</SelectItem>
+                                <SelectItem value="gcp" disabled>Google Cloud</SelectItem>
+                                <SelectItem value="local">Local Environment</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-1 text-sm">
+                            <p className="font-medium">Deployment Options:</p>
+                            <ul className="list-disc list-inside space-y-1 pl-2">
+                              <li>Strategy will be deployed to your droplet</li>
+                              <li>Auto-restart on server reboot</li>
+                              <li>Error logging and notifications</li>
+                              <li>Automatic data backups</li>
+                            </ul>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setSelectedStrategy(null)}>Cancel</Button>
+                          <Button onClick={deployToServer} disabled={isDeploying}>
+                            {isDeploying ? (
+                              <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Deploying...
+                              </>
+                            ) : (
+                              <>
+                                <Cloud className="h-4 w-4 mr-2" />
+                                Deploy Strategy
+                              </>
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               </CardFooter>

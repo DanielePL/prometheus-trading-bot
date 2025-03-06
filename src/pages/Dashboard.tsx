@@ -8,6 +8,7 @@ import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { BotStatus } from '@/components/dashboard/BotStatus';
 import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { CloudConnection } from '@/components/dashboard/CloudConnection';
+import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
   Landmark, ClipboardCheck, Calendar
@@ -60,6 +61,14 @@ const Dashboard = () => {
             <CloudConnection />
             <TradingSystemInfo />
           </div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <SupabaseIntegrationGuide />
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <RecentTrades />
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

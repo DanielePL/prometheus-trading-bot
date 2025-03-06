@@ -12,7 +12,8 @@ import {
   StopCircle, 
   RefreshCw,
   Database,
-  BookOpen
+  BookOpen,
+  Flame
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +42,7 @@ export const BotStatus = () => {
   const toggleBot = () => {
     setIsRunning(!isRunning);
     toast({
-      title: isRunning ? "Bot Stopped" : "Bot Started",
+      title: isRunning ? "Prometheus Stopped" : "Prometheus Started",
       description: isRunning ? "Trading bot has been stopped" : "Trading bot is now running",
     });
   };
@@ -59,7 +60,7 @@ export const BotStatus = () => {
     setIsTraining(true);
     toast({
       title: "Model Training Started",
-      description: "Training machine learning model with latest data",
+      description: "Training Prometheus ML model with latest data",
     });
     
     // Simulate model training completion
@@ -76,9 +77,12 @@ export const BotStatus = () => {
     <Card className="h-full">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>Bot Status</CardTitle>
-            <CardDescription>Current trading bot status</CardDescription>
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-amber-500" />
+            <div>
+              <CardTitle>Prometheus Status</CardTitle>
+              <CardDescription>Current trading bot status</CardDescription>
+            </div>
           </div>
           <Badge 
             variant="outline" 

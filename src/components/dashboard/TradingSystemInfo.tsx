@@ -8,7 +8,8 @@ import {
   TrendingUp, 
   BarChart2, 
   MessageCircle,
-  Database
+  Database,
+  Flame
 } from 'lucide-react';
 
 interface IndicatorProps {
@@ -59,8 +60,13 @@ export const TradingSystemInfo = () => {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Trading System</CardTitle>
-        <CardDescription>Overview of trading system components</CardDescription>
+        <div className="flex items-center gap-2">
+          <Flame className="h-5 w-5 text-amber-500" />
+          <div>
+            <CardTitle>Prometheus System</CardTitle>
+            <CardDescription>Trading system components</CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-1">

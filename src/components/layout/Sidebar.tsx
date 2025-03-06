@@ -116,7 +116,6 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           </SidebarSection>
         </div>
         
-        {/* Footer */}
         <div className="border-t py-2 px-2">
           <SidebarItem icon={User} label="Profile" to="/profile" />
           <SidebarItem icon={Settings} label="Settings" to="/settings" />

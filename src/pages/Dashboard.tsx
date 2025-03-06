@@ -7,7 +7,7 @@ import { TradingPairs } from '@/components/dashboard/TradingPairs';
 import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { BotStatus } from '@/components/dashboard/BotStatus';
 import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
-import { CloudConnection } from '@/components/dashboard/CloudConnection';
+import { CloudConnection } from '@/components/dashboard/cloud-connection';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 

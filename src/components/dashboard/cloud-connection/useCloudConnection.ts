@@ -1,0 +1,111 @@
+
+import { useState, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { ConnectionStatusType, CloudServiceType } from './types';
+import { getServiceName } from './utils';
+
+export const useCloudConnection = () => {
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusType>('disconnected');
+  const [selectedService, setSelectedService] = useState<CloudServiceType>('aws');
+  const [uptime, setUptime] = useState<string>('0h 0m');
+  const [cpuUsage, setCpuUsage] = useState<number>(0);
+  const [memoryUsage, setMemoryUsage] = useState<number>(0);
+  const [lastSync, setLastSync] = useState<string>('Never');
+  const [isRestarting, setIsRestarting] = useState<boolean>(false);
+  const { toast } = useToast();
+
+  // Simulate connection status checks
+  useEffect(() => {
+    if (connectionStatus === 'connecting') {
+      const timer = setTimeout(() => {
+        setConnectionStatus('connected');
+        setLastSync('Just now');
+        startResourceUpdates();
+        
+        toast({
+          title: "Cloud Service Connected",
+          description: `Successfully connected to ${getServiceName(selectedService)}`,
+        });
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [connectionStatus, selectedService, toast]);
+
+  // Simulate resource usage updates when connected
+  const startResourceUpdates = () => {
+    const interval = setInterval(() => {
+      setCpuUsage(Math.floor(Math.random() * 60) + 10);
+      setMemoryUsage(Math.floor(Math.random() * 40) + 30);
+      
+      // Update uptime
+      const [hours, minutes] = uptime.split('h ');
+      const newMinutes = parseInt(minutes) + 5;
+      if (newMinutes >= 60) {
+        setUptime(`${parseInt(hours) + 1}h ${newMinutes - 60}m`);
+      } else {
+        setUptime(`${hours} ${newMinutes}m`);
+      }
+      
+      // Update last sync time randomly
+      if (Math.random() > 0.7) {
+        setLastSync('Just now');
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  };
+
+  const connectToService = () => {
+    setConnectionStatus('connecting');
+    toast({
+      title: "Connecting to Cloud Service",
+      description: `Establishing connection to ${getServiceName(selectedService)}...`,
+    });
+  };
+
+  const disconnectService = () => {
+    setConnectionStatus('disconnected');
+    setUptime('0h 0m');
+    setCpuUsage(0);
+    setMemoryUsage(0);
+    
+    toast({
+      title: "Cloud Service Disconnected",
+      description: `Connection to ${getServiceName(selectedService)} terminated.`,
+    });
+  };
+
+  const restartService = () => {
+    setIsRestarting(true);
+    
+    toast({
+      title: "Restarting Cloud Service",
+      description: `Restarting ${getServiceName(selectedService)}...`,
+    });
+    
+    setTimeout(() => {
+      setIsRestarting(false);
+      setLastSync('Just now');
+      
+      toast({
+        title: "Cloud Service Restarted",
+        description: `${getServiceName(selectedService)} has been restarted successfully.`,
+      });
+    }, 3000);
+  };
+
+  return {
+    connectionStatus,
+    selectedService,
+    setSelectedService,
+    uptime,
+    cpuUsage,
+    memoryUsage,
+    lastSync,
+    isRestarting,
+    connectToService,
+    disconnectService,
+    restartService
+  };
+};

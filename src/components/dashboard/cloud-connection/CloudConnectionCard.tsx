@@ -13,6 +13,7 @@ export const CloudConnectionCard: React.FC = () => {
     connectionStatus,
     selectedService,
     setSelectedService,
+    connectionConfig,
     uptime,
     cpuUsage,
     memoryUsage,
@@ -51,6 +52,7 @@ export const CloudConnectionCard: React.FC = () => {
           ) : (
             <ConnectedState 
               selectedService={selectedService}
+              connectionConfig={connectionConfig}
               uptime={uptime}
               lastSync={lastSync}
               cpuUsage={cpuUsage}

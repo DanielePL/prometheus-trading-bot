@@ -7,7 +7,19 @@ export const getServiceName = (serviceId: CloudServiceType): string => {
     case 'digitalocean': return 'DigitalOcean Droplet';
     case 'gcp': return 'Google Cloud Compute';
     case 'railway': return 'Railway.app';
+    case 'azure': return 'Azure VM';
     default: return 'Cloud Service';
+  }
+};
+
+export const getServiceDescription = (serviceId: CloudServiceType): string => {
+  switch (serviceId) {
+    case 'aws': return 'Amazon Web Services Elastic Compute Cloud';
+    case 'digitalocean': return 'DigitalOcean Droplet Virtual Machine';
+    case 'gcp': return 'Google Cloud Platform Compute Engine';
+    case 'railway': return 'Railway.app Application Platform';
+    case 'azure': return 'Microsoft Azure Virtual Machine';
+    default: return 'Cloud Computing Service';
   }
 };
 

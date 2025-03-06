@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { ConnectionStatusType, CloudServiceType } from './types';
+import { ConnectionStatusType, CloudServiceType, CloudConnectionConfig } from './types';
 import { getServiceName } from './utils';
 
 export const useCloudConnection = () => {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusType>('disconnected');
-  const [selectedService, setSelectedService] = useState<CloudServiceType>('aws');
+  const [selectedService, setSelectedService] = useState<CloudServiceType>('digitalocean');
+  const [connectionConfig, setConnectionConfig] = useState<CloudConnectionConfig>({});
   const [uptime, setUptime] = useState<string>('0h 0m');
   const [cpuUsage, setCpuUsage] = useState<number>(0);
   const [memoryUsage, setMemoryUsage] = useState<number>(0);
@@ -24,13 +25,13 @@ export const useCloudConnection = () => {
         
         toast({
           title: "Cloud Service Connected",
-          description: `Successfully connected to ${getServiceName(selectedService)}`,
+          description: `Successfully connected to ${getServiceName(selectedService)} at ${connectionConfig.ipAddress}:${connectionConfig.port}`,
         });
       }, 2000);
       
       return () => clearTimeout(timer);
     }
-  }, [connectionStatus, selectedService, toast]);
+  }, [connectionStatus, selectedService, connectionConfig, toast]);
 
   // Simulate resource usage updates when connected
   const startResourceUpdates = () => {
@@ -56,11 +57,19 @@ export const useCloudConnection = () => {
     return () => clearInterval(interval);
   };
 
-  const connectToService = () => {
+  const connectToService = (config?: CloudConnectionConfig) => {
+    if (config) {
+      setConnectionConfig(config);
+    }
     setConnectionStatus('connecting');
+    
+    const configDescription = config?.ipAddress 
+      ? ` at ${config.ipAddress}${config.port ? `:${config.port}` : ''}` 
+      : '';
+    
     toast({
       title: "Connecting to Cloud Service",
-      description: `Establishing connection to ${getServiceName(selectedService)}...`,
+      description: `Establishing connection to ${getServiceName(selectedService)}${configDescription}...`,
     });
   };
 
@@ -99,6 +108,7 @@ export const useCloudConnection = () => {
     connectionStatus,
     selectedService,
     setSelectedService,
+    connectionConfig,
     uptime,
     cpuUsage,
     memoryUsage,

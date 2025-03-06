@@ -2,12 +2,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Server, Power, RefreshCw, Clock, ArrowUpDown, Shield, Terminal } from 'lucide-react';
-import { CloudServiceType } from './types';
+import { Server, Power, RefreshCw, Clock, ArrowUpDown, Shield, Terminal, Wifi } from 'lucide-react';
+import { CloudServiceType, CloudConnectionConfig } from './types';
 import { getServiceName } from './utils';
 
 interface ConnectedStateProps {
   selectedService: CloudServiceType;
+  connectionConfig?: CloudConnectionConfig;
   uptime: string;
   lastSync: string;
   cpuUsage: number;
@@ -19,6 +20,7 @@ interface ConnectedStateProps {
 
 export const ConnectedState: React.FC<ConnectedStateProps> = ({
   selectedService,
+  connectionConfig,
   uptime,
   lastSync,
   cpuUsage,
@@ -56,10 +58,10 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
         
         <div className="space-y-1">
           <div className="flex items-center">
-            <Shield className="h-4 w-4 text-muted-foreground mr-2" />
-            <span className="text-sm font-medium">Status</span>
+            <Wifi className="h-4 w-4 text-muted-foreground mr-2" />
+            <span className="text-sm font-medium">IP Address</span>
           </div>
-          <p className="text-sm text-green-500">Secure</p>
+          <p className="text-sm">{connectionConfig?.ipAddress || 'N/A'}</p>
         </div>
       </div>
       

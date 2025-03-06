@@ -7,8 +7,50 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Code2, Play, Save, Upload, XCircle, CheckCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Code2, Play, Save, Upload, AlertCircle } from 'lucide-react';
+
+// Create a mock supabase client for when the real one isn't available
+const mockSupabase = {
+  functions: {
+    invoke: async (name: string, options: any) => {
+      console.log(`Mock invoke of ${name} with options`, options);
+      
+      // Return mock data based on the action
+      if (options.body.action === 'validate') {
+        return { data: { valid: true, message: "Python code syntax is valid (mock)" } };
+      } else if (options.body.action === 'execute') {
+        return { 
+          data: {
+            success: true,
+            result: {
+              status: 'completed',
+              output: 'This is a mock execution.\nTo fully integrate with your Python environment:\n1. Complete your Supabase setup\n2. Configure your Python execution service',
+              metrics: {
+                executionTime: '0.00s',
+                memoryUsage: '0MB',
+                cpuUsage: '0%'
+              }
+            }
+          }
+        };
+      } else if (options.body.action === 'store') {
+        return { data: { success: true, fileId: 'mock-' + Date.now(), message: "Strategy saved successfully (mock)" } };
+      }
+      
+      return { data: { success: true, message: "Mock operation completed" } };
+    }
+  }
+};
+
+// Try to import the real supabase client, fall back to mock if not available
+let supabase: any;
+try {
+  const { supabase: realSupabase } = require('@/integrations/supabase/client');
+  supabase = realSupabase;
+} catch (error) {
+  console.warn("Supabase client not available, using mock implementation");
+  supabase = mockSupabase;
+}
 
 export const PythonCodeEditor = () => {
   const [code, setCode] = useState<string>(
@@ -89,7 +131,7 @@ def run_strategy(market_data):
       console.error("Error validating code:", error);
       toast({
         title: "Validation Error",
-        description: "Could not validate your Python code.",
+        description: "Could not validate your Python code. Supabase connection may not be configured.",
         variant: "destructive",
       });
       return false;
@@ -127,7 +169,7 @@ def run_strategy(market_data):
       
       toast({
         title: "Execution Error",
-        description: "Could not execute your Python code.",
+        description: "Could not execute your Python code. Supabase connection may not be configured.",
         variant: "destructive",
       });
     } finally {
@@ -154,7 +196,7 @@ def run_strategy(market_data):
       
       toast({
         title: "Save Error",
-        description: "Could not save your Python code.",
+        description: "Could not save your Python code. Supabase connection may not be configured.",
         variant: "destructive",
       });
     } finally {
@@ -246,7 +288,7 @@ def run_strategy(market_data):
             
             <div className="flex justify-between">
               <Button variant="outline" onClick={validatePythonCode}>
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <AlertCircle className="h-4 w-4 mr-2" />
                 Validate
               </Button>
               <div className="flex gap-2">

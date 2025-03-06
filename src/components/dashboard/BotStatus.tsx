@@ -4,12 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { AlertCircle, CheckCircle, Info, PlayCircle, StopCircle } from 'lucide-react';
+import { 
+  AlertCircle, 
+  CheckCircle, 
+  Info, 
+  PlayCircle, 
+  StopCircle, 
+  RefreshCw,
+  Database,
+  BookOpen
+} from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from "@/hooks/use-toast";
 
 export const BotStatus = () => {
   const [isRunning, setIsRunning] = React.useState(true);
   const [progress, setProgress] = React.useState(78);
+  const [isPaperTrading, setIsPaperTrading] = React.useState(true);
+  const [isTraining, setIsTraining] = React.useState(false);
+  const { toast } = useToast();
   
   // Simulate progress change
   React.useEffect(() => {
@@ -27,6 +40,36 @@ export const BotStatus = () => {
   
   const toggleBot = () => {
     setIsRunning(!isRunning);
+    toast({
+      title: isRunning ? "Bot Stopped" : "Bot Started",
+      description: isRunning ? "Trading bot has been stopped" : "Trading bot is now running",
+    });
+  };
+  
+  const toggleTradingMode = () => {
+    setIsPaperTrading(!isPaperTrading);
+    toast({
+      title: "Trading Mode Changed",
+      description: isPaperTrading ? "Switched to Live Trading" : "Switched to Paper Trading",
+      variant: isPaperTrading ? "destructive" : "default",
+    });
+  };
+  
+  const trainModel = () => {
+    setIsTraining(true);
+    toast({
+      title: "Model Training Started",
+      description: "Training machine learning model with latest data",
+    });
+    
+    // Simulate model training completion
+    setTimeout(() => {
+      setIsTraining(false);
+      toast({
+        title: "Model Training Complete",
+        description: "Model has been updated with 74.5% accuracy",
+      });
+    }, 3000);
   };
   
   return (
@@ -64,6 +107,20 @@ export const BotStatus = () => {
             </div>
           </div>
           
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Trading Mode</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">
+                {isPaperTrading ? "Paper Trading" : "Live Trading"}
+              </span>
+              <Switch 
+                checked={!isPaperTrading} 
+                onCheckedChange={toggleTradingMode} 
+                className={!isPaperTrading ? "bg-amber-600" : ""} 
+              />
+            </div>
+          </div>
+          
           <div>
             <div className="flex justify-between mb-1">
               <span className="text-sm font-medium">System Load</span>
@@ -75,19 +132,19 @@ export const BotStatus = () => {
           <div className="space-y-2 pt-2">
             <div className="flex items-center text-sm">
               <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
-              <span>Connected to exchange API</span>
+              <span>Connected to Kraken API</span>
             </div>
             <div className="flex items-center text-sm">
               <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
-              <span>Websocket feed active</span>
+              <span>ML model loaded</span>
             </div>
             <div className="flex items-center text-sm">
               <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-2" />
-              <span>Last executed trade: 2 minutes ago</span>
+              <span>Last signal: BUY (0.73 confidence)</span>
             </div>
             <div className="flex items-center text-sm">
               <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mr-2" />
-              <span>CPU usage slightly elevated</span>
+              <span>Social sentiment: Neutral</span>
             </div>
           </div>
           
@@ -109,9 +166,24 @@ export const BotStatus = () => {
                 </>
               )}
             </Button>
-            <Button variant="outline">
-              <Info className="mr-2 h-4 w-4" />
-              Logs
+            <Button 
+              variant="outline"
+              disabled={isTraining}
+              onClick={trainModel}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isTraining ? 'animate-spin' : ''}`} />
+              {isTraining ? 'Training...' : 'Train Model'}
+            </Button>
+          </div>
+          
+          <div className="flex justify-center gap-2 pt-1">
+            <Button variant="outline" size="sm">
+              <Database className="mr-2 h-4 w-4" />
+              Historical Data
+            </Button>
+            <Button variant="outline" size="sm">
+              <BookOpen className="mr-2 h-4 w-4" />
+              View Logs
             </Button>
           </div>
         </div>

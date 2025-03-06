@@ -6,6 +6,7 @@ import { PerformanceChart } from '@/components/dashboard/PerformanceChart';
 import { TradingPairs } from '@/components/dashboard/TradingPairs';
 import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { BotStatus } from '@/components/dashboard/BotStatus';
+import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
   Landmark, ClipboardCheck, Calendar
@@ -55,7 +56,7 @@ const Dashboard = () => {
           </div>
           <div className="space-y-4">
             <BotStatus />
-            <RecentTrades />
+            <TradingSystemInfo />
           </div>
         </div>
         

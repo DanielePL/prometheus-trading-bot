@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -211,12 +210,12 @@ export const SupabaseIntegrationGuide = () => {
                   ); <br /><br />
                   
                   // Fetch trades <br />
-                  const fetchTrades = async () => {'{'} <br />
-                  &nbsp;&nbsp;const {'{ data, error }'} = await supabase <br />
+                  const fetchTrades = async () ={">"} {`{`} <br />
+                  &nbsp;&nbsp;const {`{ data, error }`} = await supabase <br />
                   &nbsp;&nbsp;&nbsp;&nbsp;.from('trades') <br />
                   &nbsp;&nbsp;&nbsp;&nbsp;.select('*') <br />
-                  &nbsp;&nbsp;&nbsp;&nbsp;.order('timestamp', {'{ ascending: false }'}); <br />
-                  {'}'}
+                  &nbsp;&nbsp;&nbsp;&nbsp;.order('timestamp', {`{ ascending: false }`}); <br />
+                  {`}`}
                 </code>
               </div>
             </div>
@@ -237,8 +236,8 @@ export const SupabaseIntegrationGuide = () => {
                   const tradesSubscription = supabase <br />
                   &nbsp;&nbsp;.channel('table-db-changes') <br />
                   &nbsp;&nbsp;.on('postgres_changes', <br />
-                  &nbsp;&nbsp;&nbsp;&nbsp;{'{ event: "INSERT", schema: "public", table: "trades" }'}, <br />
-                  &nbsp;&nbsp;&nbsp;&nbsp;(payload) => handleNewTrade(payload.new) <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;{`{ event: "INSERT", schema: "public", table: "trades" }`}, <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;(payload) ={">"} handleNewTrade(payload.new) <br />
                   &nbsp;&nbsp;) <br />
                   &nbsp;&nbsp;.subscribe();
                 </code>

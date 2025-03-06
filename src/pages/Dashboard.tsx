@@ -11,7 +11,7 @@ import { CloudConnection } from '@/components/dashboard/cloud-connection';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar
+  Landmark, ClipboardCheck, Calendar, Cloud
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -51,6 +51,13 @@ const Dashboard = () => {
           />
         </div>
         
+        {/* Highlight Cloud Connection Card */}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="relative p-1 rounded-lg bg-gradient-to-r from-amber-500/30 via-amber-400/20 to-amber-500/30 animate-pulse">
+            <CloudConnection />
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">
             <PerformanceChart />
@@ -58,7 +65,6 @@ const Dashboard = () => {
           </div>
           <div className="space-y-4">
             <BotStatus />
-            <CloudConnection />
             <TradingSystemInfo />
           </div>
         </div>

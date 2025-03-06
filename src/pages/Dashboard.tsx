@@ -10,10 +10,8 @@ import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar, CloudCog
+  Landmark, ClipboardCheck, Calendar
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   return (
@@ -50,24 +48,6 @@ const Dashboard = () => {
             change={1.4}
             icon={<CircleDollarSign className="h-4 w-4" />}
           />
-        </div>
-        
-        {/* Cloud Connection Link */}
-        <div className="grid grid-cols-1 gap-4">
-          <div className="bg-amber-500/10 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CloudCog className="h-6 w-6 text-amber-500" />
-              <div>
-                <h3 className="font-medium">Cloud Connection</h3>
-                <p className="text-sm text-muted-foreground">Manage your trading bot cloud infrastructure</p>
-              </div>
-            </div>
-            <Button asChild>
-              <Link to="/cloud-connection">
-                Configure
-              </Link>
-            </Button>
-          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

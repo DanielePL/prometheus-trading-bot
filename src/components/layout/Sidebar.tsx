@@ -1,10 +1,9 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Activity, ArrowLeftRight, BarChart2, Briefcase, ChevronLeft, ChevronRight, 
   CreditCard, Github, Globe, History, Home, LineChart, LogOut, 
-  Settings, TrendingUp, User, Wallet 
+  Settings, TrendingUp, User, Wallet, Cloud 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -50,6 +49,9 @@ const SidebarSection = ({
 );
 
 export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
   return (
     <>
       {/* Mobile sidebar backdrop */}
@@ -94,22 +96,23 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-2 px-2">
           <SidebarSection title={isOpen ? "Dashboard" : ""}>
-            <SidebarItem icon={Home} label="Overview" to="/" active />
-            <SidebarItem icon={Activity} label="Performance" to="/performance" />
-            <SidebarItem icon={BarChart2} label="Markets" to="/markets" />
+            <SidebarItem icon={Home} label="Overview" to="/" active={currentPath === '/'} />
+            <SidebarItem icon={Activity} label="Performance" to="/performance" active={currentPath === '/performance'} />
+            <SidebarItem icon={BarChart2} label="Markets" to="/markets" active={currentPath === '/markets'} />
+            <SidebarItem icon={Cloud} label="Cloud" to="/cloud" active={currentPath === '/cloud'} />
           </SidebarSection>
           
           <SidebarSection title={isOpen ? "Trading" : ""}>
-            <SidebarItem icon={TrendingUp} label="Strategies" to="/strategies" />
-            <SidebarItem icon={ArrowLeftRight} label="Trades" to="/trades" />
-            <SidebarItem icon={History} label="History" to="/history" />
-            <SidebarItem icon={LineChart} label="Analytics" to="/analytics" />
+            <SidebarItem icon={TrendingUp} label="Strategies" to="/strategies" active={currentPath === '/strategies'} />
+            <SidebarItem icon={ArrowLeftRight} label="Trades" to="/trades" active={currentPath === '/trades'} />
+            <SidebarItem icon={History} label="History" to="/history" active={currentPath === '/history'} />
+            <SidebarItem icon={LineChart} label="Analytics" to="/analytics" active={currentPath === '/analytics'} />
           </SidebarSection>
           
           <SidebarSection title={isOpen ? "Account" : ""}>
-            <SidebarItem icon={Briefcase} label="Portfolio" to="/portfolio" />
-            <SidebarItem icon={Wallet} label="Assets" to="/assets" />
-            <SidebarItem icon={CreditCard} label="Deposits" to="/deposits" />
+            <SidebarItem icon={Briefcase} label="Portfolio" to="/portfolio" active={currentPath === '/portfolio'} />
+            <SidebarItem icon={Wallet} label="Assets" to="/assets" active={currentPath === '/assets'} />
+            <SidebarItem icon={CreditCard} label="Deposits" to="/deposits" active={currentPath === '/deposits'} />
           </SidebarSection>
         </div>
         

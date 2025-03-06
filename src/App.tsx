@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Performance from "./pages/Performance";
 import Markets from "./pages/Markets";
 import Strategies from "./pages/Strategies";
+import Cloud from "./pages/Cloud";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,7 +49,7 @@ const App = () => {
             <Route path="/performance" element={<Performance />} />
             <Route path="/markets" element={<Markets />} />
             <Route path="/strategies" element={<Strategies />} />
-            {/* Other routes will be added here */}
+            <Route path="/cloud" element={<Cloud />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

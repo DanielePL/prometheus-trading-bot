@@ -7,11 +7,10 @@ import { TradingPairs } from '@/components/dashboard/TradingPairs';
 import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { BotStatus } from '@/components/dashboard/BotStatus';
 import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
-import { CloudConnection } from '@/components/dashboard/cloud-connection';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar, Cloud
+  Landmark, ClipboardCheck, Calendar
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -49,13 +48,6 @@ const Dashboard = () => {
             change={1.4}
             icon={<CircleDollarSign className="h-4 w-4" />}
           />
-        </div>
-        
-        {/* Highlight Cloud Connection Card */}
-        <div className="grid grid-cols-1 gap-4">
-          <div className="relative p-1 rounded-lg bg-gradient-to-r from-amber-500/30 via-amber-400/20 to-amber-500/30 animate-pulse">
-            <CloudConnection />
-          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

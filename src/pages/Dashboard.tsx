@@ -23,7 +23,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center relative">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground mt-1">
@@ -53,18 +53,9 @@ const Dashboard = () => {
               </Link>
             </Button>
           </div>
-          
-          <div className="absolute right-0 top-0 sm:-top-1 md:-top-2 -mt-2 sm:mt-0">
-            <BullRunIndicator 
-              isBullRun={true}
-              confidence={0.85}
-              lastDetected="Just now"
-              stopLossPercentage={3.5}
-            />
-          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
           <StatsCard
             title="Portfolio Value"
             value="$10,000.00"
@@ -82,12 +73,22 @@ const Dashboard = () => {
             value="1"
             icon={<BarChart2 className="h-4 w-4" />}
           />
-          <StatsCard
-            title="Win Rate"
-            value="0.0%"
-            change={0}
-            icon={<CircleDollarSign className="h-4 w-4" />}
-          />
+          <div className="relative">
+            <StatsCard
+              title="Win Rate"
+              value="0.0%"
+              change={0}
+              icon={<CircleDollarSign className="h-4 w-4" />}
+            />
+            <div className="absolute -top-3 -right-3">
+              <BullRunIndicator 
+                isBullRun={true}
+                confidence={0.85}
+                lastDetected="Just now"
+                stopLossPercentage={3.5}
+              />
+            </div>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

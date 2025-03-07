@@ -16,11 +16,11 @@ export const StatsCard = ({ title, value, change, icon, className }: StatsCardPr
   const isPositive = change !== undefined && change >= 0;
   
   return (
-    <Card className={cn("overflow-hidden h-full transition-all duration-200 hover:shadow-lg", className)}>
-      <CardContent className="p-6 flex flex-col h-full">
-        <div className="flex justify-between items-start mb-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div className="p-2 rounded-full bg-secondary/50">{icon}</div>
+    <Card className={cn("overflow-hidden h-full", className)}>
+      <CardContent className="p-4 flex flex-col h-full">
+        <div className="flex justify-between items-center mb-2">
+          <p className="text-sm font-medium">{title}</p>
+          <div className="p-1 rounded-full bg-blue-900/30">{icon}</div>
         </div>
         
         <div className="mt-1">
@@ -29,9 +29,8 @@ export const StatsCard = ({ title, value, change, icon, className }: StatsCardPr
           {change !== undefined && (
             <div className="flex items-center mt-1">
               <div className={cn(
-                "flex items-center text-xs font-medium rounded-full px-1.5 py-0.5",
-                isPositive ? "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400" : 
-                             "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400"
+                "flex items-center text-xs font-medium",
+                isPositive ? "text-green-400" : "text-red-400"
               )}>
                 {isPositive ? (
                   <ArrowUpIcon className="h-3 w-3 mr-1" />
@@ -40,7 +39,7 @@ export const StatsCard = ({ title, value, change, icon, className }: StatsCardPr
                 )}
                 {Math.abs(change)}%
               </div>
-              <span className="text-xs text-muted-foreground ml-1.5">vs last period</span>
+              <span className="text-xs text-gray-400 ml-1.5">vs last period</span>
             </div>
           )}
         </div>

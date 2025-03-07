@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,20 +47,16 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   
   const performBullRunScan = async () => {
     try {
-      // Fetch the latest candles and order book
       const candles = await exchangeAPI.fetchCandles(tradingPair, '1h');
       const orderBook = await exchangeAPI.getOrderBook(tradingPair);
       
-      // Use our advanced bull run detector
       const result = bullRunDetector.analyzeMarket(candles, orderBook);
       
-      // Update the UI with the results
       setIsBullRun(result.isBullRun);
       setConfidence(result.confidence);
       setStopLossPercentage(result.stopLossPercentage);
       setLastScanTime(result.lastDetected);
       
-      // Animate if bull run is detected
       if (result.isBullRun) {
         setIsAnimating(true);
         setTimeout(() => setIsAnimating(false), 2000);
@@ -79,7 +74,6 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
     } catch (error) {
       console.error('Error during bull run scan:', error);
       
-      // Fallback to random data for demo purposes
       const newIsBullRun = Math.random() > 0.4;
       const newConfidence = 0.65 + (Math.random() * 0.3);
       const newStopLoss = newIsBullRun ? Math.max(1.0, parseFloat((newConfidence * 10).toFixed(1))) : 1.0;
@@ -119,51 +113,42 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
       description: 'Scanning cryptocurrencies for bull run patterns'
     });
     
-    // Get the cryptocurrencies to scan - increased to 100
-    const currenciesToScan = marketData.slice(0, 100); // Scan up to 100 cryptocurrencies
+    const currenciesToScan = marketData.slice(0, 100);
     let scannedCount = 0;
     const results: ScanResult[] = [];
     
     for (const currency of currenciesToScan) {
       try {
-        // Create trading pair format
         const pair = `${currency.symbol}-USD`;
         
-        // Update progress
         scannedCount++;
         setScanProgress(Math.round((scannedCount / currenciesToScan.length) * 100));
         
-        // Fetch and analyze data
         const candles = await exchangeAPI.fetchCandles(pair, '1h');
         const orderBook = await exchangeAPI.getOrderBook(pair);
         const result = bullRunDetector.analyzeMarket(candles, orderBook);
         
-        // Add to results
         results.push({
           ...result,
           symbol: currency.symbol,
           name: currency.name
         });
         
-        // If this is a strong bull run signal, highlight it
         if (result.isBullRun && result.confidence > 0.75) {
           toast.success(`Bull run detected for ${currency.name}!`, {
             description: `${Math.round(result.confidence * 100)}% confidence with ${result.stopLossPercentage.toFixed(1)}% stop loss`
           });
         }
         
-        // Sort results by confidence
         results.sort((a, b) => b.confidence - a.confidence);
         setMarketScanResults([...results]);
         
-        // Simulate API delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200)); // Reduced the delay slightly
+        await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
         console.error(`Error scanning ${currency.symbol}:`, error);
       }
     }
     
-    // Show highest confidence result in main indicator
     if (results.length > 0) {
       const topResult = results[0];
       setIsBullRun(topResult.isBullRun);
@@ -231,131 +216,116 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   
   return (
     <Card className={`
-      h-full w-full
+      h-full
       ${isBullRun 
-        ? 'border-green-500 dark:border-green-400 bg-green-950/90 text-white dark:bg-green-900/90 shadow-[0_0_10px_rgba(34,197,94,0.5)]' 
-        : 'border-gray-700 dark:border-gray-700 bg-gray-900/90 text-gray-100'}
+        ? 'bg-green-900 border-green-800 text-white' 
+        : 'bg-green-900 border-green-800 text-white'}
       ${isAnimating ? 'animate-pulse' : ''}
-      transition-all duration-300 overflow-hidden
+      transition-all duration-300
     `}>
-      <CardContent className="p-6 flex flex-col h-full justify-between">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">Bull Run Scanner</span>
-            <span className="text-xs text-muted-foreground">Market Pattern Detector</span>
-          </div>
-          
-          <div className="p-2 rounded-full bg-secondary/50">
-            <Radar className="h-4 w-4" />
+      <CardContent className="p-4 flex flex-col h-full">
+        <div className="mb-1">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-base font-bold">Bull Run Scanner</div>
+              <div className="text-xs text-green-300">Market Pattern Detector</div>
+            </div>
+            <Radar className="h-5 w-5 text-green-300" />
           </div>
         </div>
         
-        <div className="space-y-3 flex-grow">
-          {scanningMarket ? (
-            <div className="py-2 space-y-3">
-              <div className="flex justify-between text-xs">
-                <span>Scanning market ({Math.round(scanProgress)}% complete)...</span>
-                <span>{scanProgress}%</span>
-              </div>
-              <Progress 
-                value={scanProgress} 
-                className="bg-secondary"
-                style={{ backgroundColor: 'var(--secondary)', '--progress-color': 'rgb(59, 130, 246)' } as React.CSSProperties} 
-              />
+        {scanningMarket ? (
+          <div className="py-2 space-y-2">
+            <div className="flex justify-between text-xs">
+              <span>Scanning market ({Math.round(scanProgress)}% complete)...</span>
+              <span>{scanProgress}%</span>
             </div>
-          ) : isBullRun ? (
-            <>
-              <div className="flex justify-between items-center">
-                <span className="text-xs">Confidence</span>
-                <span className="text-sm font-semibold">{formattedConfidence}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-xs">Stop Loss</span>
-                <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/50 text-xs py-0 px-1">
-                  {stopLossPercentage.toFixed(1)}%
-                </Badge>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-xs">Detected</span>
-                <span className="text-xs text-gray-400">{lastScanTime}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-xs">Symbol</span>
-                <span className="text-xs font-semibold">{tradingPair}</span>
-              </div>
-            </>
-          ) : (
-            <div className="text-sm text-center text-gray-400 py-4">
-              {isAutoScanning ? 'Scanning for patterns...' : 'No bull run detected'}
+            <Progress 
+              value={scanProgress} 
+              className="bg-green-800"
+              style={{ '--progress-color': 'rgb(34, 197, 94)' } as React.CSSProperties} 
+            />
+          </div>
+        ) : (
+          <div className="space-y-1 flex-grow">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Confidence</span>
+              <span className="text-sm font-semibold">{formattedConfidence}</span>
             </div>
-          )}
-          
-          {/* Market Scan Results */}
-          {scanComplete && marketScanResults.length > 0 && (
-            <Collapsible open={expandResults} onOpenChange={setExpandResults} className="mt-2">
-              <CollapsibleTrigger className="flex w-full justify-between items-center text-xs py-1 text-gray-300 hover:text-white">
-                <span>Market scan results ({marketScanResults.length})</span>
-                {expandResults ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1">
-                <div className="max-h-40 overflow-y-auto space-y-1 text-xs">
-                  {marketScanResults.map((result, index) => (
-                    <div 
-                      key={result.symbol} 
-                      className={`flex justify-between items-center p-1 rounded 
-                      ${result.isBullRun ? 'bg-green-950 text-green-100' : 'bg-gray-800 text-gray-300'} 
-                      ${index === 0 ? 'border-l-2 border-amber-500 pl-1' : ''}`}
-                    >
-                      <span className="font-medium">{result.symbol}</span>
-                      <div className="flex items-center gap-1">
-                        <Badge variant="outline" className={
-                          result.confidence > 0.7 
-                            ? 'bg-green-500/20 text-green-300 border-green-500/30 text-xs py-0 px-1' 
-                            : result.confidence > 0.5 
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs py-0 px-1'
-                              : 'bg-gray-500/20 text-gray-300 border-gray-500/30 text-xs py-0 px-1'
-                        }>
-                          {Math.round(result.confidence * 100)}%
-                        </Badge>
-                      </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Stop Loss</span>
+              <Badge variant="outline" className="bg-amber-400/20 text-amber-300 border-amber-500/50 text-xs py-0 px-2">
+                {stopLossPercentage.toFixed(1)}%
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Detected</span>
+              <span className="text-sm text-green-300">{lastScanTime}</span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Symbol</span>
+              <span className="text-sm font-semibold">{tradingPair}</span>
+            </div>
+          </div>
+        )}
+        
+        {scanComplete && marketScanResults.length > 0 && (
+          <Collapsible 
+            open={expandResults} 
+            onOpenChange={setExpandResults} 
+            className="mt-1 border-t border-green-800/50 pt-1"
+          >
+            <CollapsibleTrigger className="flex w-full justify-between items-center text-xs py-1 text-green-300 hover:text-white">
+              <span>Market scan results ({marketScanResults.length})</span>
+              {expandResults ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-1">
+              <div className="max-h-40 overflow-y-auto space-y-1 text-xs">
+                {marketScanResults.map((result, index) => (
+                  <div 
+                    key={result.symbol} 
+                    className={`flex justify-between items-center p-1 rounded 
+                    ${result.isBullRun ? 'bg-green-800/50 text-green-100' : 'bg-green-900/50 text-green-300'} 
+                    ${index === 0 ? 'border-l-2 border-amber-500 pl-1' : ''}`}
+                  >
+                    <span className="font-medium">{result.symbol}</span>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className={
+                        result.confidence > 0.7 
+                          ? 'bg-green-500/20 text-green-300 border-green-500/30 text-xs py-0 px-1' 
+                          : result.confidence > 0.5 
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs py-0 px-1'
+                            : 'bg-gray-500/20 text-gray-300 border-gray-500/30 text-xs py-0 px-1'
+                      }>
+                        {Math.round(result.confidence * 100)}%
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-        </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
         
-        <div className="flex gap-2 pt-3 mt-1 border-t border-gray-700/50 dark:border-gray-700/50">
-          {isAutoScanning ? (
-            <Button 
-              size="sm" 
-              variant="destructive"
-              onClick={stopAutoScan}
-              className="text-xs h-6 px-2 min-w-0 flex-1"
-            >
-              Stop Auto
-            </Button>
-          ) : (
-            <Button 
-              size="sm" 
-              variant="secondary"
-              onClick={startAutoScan}
-              className="text-xs h-6 px-2 min-w-0 flex-1 bg-white/10 hover:bg-white/20 text-white"
-            >
-              Auto Scan
-            </Button>
-          )}
+        <div className="flex gap-2 pt-2 mt-1">
+          <Button 
+            size="sm" 
+            variant={isAutoScanning ? "destructive" : "outline"}
+            onClick={isAutoScanning ? stopAutoScan : startAutoScan}
+            className={`text-xs flex-1 ${isAutoScanning ? "" : "bg-green-800 hover:bg-green-700 text-white border-green-700"}`}
+          >
+            {isAutoScanning ? "Stop Auto" : "Auto Scan"}
+          </Button>
           
           <Button 
             size="sm" 
-            variant={scanningMarket ? "secondary" : "default"}
+            variant="default"
             onClick={scanMarket}
             disabled={scanningMarket}
-            className="text-xs h-6 px-2 min-w-0 flex-1"
+            className="text-xs flex-1 bg-green-100 hover:bg-green-200 text-green-900"
           >
             {scanningMarket ? 'Scanning...' : 'Scan Market'}
           </Button>

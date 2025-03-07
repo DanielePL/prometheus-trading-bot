@@ -1,11 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Bell, Menu, Moon, Search, Settings, Sun, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { ApiKeyConfig } from '@/components/trading/ApiKeyConfig';
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -17,6 +17,12 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
     window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
   const { toast } = useToast();
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  const [apiKeys, setApiKeys] = useState({
+    exchangeApiKey: localStorage.getItem('exchangeApiKey') || '',
+    exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
+    apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://api.exchange.com'
+  });
   
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -26,12 +32,33 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  const handleSaveApiKeys = (keys: typeof apiKeys) => {
+    setApiKeys(keys);
+    localStorage.setItem('exchangeApiKey', keys.exchangeApiKey);
+    localStorage.setItem('exchangeApiSecret', keys.exchangeApiSecret);
+    localStorage.setItem('apiEndpoint', keys.apiEndpoint);
+    
+    setShowApiConfig(false);
+    
+    toast({
+      title: "API Keys Saved",
+      description: "Your exchange API configuration has been saved",
+    });
+    
+    console.log("API configuration updated");
+  };
+
   const handleMenuItemClick = (option: string) => {
     console.log(`Menu item clicked: ${option}`);
-    toast({
-      title: "Settings Option Selected",
-      description: `You selected: ${option}`,
-    });
+    
+    if (option === "API Settings") {
+      setShowApiConfig(true);
+    } else {
+      toast({
+        title: "Settings Option Selected",
+        description: `You selected: ${option}`,
+      });
+    }
   };
 
   return (
@@ -114,16 +141,16 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-background border shadow-md p-2">
-              <DropdownMenuItem onClick={() => handleMenuItemClick("API Settings")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("API Settings")} className="cursor-pointer">
                 API Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMenuItemClick("Strategy Parameters")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("Strategy Parameters")} className="cursor-pointer">
                 Strategy Parameters
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMenuItemClick("Notification Preferences")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("Notification Preferences")} className="cursor-pointer">
                 Notification Preferences
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMenuItemClick("Advanced Configuration")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("Advanced Configuration")} className="cursor-pointer">
                 Advanced Configuration
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -139,23 +166,31 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-background border shadow-md p-2">
-              <DropdownMenuItem onClick={() => handleMenuItemClick("Profile")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("Profile")} className="cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMenuItemClick("Account Settings")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("Account Settings")} className="cursor-pointer">
                 Account Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMenuItemClick("API Keys")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("API Keys")} className="cursor-pointer">
                 API Keys
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMenuItemClick("Logout")}>
+              <DropdownMenuItem onClick={() => handleMenuItemClick("Logout")} className="cursor-pointer">
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+
+      {showApiConfig && (
+        <ApiKeyConfig
+          apiKeys={apiKeys}
+          onSave={handleSaveApiKeys}
+          onCancel={() => setShowApiConfig(false)}
+        />
+      )}
     </nav>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BotControlPanel } from './BotControlPanel';
@@ -30,7 +29,6 @@ export const TradingBot = () => {
   const [currentSignal, setCurrentSignal] = useState<TradingSignal | null>(null);
   const { toast } = useToast();
 
-  // Mock trading pairs
   const tradingPairs = [
     { value: 'BTC-USD', label: 'Bitcoin/USD' },
     { value: 'ETH-USD', label: 'Ethereum/USD' },
@@ -39,7 +37,6 @@ export const TradingBot = () => {
     { value: 'ADA-USD', label: 'Cardano/USD' },
   ];
 
-  // Trading strategies
   const tradingStrategies = [
     { value: 'macrossover', label: 'Moving Average Crossover' },
     { value: 'rsioscillator', label: 'RSI Oscillator' },
@@ -48,32 +45,26 @@ export const TradingBot = () => {
     { value: 'supportresistance', label: 'Support & Resistance' },
   ];
 
-  // Add log with timestamp
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev.slice(-19), `[${timestamp}] ${message}`]);
   };
 
-  // Fetch market data and analyze
   const analyzeMarket = async () => {
     try {
-      // Fetch market data
       addLog(`Fetching market data for ${tradingPair}...`);
       const data = await exchangeAPI.fetchMarketData(tradingPair);
       setMarketData(data);
       addLog(`Current ${tradingPair} price: $${data.price.toFixed(2)}`);
       
-      // Fetch candles for technical analysis
       addLog('Retrieving historical price data for analysis...');
       const candleData = await exchangeAPI.fetchCandles(tradingPair, '1h');
       setCandles(candleData);
       
-      // Fetch order book
       const bookData = await exchangeAPI.getOrderBook(tradingPair);
       setOrderBook(bookData);
       addLog(`Order book depth: ${bookData.bids.length} bids, ${bookData.asks.length} asks`);
       
-      // Analyze with selected strategy
       const strategy = getStrategyByName(tradingStrategy);
       addLog(`Analyzing market with ${strategy.getName()} strategy...`);
       
@@ -83,7 +74,6 @@ export const TradingBot = () => {
       addLog(`Signal generated: ${signal.action.toUpperCase()} with ${(signal.confidence * 100).toFixed(0)}% confidence`);
       addLog(`Analysis: ${signal.reason}`);
       
-      // Execute trade if confidence is high enough and we're in the right mode
       if (isRunning && signal.confidence > getRiskThreshold() && signal.action !== 'hold') {
         if (tradeMode === 'live') {
           await executeTrade(signal);
@@ -98,22 +88,19 @@ export const TradingBot = () => {
     }
   };
 
-  // Get risk threshold based on risk level setting
   const getRiskThreshold = () => {
     switch (riskLevel) {
-      case 'low': return 0.7;  // Only trade on high confidence signals
-      case 'medium': return 0.5;  // Trade on medium confidence
-      case 'high': return 0.3;  // Trade on lower confidence signals
+      case 'low': return 0.7;
+      case 'medium': return 0.5;
+      case 'high': return 0.3;
       default: return 0.5;
     }
   };
 
-  // Execute a real trade
   const executeTrade = async (signal: TradingSignal) => {
     try {
       if (!marketData) return;
       
-      // Calculate position size based on risk level and max trading amount
       const maxAmount = parseFloat(maxTradingAmount);
       const riskMultiplier = riskLevel === 'low' ? 0.25 : riskLevel === 'medium' ? 0.5 : 0.75;
       const positionSize = (maxAmount * riskMultiplier * signal.confidence) / marketData.price;
@@ -123,7 +110,7 @@ export const TradingBot = () => {
       const order = {
         symbol: tradingPair,
         side: signal.action as 'buy' | 'sell',
-        type: 'market',
+        type: 'market' as 'market' | 'limit',
         quantity: positionSize
       };
       
@@ -158,16 +145,13 @@ export const TradingBot = () => {
     }
   };
 
-  // Simulate a trade for paper trading mode
   const simulateTrade = (signal: TradingSignal) => {
     if (!marketData) return;
     
-    // Calculate position size based on risk level and max trading amount
     const maxAmount = parseFloat(maxTradingAmount);
     const riskMultiplier = riskLevel === 'low' ? 0.25 : riskLevel === 'medium' ? 0.5 : 0.75;
     const positionSize = (maxAmount * riskMultiplier * signal.confidence) / marketData.price;
     
-    // Add slight slippage for realism
     const slippage = signal.action === 'buy' ? 1.001 : 0.999;
     const price = (marketData.price * slippage).toFixed(2);
     
@@ -187,11 +171,9 @@ export const TradingBot = () => {
     });
   };
 
-  // Start the trading bot
   const startBot = () => {
     setIsRunning(true);
     
-    // Reset execution time and resource usage
     setCpuUsage(0);
     setMemoryUsage(0);
     setExecutionTime(0);
@@ -199,7 +181,6 @@ export const TradingBot = () => {
     addLog(`Bot started in ${tradeMode.toUpperCase()} mode with ${riskLevel.toUpperCase()} risk profile.`);
     addLog(`Using ${getStrategyByName(tradingStrategy).getName()} strategy on ${tradingPair}.`);
     
-    // Do initial analysis
     analyzeMarket();
     
     toast({
@@ -208,7 +189,6 @@ export const TradingBot = () => {
     });
   };
 
-  // Stop the trading bot
   const stopBot = () => {
     setIsRunning(false);
     addLog('Bot stopped. Trading algorithms terminated.');
@@ -219,7 +199,6 @@ export const TradingBot = () => {
     });
   };
 
-  // Toggle between paper and live trading modes
   const toggleTradingMode = (mode: 'paper' | 'live') => {
     if (mode === 'live') {
       const confirm = window.confirm(
@@ -238,13 +217,11 @@ export const TradingBot = () => {
     });
   };
 
-  // Clear logs
   const clearLogs = () => {
     setLogs([]);
     toast({ title: "Logs Cleared" });
   };
 
-  // Handle refresh data button
   const refreshData = () => {
     if (!isRunning) return;
     
@@ -257,16 +234,13 @@ export const TradingBot = () => {
     });
   };
 
-  // Simulate logs and resource usage when bot is running
   useEffect(() => {
     if (!isRunning) return;
     
-    // Market analysis interval
     const analysisInterval = setInterval(() => {
       analyzeMarket();
-    }, 30000); // Every 30 seconds
+    }, 30000);
     
-    // Simulate resource usage
     const resourceInterval = setInterval(() => {
       setCpuUsage(Math.floor(Math.random() * 40) + 20);
       setMemoryUsage(Math.floor(Math.random() * 30) + 40);
@@ -277,7 +251,6 @@ export const TradingBot = () => {
       clearInterval(analysisInterval);
       clearInterval(resourceInterval);
       
-      // Reset resource usage when stopped
       if (!isRunning) {
         setCpuUsage(0);
         setMemoryUsage(0);

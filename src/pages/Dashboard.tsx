@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -47,7 +48,7 @@ const Dashboard = () => {
             <Button variant="outline" asChild>
               <Link to="/news-scanner">
                 <Newspaper className="mr-2 h-4 w-4" />
-                News Scanner
+                Market Intelligence
               </Link>
             </Button>
           </div>

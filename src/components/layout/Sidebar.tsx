@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -55,7 +54,6 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   
   return (
     <>
-      {/* Mobile sidebar backdrop */}
       {isOpen && (
         <div 
           className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
@@ -63,7 +61,6 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         />
       )}
       
-      {/* Sidebar */}
       <aside 
         className={cn(
           "fixed top-0 bottom-0 left-0 z-50 w-64 border-r bg-card",
@@ -72,7 +69,6 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           "flex flex-col"
         )}
       >
-        {/* Logo Area */}
         <div className="py-6 px-4 flex justify-between items-center border-b h-16">
           <div className="flex items-center gap-2">
             {isOpen ? (
@@ -94,14 +90,13 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           </Button>
         </div>
         
-        {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-2 px-2">
           <SidebarSection title={isOpen ? "Dashboard" : ""}>
             <SidebarItem icon={Home} label="Overview" to="/" active={currentPath === '/'} />
             <SidebarItem icon={Activity} label="Performance" to="/performance" active={currentPath === '/performance'} />
             <SidebarItem icon={BarChart2} label="Markets" to="/markets" active={currentPath === '/markets'} />
             <SidebarItem icon={Cloud} label="Cloud" to="/cloud" active={currentPath === '/cloud'} />
-            <SidebarItem icon={Newspaper} label="News Scanner" to="/news-scanner" active={currentPath === '/news-scanner'} />
+            <SidebarItem icon={Newspaper} label="Market Intelligence" to="/news-scanner" active={currentPath === '/news-scanner'} />
           </SidebarSection>
           
           <SidebarSection title={isOpen ? "Trading" : ""}>

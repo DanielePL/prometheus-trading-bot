@@ -24,7 +24,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   const [stopLossPercentage, setStopLossPercentage] = useState(initialStopLossPercentage);
   const [isAutoScanning, setIsAutoScanning] = useState(false);
   const [scanInterval, setScanInterval] = useState<NodeJS.Timeout | null>(null);
-  const [lastScanTime, setLastScanTime] = useState(lastDetected);
+  const [lastScanTime, setLastScanTime] = useState<string>(lastDetected); // Fixed type issue here
   
   // Format confidence as percentage
   const formattedConfidence = `${Math.round(confidence * 100)}%`;

@@ -76,7 +76,6 @@ const NewsScanner = () => {
                 </div>
                 
                 <div className="space-y-6">
-                  {/* No need to control BullRunIndicator from here anymore, it's self-contained */}
                   <BullRunIndicator 
                     isBullRun={isBullRun}
                     confidence={0.78}

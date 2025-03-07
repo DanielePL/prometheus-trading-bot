@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getNewsItems, NewsItem } from '@/services/newsCrawlerService';
 import { Search, ExternalLink, MessageSquare, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { NewsSentimentBarometer } from './NewsSentimentBarometer';
 
 export const NewsResults = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -36,6 +37,11 @@ export const NewsResults = () => {
     
     setFilteredItems(filtered);
   }, [newsItems, searchTerm, selectedTab]);
+
+  // Calculate counts for the barometer
+  const positiveCount = newsItems.filter(item => item.sentiment === 'positive').length;
+  const negativeCount = newsItems.filter(item => item.sentiment === 'negative').length;
+  const neutralCount = newsItems.filter(item => item.sentiment === 'neutral').length;
 
   const getSentimentIcon = (sentiment: 'positive' | 'negative' | 'neutral' | null) => {
     switch (sentiment) {
@@ -86,30 +92,40 @@ export const NewsResults = () => {
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="relative flex-grow">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search news..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search news..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-          
-          <Tabs defaultValue="all" className="w-full sm:w-auto" onValueChange={(v) => setSelectedTab(v as any)}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="positive">Positive</TabsTrigger>
-              <TabsTrigger value="negative">Negative</TabsTrigger>
-              <TabsTrigger value="neutral">Neutral</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div>
+            <Tabs defaultValue="all" className="w-full" onValueChange={(v) => setSelectedTab(v as any)}>
+              <TabsList className="w-full">
+                <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
+                <TabsTrigger value="positive" className="flex-1">Positive</TabsTrigger>
+                <TabsTrigger value="negative" className="flex-1">Negative</TabsTrigger>
+                <TabsTrigger value="neutral" className="flex-1">Neutral</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
+        
+        {/* Add the sentiment barometer */}
+        <NewsSentimentBarometer 
+          positiveCount={positiveCount} 
+          negativeCount={negativeCount}
+          neutralCount={neutralCount}
+        />
       </CardHeader>
       
       <CardContent>
-        <ScrollArea className="h-[500px] pr-4">
+        <ScrollArea className="h-[350px] pr-4">
           {filteredItems.length > 0 ? (
             <div className="space-y-4">
               {filteredItems.map((item) => (

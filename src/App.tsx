@@ -16,6 +16,7 @@ import History from "./pages/History";
 import Analytics from "./pages/Analytics";
 import Portfolio from "./pages/Portfolio";
 import Assets from "./pages/Assets";
+import TradingBot from "./pages/TradingBot";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => {
             <Route path="/cloud" element={<Cloud />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/assets" element={<Assets />} />
+            <Route path="/trading-bot" element={<TradingBot />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BotControlPanel } from './BotControlPanel';
 import { BotLogPanel } from './BotLogPanel';
+import { ApiKeyConfig } from './ApiKeyConfig';
 import { 
   exchangeAPI, 
   getStrategyByName, 
@@ -27,6 +28,12 @@ export const TradingBot = () => {
   const [candles, setCandles] = useState<Candle[]>([]);
   const [orderBook, setOrderBook] = useState<OrderBook | null>(null);
   const [currentSignal, setCurrentSignal] = useState<TradingSignal | null>(null);
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  const [apiKeys, setApiKeys] = useState({
+    exchangeApiKey: localStorage.getItem('exchangeApiKey') || '',
+    exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
+    apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://api.exchange.com'
+  });
   const { toast } = useToast();
 
   const tradingPairs = [
@@ -172,6 +179,16 @@ export const TradingBot = () => {
   };
 
   const startBot = () => {
+    if (tradeMode === 'live' && (!apiKeys.exchangeApiKey || !apiKeys.exchangeApiSecret)) {
+      toast({
+        title: "API Keys Required",
+        description: "Please configure your exchange API keys for live trading",
+        variant: "destructive"
+      });
+      setShowApiConfig(true);
+      return;
+    }
+    
     setIsRunning(true);
     
     setCpuUsage(0);
@@ -234,6 +251,22 @@ export const TradingBot = () => {
     });
   };
 
+  const handleSaveApiKeys = (keys: typeof apiKeys) => {
+    setApiKeys(keys);
+    localStorage.setItem('exchangeApiKey', keys.exchangeApiKey);
+    localStorage.setItem('exchangeApiSecret', keys.exchangeApiSecret);
+    localStorage.setItem('apiEndpoint', keys.apiEndpoint);
+    
+    setShowApiConfig(false);
+    
+    toast({
+      title: "API Keys Saved",
+      description: "Your exchange API configuration has been saved",
+    });
+    
+    addLog("Exchange API configuration updated");
+  };
+
   useEffect(() => {
     if (!isRunning) return;
     
@@ -282,6 +315,8 @@ export const TradingBot = () => {
         onTradingStrategyChange={setTradingStrategy}
         onRiskLevelChange={(val: any) => setRiskLevel(val)}
         onMaxTradingAmountChange={setMaxTradingAmount}
+        onConfigureApiKeys={() => setShowApiConfig(true)}
+        hasApiKeys={!!apiKeys.exchangeApiKey && !!apiKeys.exchangeApiSecret}
       />
       
       <BotLogPanel
@@ -289,6 +324,14 @@ export const TradingBot = () => {
         isRunning={isRunning}
         onRefreshData={refreshData}
       />
+
+      {showApiConfig && (
+        <ApiKeyConfig
+          apiKeys={apiKeys}
+          onSave={handleSaveApiKeys}
+          onCancel={() => setShowApiConfig(false)}
+        />
+      )}
     </div>
   );
 };

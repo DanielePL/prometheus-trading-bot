@@ -15,7 +15,8 @@ import {
   AlertCircle, 
   Clock, 
   Zap, 
-  Activity 
+  Activity,
+  KeyRound
 } from 'lucide-react';
 
 interface BotControlPanelProps {
@@ -36,6 +37,7 @@ interface BotControlPanelProps {
   };
   tradingPairs: { value: string, label: string }[];
   tradingStrategies: { value: string, label: string }[];
+  hasApiKeys: boolean;
   onStartBot: () => void;
   onStopBot: () => void;
   onClearLogs: () => void;
@@ -44,6 +46,7 @@ interface BotControlPanelProps {
   onTradingStrategyChange: (value: string) => void;
   onRiskLevelChange: (value: any) => void;
   onMaxTradingAmountChange: (value: string) => void;
+  onConfigureApiKeys: () => void;
 }
 
 export const BotControlPanel: React.FC<BotControlPanelProps> = ({
@@ -59,6 +62,7 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
   lastTrade,
   tradingPairs,
   tradingStrategies,
+  hasApiKeys,
   onStartBot,
   onStopBot,
   onClearLogs,
@@ -66,7 +70,8 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
   onTradingPairChange,
   onTradingStrategyChange,
   onRiskLevelChange,
-  onMaxTradingAmountChange
+  onMaxTradingAmountChange,
+  onConfigureApiKeys
 }) => {
   return (
     <Card className="lg:col-span-1">
@@ -118,14 +123,36 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
               <span className="text-sm">Live trading mode uses real funds. Trade with caution.</span>
             </div>
           )}
+          
+          {tradeMode === 'live' && !hasApiKeys && (
+            <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+              <span className="text-sm">Exchange API keys required for live trading</span>
+              <Button size="sm" variant="outline" onClick={onConfigureApiKeys}>
+                <KeyRound className="mr-2 h-4 w-4" />
+                Configure
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Configuration */}
         <div className="space-y-4">
-          <h3 className="font-medium flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Bot Configuration
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Bot Configuration
+            </h3>
+            
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={onConfigureApiKeys}
+              className="h-8"
+            >
+              <KeyRound className="mr-2 h-3 w-3" />
+              API Keys
+            </Button>
+          </div>
           
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">

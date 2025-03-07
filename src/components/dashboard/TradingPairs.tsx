@@ -15,6 +15,10 @@ interface TradingPair {
   strategy: string;
 }
 
+interface TradingPairsProps {
+  onSelectSymbol?: (symbol: string) => void;
+}
+
 const tradingPairs: TradingPair[] = [
   {
     id: '1',
@@ -63,7 +67,15 @@ const tradingPairs: TradingPair[] = [
   },
 ];
 
-export const TradingPairs = () => {
+export const TradingPairs: React.FC<TradingPairsProps> = ({ onSelectSymbol }) => {
+  const handleRowClick = (pair: TradingPair) => {
+    // Extract the symbol from the pair name (e.g., "BTC/USDT" -> "BTC-USD")
+    const symbol = pair.name.replace('/', '-').replace('USDT', 'USD');
+    if (onSelectSymbol) {
+      onSelectSymbol(symbol);
+    }
+  };
+
   return (
     <Card className="col-span-full">
       <CardHeader>
@@ -84,7 +96,11 @@ export const TradingPairs = () => {
           </TableHeader>
           <TableBody>
             {tradingPairs.map((pair) => (
-              <TableRow key={pair.id} className="hover:bg-secondary/50 transition-colors">
+              <TableRow 
+                key={pair.id} 
+                className="hover:bg-secondary/50 transition-colors cursor-pointer"
+                onClick={() => handleRowClick(pair)}
+              >
                 <TableCell className="font-medium">{pair.name}</TableCell>
                 <TableCell>{pair.price}</TableCell>
                 <TableCell>

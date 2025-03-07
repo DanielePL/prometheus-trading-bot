@@ -116,22 +116,22 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
     setScanComplete(false);
     
     toast.info('Market-wide scan initiated', {
-      description: 'Scanning top cryptocurrencies for bull run patterns'
+      description: 'Scanning cryptocurrencies for bull run patterns'
     });
     
-    // Get the top cryptocurrencies to scan
-    const topCurrencies = marketData.slice(0, 20); // Scan top 20 cryptocurrencies
+    // Get the cryptocurrencies to scan - increased to 100
+    const currenciesToScan = marketData.slice(0, 100); // Scan up to 100 cryptocurrencies
     let scannedCount = 0;
     const results: ScanResult[] = [];
     
-    for (const currency of topCurrencies) {
+    for (const currency of currenciesToScan) {
       try {
         // Create trading pair format
         const pair = `${currency.symbol}-USD`;
         
         // Update progress
         scannedCount++;
-        setScanProgress(Math.round((scannedCount / topCurrencies.length) * 100));
+        setScanProgress(Math.round((scannedCount / currenciesToScan.length) * 100));
         
         // Fetch and analyze data
         const candles = await exchangeAPI.fetchCandles(pair, '1h');
@@ -157,7 +157,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
         setMarketScanResults([...results]);
         
         // Simulate API delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 200)); // Reduced the delay slightly
       } catch (error) {
         console.error(`Error scanning ${currency.symbol}:`, error);
       }
@@ -254,7 +254,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
           {scanningMarket ? (
             <div className="py-2 space-y-3">
               <div className="flex justify-between text-xs">
-                <span>Scanning market...</span>
+                <span>Scanning market ({Math.round(scanProgress)}% complete)...</span>
                 <span>{scanProgress}%</span>
               </div>
               <Progress 
@@ -301,7 +301,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
                 {expandResults ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-1">
-                <div className="max-h-24 overflow-y-auto space-y-1 text-xs">
+                <div className="max-h-40 overflow-y-auto space-y-1 text-xs">
                   {marketScanResults.map((result, index) => (
                     <div 
                       key={result.symbol} 

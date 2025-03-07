@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -22,7 +23,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center relative">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground mt-1">
@@ -31,15 +32,6 @@ const Dashboard = () => {
           </div>
           
           <div className="flex space-x-2 items-center">
-            <div className="mr-4">
-              <BullRunIndicator 
-                isBullRun={true}
-                confidence={0.85}
-                lastDetected="Just now"
-                stopLossPercentage={3.5}
-              />
-            </div>
-            
             {!botState.isExchangeConnected && (
               <Button onClick={botActions.reconnectExchange} variant="default">
                 <Zap className="mr-2 h-4 w-4" />
@@ -60,6 +52,15 @@ const Dashboard = () => {
                 Market Intelligence
               </Link>
             </Button>
+          </div>
+          
+          <div className="absolute right-0 top-0 sm:-top-1 md:-top-2 -mt-2 sm:mt-0">
+            <BullRunIndicator 
+              isBullRun={true}
+              confidence={0.85}
+              lastDetected="Just now"
+              stopLossPercentage={3.5}
+            />
           </div>
         </div>
         

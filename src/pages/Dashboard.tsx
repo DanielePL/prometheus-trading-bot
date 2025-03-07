@@ -55,7 +55,7 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Portfolio Value"
             value="$10,000.00"
@@ -80,7 +80,7 @@ const Dashboard = () => {
               change={0}
               icon={<CircleDollarSign className="h-4 w-4" />}
             />
-            <div className="absolute -top-3 -right-3">
+            <div className="absolute top-1/2 -right-1/2 transform -translate-y-1/2 z-10">
               <BullRunIndicator 
                 isBullRun={true}
                 confidence={0.85}

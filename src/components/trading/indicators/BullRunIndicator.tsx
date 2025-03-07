@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Radar } from 'lucide-react';
+import { Radar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -95,21 +94,20 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
     <Card className={`
       w-[5cm] h-[5cm] 
       ${isBullRun 
-        ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30 shadow-[0_0_10px_rgba(34,197,94,0.5)]' 
-        : 'border-gray-200 dark:border-gray-800 bg-background'}
+        ? 'border-green-500 dark:border-green-400 bg-green-950/90 text-white dark:bg-green-900/90 shadow-[0_0_10px_rgba(34,197,94,0.5)]' 
+        : 'border-gray-700 dark:border-gray-700 bg-gray-900/90 text-gray-100'}
       ${isAnimating ? 'animate-pulse' : ''}
-      transition-all duration-300 overflow-hidden
+      transition-all duration-300 overflow-hidden rounded-md
     `}>
       <CardContent className="p-3 flex flex-col h-full justify-between">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1">
-            <TrendingUp className={`h-4 w-4 ${isBullRun ? 
-              'text-green-500 animate-pulse' : 'text-gray-400'}`} />
-            <span className="text-sm font-medium">Bull Run Detector</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">Bull Run</span>
+            <span className="text-xs font-medium">Detector</span>
           </div>
           
           {isBullRun && (
-            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 animate-pulse text-xs py-0 px-2">
+            <Badge className="bg-green-500 text-white dark:bg-green-500 dark:text-white text-xs py-0 px-2">
               Active
             </Badge>
           )}
@@ -119,42 +117,42 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
           {isBullRun ? (
             <>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Confidence</span>
+                <span className="text-xs">Confidence</span>
                 <span className="text-sm font-semibold">{formattedConfidence}</span>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Stop Loss</span>
-                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs py-0 px-1">
+                <span className="text-xs">Stop Loss</span>
+                <Badge variant="outline" className="bg-amber-500/20 text-amber-400 border-amber-500/50 text-xs py-0 px-1">
                   {stopLossPercentage.toFixed(1)}%
                 </Badge>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Detected</span>
-                <span className="text-xs text-muted-foreground">{lastScanTime}</span>
+                <span className="text-xs">Detected</span>
+                <span className="text-xs text-gray-400">{lastScanTime}</span>
               </div>
             </>
           ) : (
-            <div className="text-sm text-center text-muted-foreground py-4">
+            <div className="text-sm text-center text-gray-400 py-4">
               {isAutoScanning ? 'Scanning for patterns...' : 'No bull run detected'}
             </div>
           )}
         </div>
         
-        <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-100 dark:border-gray-800">
+        <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-700/50 dark:border-gray-700/50">
           <div className="flex items-center">
-            <Radar className={`h-3 w-3 mr-1 ${isAutoScanning ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
-            <span className="text-xs text-muted-foreground">
+            <Radar className={`h-3 w-3 mr-1 ${isAutoScanning ? 'text-blue-400 animate-pulse' : 'text-gray-400'}`} />
+            <span className="text-xs text-gray-400">
               {isAutoScanning ? 'Auto' : 'Manual'}
             </span>
           </div>
           
           <Button 
             size="sm" 
-            variant={isAutoScanning ? "destructive" : "default"}
+            variant={isAutoScanning ? "destructive" : "secondary"}
             onClick={isAutoScanning ? stopAutoScan : startAutoScan}
-            className="text-xs h-7 px-2 min-w-0"
+            className="text-xs h-6 px-2 min-w-0 bg-white/10 hover:bg-white/20 text-white rounded"
           >
             {isAutoScanning ? 'Stop' : 'Scan'}
           </Button>

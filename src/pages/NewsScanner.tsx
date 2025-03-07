@@ -47,7 +47,7 @@ const NewsScanner = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Market Intelligence</h1>
             <p className="text-muted-foreground mt-1">
-              Scan and analyze news sources to enhance trading decisions
+              Scan crypto markets and news sources to enhance trading decisions
             </p>
           </div>
           
@@ -58,7 +58,7 @@ const NewsScanner = () => {
             disabled={isScanning}
           >
             <RefreshCw className={`h-4 w-4 ${isScanning ? 'animate-spin' : ''}`} />
-            {isScanning ? 'Scanning...' : 'Scan Now'}
+            {isScanning ? 'Scanning...' : 'Scan News'}
           </Button>
         </div>
         

@@ -1,3 +1,4 @@
+
 import { Candle, OrderBook } from '../trading/TradingBotAPI';
 
 export interface BullRunParameters {
@@ -17,6 +18,10 @@ export class BullRunDetector {
   // Detection history
   private detectionHistory: BullRunParameters[] = [];
   
+  // Cache for recent results to avoid redundant calculations
+  private resultCache: Map<string, { result: BullRunParameters, timestamp: number }> = new Map();
+  private cacheTTL: number = 5 * 60 * 1000; // 5 minutes cache TTL
+  
   constructor() {
     // Load detection history from localStorage if available
     try {
@@ -30,7 +35,15 @@ export class BullRunDetector {
   }
   
   // Analyze market data for bull run patterns
-  analyzeMarket(candles: Candle[], orderBook: OrderBook): BullRunParameters {
+  analyzeMarket(candles: Candle[], orderBook: OrderBook, symbolKey?: string): BullRunParameters {
+    // Check cache if symbolKey is provided
+    if (symbolKey) {
+      const cachedResult = this.resultCache.get(symbolKey);
+      if (cachedResult && (Date.now() - cachedResult.timestamp) < this.cacheTTL) {
+        return cachedResult.result;
+      }
+    }
+    
     if (candles.length < 50) {
       return {
         isBullRun: false,
@@ -96,6 +109,14 @@ export class BullRunDetector {
       
       // Save to localStorage
       localStorage.setItem('bull_run_history', JSON.stringify(this.detectionHistory));
+    }
+    
+    // Cache result if symbolKey is provided
+    if (symbolKey) {
+      this.resultCache.set(symbolKey, {
+        result,
+        timestamp: Date.now()
+      });
     }
     
     return result;

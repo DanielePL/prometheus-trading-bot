@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, AlertTriangle } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Radar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface BullRunIndicatorProps {
   isBullRun: boolean;
@@ -12,13 +14,78 @@ interface BullRunIndicatorProps {
 }
 
 export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
-  isBullRun,
-  confidence,
+  isBullRun: initialIsBullRun,
+  confidence: initialConfidence,
   lastDetected = 'Just now',
-  stopLossPercentage
+  stopLossPercentage: initialStopLossPercentage
 }) => {
+  const [isBullRun, setIsBullRun] = useState(initialIsBullRun);
+  const [confidence, setConfidence] = useState(initialConfidence);
+  const [stopLossPercentage, setStopLossPercentage] = useState(initialStopLossPercentage);
+  const [isAutoScanning, setIsAutoScanning] = useState(false);
+  const [scanInterval, setScanInterval] = useState<NodeJS.Timeout | null>(null);
+  const [lastScanTime, setLastScanTime] = useState(lastDetected);
+  
   // Format confidence as percentage
   const formattedConfidence = `${Math.round(confidence * 100)}%`;
+  
+  // Function to simulate a bull run detection scan
+  const performBullRunScan = () => {
+    // In a real implementation, this would analyze market data
+    // For demo purposes, we're using random values
+    const newIsBullRun = Math.random() > 0.4; // 60% chance of bull run
+    const newConfidence = 0.65 + (Math.random() * 0.3);
+    const newStopLoss = newIsBullRun ? Math.max(1.0, (newConfidence * 10).toFixed(1)) : 1.0;
+    
+    setIsBullRun(newIsBullRun);
+    setConfidence(newConfidence);
+    setStopLossPercentage(parseFloat(newStopLoss.toString()));
+    setLastScanTime(new Date().toLocaleTimeString());
+    
+    if (newIsBullRun) {
+      toast.success('Bull run pattern detected!', {
+        description: `Confidence: ${Math.round(newConfidence * 100)}%, Stop Loss: ${newStopLoss}%`,
+      });
+    }
+  };
+  
+  // Start auto-scanning
+  const startAutoScan = () => {
+    if (isAutoScanning) return;
+    
+    toast.info('Auto-scan enabled', {
+      description: 'Scanner will check for bull run patterns every 30 seconds'
+    });
+    
+    setIsAutoScanning(true);
+    performBullRunScan(); // Initial scan
+    
+    const interval = setInterval(() => {
+      performBullRunScan();
+    }, 30000); // Scan every 30 seconds
+    
+    setScanInterval(interval);
+  };
+  
+  // Stop auto-scanning
+  const stopAutoScan = () => {
+    if (!isAutoScanning || !scanInterval) return;
+    
+    clearInterval(scanInterval);
+    setScanInterval(null);
+    setIsAutoScanning(false);
+    
+    toast.info('Auto-scan disabled');
+  };
+  
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (scanInterval) {
+        clearInterval(scanInterval);
+      }
+    };
+  }, [scanInterval]);
   
   return (
     <Card className={`border ${isBullRun ? 'border-green-400 dark:border-green-600' : 'border-gray-200 dark:border-gray-800'}`}>
@@ -53,7 +120,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
               
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Detected</span>
-                <span className="text-sm text-muted-foreground">{lastDetected}</span>
+                <span className="text-sm text-muted-foreground">{lastScanTime}</span>
               </div>
               
               <div className="flex justify-between items-center">
@@ -75,10 +142,28 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
           {!isBullRun && (
             <div className="p-3 flex items-center justify-center">
               <div className="text-sm text-muted-foreground">
-                Scanning market for bullish patterns...
+                {isAutoScanning ? 'Auto-scanning for bullish patterns...' : 'Enable auto-scan to detect bull runs'}
               </div>
             </div>
           )}
+          
+          <div className="flex justify-between items-center pt-2">
+            <div className="flex items-center">
+              <Radar className={`h-4 w-4 mr-1 ${isAutoScanning ? 'text-blue-500 animate-pulse' : 'text-gray-400'}`} />
+              <span className="text-xs text-muted-foreground">
+                {isAutoScanning ? 'Auto-scan active' : 'Auto-scan inactive'}
+              </span>
+            </div>
+            
+            <Button 
+              size="sm" 
+              variant={isAutoScanning ? "destructive" : "default"}
+              onClick={isAutoScanning ? stopAutoScan : startAutoScan}
+              className="text-xs h-8 px-2"
+            >
+              {isAutoScanning ? 'Stop Scan' : 'Auto Scan'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { NewsSourceManager } from '@/components/news/NewsSourceManager';
 import { NewsResults } from '@/components/news/NewsResults';
@@ -76,6 +76,7 @@ const NewsScanner = () => {
                 </div>
                 
                 <div className="space-y-6">
+                  {/* No need to control BullRunIndicator from here anymore, it's self-contained */}
                   <BullRunIndicator 
                     isBullRun={isBullRun}
                     confidence={0.78}

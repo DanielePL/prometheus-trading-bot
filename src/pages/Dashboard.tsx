@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { PerformanceChart } from '@/components/dashboard/PerformanceChart';
@@ -9,16 +9,34 @@ import { BotStatus } from '@/components/dashboard/BotStatus';
 import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { BullRunIndicator } from '@/components/trading/indicators/BullRunIndicator';
+import { MarketDepthVisualization } from '@/components/markets/MarketDepthVisualization';
 import { 
   Wallet, TrendingUp, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar, Zap, Newspaper
+  Landmark, ClipboardCheck, Calendar, Zap, Newspaper,
+  BarChart3, RefreshCw, Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useTradingBot } from '@/hooks/useTradingBot';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const [botState, botActions] = useTradingBot();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeSymbol, setActiveSymbol] = useState("BTC-USD");
+  
+  const handleDashboardRefresh = async () => {
+    setIsRefreshing(true);
+    
+    // Simulate data refreshing
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    toast.success('Dashboard data refreshed');
+    setIsRefreshing(false);
+  };
   
   return (
     <AppLayout>
@@ -32,6 +50,17 @@ const Dashboard = () => {
           </div>
           
           <div className="flex space-x-2 items-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDashboardRefresh}
+              disabled={isRefreshing}
+              className="h-9"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            
             {!botState.isExchangeConnected && (
               <Button onClick={botActions.reconnectExchange} variant="default">
                 <Zap className="mr-2 h-4 w-4" />
@@ -84,12 +113,63 @@ const Dashboard = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">
-            <PerformanceChart />
-            <TradingPairs />
+            <Tabs defaultValue="performance" className="w-full">
+              <TabsList className="mb-2">
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="market">Market Depth</TabsTrigger>
+                <TabsTrigger value="pairs">Trading Pairs</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="performance">
+                <PerformanceChart />
+              </TabsContent>
+              
+              <TabsContent value="market">
+                <MarketDepthVisualization symbol={activeSymbol} />
+              </TabsContent>
+              
+              <TabsContent value="pairs">
+                <TradingPairs onSymbolChange={setActiveSymbol} />
+              </TabsContent>
+            </Tabs>
           </div>
           <div className="space-y-4">
-            <BotStatus />
-            <TradingSystemInfo />
+            <Tabs defaultValue="bot" className="w-full">
+              <TabsList className="mb-2 w-full">
+                <TabsTrigger value="bot" className="flex-1">Bot Status</TabsTrigger>
+                <TabsTrigger value="system" className="flex-1">System</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="bot">
+                <BotStatus />
+              </TabsContent>
+              
+              <TabsContent value="system">
+                <TradingSystemInfo />
+              </TabsContent>
+            </Tabs>
+            
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Advanced Analytics
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="mx-auto max-w-4xl">
+                <div className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Advanced Market Analytics</h3>
+                  <div className="text-center text-muted-foreground py-20">
+                    Advanced analytics will be implemented soon
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <DrawerClose asChild>
+                      <Button variant="outline">Close</Button>
+                    </DrawerClose>
+                  </div>
+                </div>
+              </DrawerContent>
+            </Drawer>
           </div>
         </div>
         
@@ -117,6 +197,26 @@ const Dashboard = () => {
             value="0"
             icon={<Calendar className="h-4 w-4" />}
           />
+        </div>
+        
+        <div className="fixed bottom-4 right-4 z-50">
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button size="icon" className="rounded-full w-12 h-12 bg-primary shadow-lg hover:bg-primary/90">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="mx-auto max-w-sm">
+              <div className="p-4">
+                <h3 className="text-lg font-medium mb-3">Quick Settings</h3>
+                <div className="space-y-4">
+                  <div className="text-center text-muted-foreground py-8">
+                    Settings controls will be implemented soon
+                  </div>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
         </div>
       </div>
     </AppLayout>

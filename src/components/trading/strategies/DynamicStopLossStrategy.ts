@@ -1,182 +1,266 @@
 
 import { TradingStrategy, TradingSignal, Candle, OrderBook } from '../TradingBotAPI';
+import { BullRunParameters } from '../../dashboard/BullRunDetector';
 
-/**
- * DynamicStopLossStrategy combines a momentum-based approach with dynamic stop loss management.
- * It scans for bull runs (sustained upward price movements) and adjusts stop loss levels
- * based on current profit percentage.
- */
 export class DynamicStopLossStrategy implements TradingStrategy {
-  private lookbackPeriod: number;
-  private momentumThreshold: number;
-  private minimumStopLoss: number; // Minimum stop loss percentage
-  private trailingFactor: number; // How much of gains to protect
-  
-  constructor(
-    lookbackPeriod: number = 8, 
-    momentumThreshold: number = 0.02, 
-    minimumStopLoss: number = 0.01, 
-    trailingFactor: number = 0.8
-  ) {
-    this.lookbackPeriod = lookbackPeriod;
-    this.momentumThreshold = momentumThreshold;
-    this.minimumStopLoss = minimumStopLoss;
-    this.trailingFactor = trailingFactor;
+  private volatilityMultiplier: number = 2.0;
+  private atrPeriod: number = 14;
+  private bullRunConfidence: number = 0;
+  private lastBullRun: Date | null = null;
+
+  constructor() {
+    // Initialize bull run data from local storage if available
+    try {
+      const storedData = localStorage.getItem('bull_run_data');
+      if (storedData) {
+        const { confidence, timestamp } = JSON.parse(storedData);
+        this.bullRunConfidence = confidence || 0;
+        this.lastBullRun = timestamp ? new Date(timestamp) : null;
+      }
+    } catch (error) {
+      console.error('Error loading bull run data:', error);
+    }
   }
-  
+
   getName(): string {
-    return "Dynamic Stop Loss + Bull Run Scanner";
+    return "Dynamic Stop Loss with Bull Run Detection";
   }
-  
+
+  // Allow updating the bull run parameters from external components
+  updateBullRunData(params: BullRunParameters): void {
+    this.bullRunConfidence = params.confidence;
+    this.lastBullRun = new Date();
+    
+    // Store bull run data in local storage for persistence
+    localStorage.setItem('bull_run_data', JSON.stringify({
+      confidence: this.bullRunConfidence,
+      timestamp: this.lastBullRun.toISOString()
+    }));
+  }
+
   analyze(candles: Candle[], orderBook: OrderBook): TradingSignal {
-    if (candles.length < this.lookbackPeriod + 1) {
+    if (candles.length < this.atrPeriod + 1) {
       return {
         action: 'hold',
         confidence: 0,
-        reason: 'Not enough data for analysis'
+        reason: 'Not enough data for proper analysis'
       };
     }
     
-    // Calculate recent price movement
+    // Calculate Average True Range (ATR) for volatility measurement
+    const atr = this.calculateATR(candles, this.atrPeriod);
+    
+    // Calculate various price levels
     const currentPrice = candles[candles.length - 1].close;
-    const lookbackPrice = candles[candles.length - this.lookbackPeriod - 1].close;
-    const priceChange = (currentPrice - lookbackPrice) / lookbackPrice;
+    const previousClose = candles[candles.length - 2].close;
+    const priceChange = (currentPrice - previousClose) / previousClose;
     
-    // Check for bull run (significant upward momentum)
-    const isBullRun = this.detectBullRun(candles);
+    // Calculate key support and resistance levels
+    const pivotPoints = this.calculatePivotPoints(candles);
+    const { supportLevels, resistanceLevels } = pivotPoints;
     
-    // Calculate volume trend
-    const volumeTrend = this.calculateVolumeTrend(candles);
+    // Calculate moving averages for trend identification
+    const sma20 = this.calculateSMA(candles, 20);
+    const sma50 = this.calculateSMA(candles, 50);
+    const sma200 = this.calculateSMA(candles, 200);
     
-    // Calculate dynamic stop loss
-    const stopLossLevel = this.calculateDynamicStopLoss(candles, priceChange);
+    // Check for volume confirmation
+    const volumeRatio = this.calculateVolumeRatio(candles, 5);
     
-    // Check for strong buy signal (bull run + increasing volume)
-    if (isBullRun && volumeTrend > 1.1 && priceChange > this.momentumThreshold) {
+    // Determine trend strength
+    const trendStrength = this.calculateTrendStrength(candles);
+    
+    // Incorporate bull run confidence into the strategy
+    let bullRunFactor = 0;
+    if (this.bullRunConfidence > 0) {
+      // Check if bull run detection is recent (within the last 24 hours)
+      const isRecent = this.lastBullRun && 
+                       (new Date().getTime() - this.lastBullRun.getTime()) < 24 * 60 * 60 * 1000;
+      
+      bullRunFactor = isRecent ? this.bullRunConfidence : 0;
+    }
+    
+    // Dynamic stop loss calculation based on ATR and bull run factor
+    const baseStopLossPercentage = atr / currentPrice * 100;
+    const adjustedStopLossPercentage = bullRunFactor > 0.5 
+      ? baseStopLossPercentage * (1 - bullRunFactor * 0.4) // Tighter stop loss during bull runs
+      : baseStopLossPercentage;
+    
+    // Combine all factors to make a decision
+    
+    // Strong uptrend with volume confirmation and bull run
+    if (sma20 > sma50 && sma50 > sma200 && volumeRatio > 1.2 && bullRunFactor > 0.6) {
+      const nearestResistance = resistanceLevels.find(r => r > currentPrice) || currentPrice * 1.05;
+      const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
+      
       return {
         action: 'buy',
-        confidence: Math.min(0.9, 0.6 + priceChange * 2),
+        confidence: Math.min(0.8 + bullRunFactor * 0.2, 0.95),
+        targetPrice: nearestResistance,
+        stopLoss,
+        reason: `Strong uptrend with volume confirmation${bullRunFactor > 0 ? ' and bull run pattern' : ''}`
+      };
+    }
+    
+    // Strong downtrend with increasing volume
+    if (sma20 < sma50 && sma50 < sma200 && volumeRatio > 1.5) {
+      const nearestSupport = supportLevels.find(s => s < currentPrice) || currentPrice * 0.95;
+      const stopLoss = currentPrice * (1 + adjustedStopLossPercentage / 100);
+      
+      return {
+        action: 'sell',
+        confidence: 0.7,
+        targetPrice: nearestSupport,
+        stopLoss,
+        reason: 'Strong downtrend with increasing volume'
+      };
+    }
+    
+    // Breakout from range with volume surge during bull run
+    if (trendStrength < 0.3 && priceChange > 0.02 && volumeRatio > 2 && bullRunFactor > 0.7) {
+      const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
+      
+      return {
+        action: 'buy',
+        confidence: 0.75,
+        targetPrice: currentPrice * 1.1,
+        stopLoss,
+        reason: 'Breakout from range with volume surge during bull run'
+      };
+    }
+    
+    // Pullback to support in uptrend
+    if (sma20 > sma50 && currentPrice < sma20 && 
+        supportLevels.some(s => Math.abs(s - currentPrice) / currentPrice < 0.01)) {
+      const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
+      
+      return {
+        action: 'buy',
+        confidence: 0.6,
+        targetPrice: sma20 * 1.02,
+        stopLoss,
+        reason: 'Pullback to support in overall uptrend'
+      };
+    }
+    
+    // Bounce from support during bull run
+    if (bullRunFactor > 0.6 && 
+        supportLevels.some(s => Math.abs(s - currentPrice) / currentPrice < 0.01)) {
+      const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
+      
+      return {
+        action: 'buy',
+        confidence: 0.7,
         targetPrice: currentPrice * 1.05,
-        stopLoss: currentPrice * (1 - stopLossLevel),
-        reason: `Bull run detected with increasing volume. Dynamic stop loss set at ${(stopLossLevel * 100).toFixed(2)}%`
+        stopLoss,
+        reason: 'Bounce from support during bull run phase'
       };
     }
     
-    // Check for sell signal (price reversal after uptrend)
-    if (priceChange > 0.01 && this.detectReversal(candles)) {
-      return {
-        action: 'sell',
-        confidence: Math.min(0.8, 0.5 + Math.abs(priceChange)),
-        targetPrice: currentPrice * 0.97,
-        stopLoss: currentPrice * 1.02,
-        reason: 'Price reversal detected after uptrend, taking profits'
-      };
-    }
-    
-    // Weak bull signal
-    if (priceChange > 0.005) {
-      return {
-        action: 'buy',
-        confidence: 0.4,
-        targetPrice: currentPrice * 1.03,
-        stopLoss: currentPrice * (1 - stopLossLevel),
-        reason: `Positive momentum detected. Dynamic stop loss set at ${(stopLossLevel * 100).toFixed(2)}%`
-      };
-    }
-    
-    // Weak bear signal
-    if (priceChange < -0.01) {
-      return {
-        action: 'sell',
-        confidence: 0.3,
-        targetPrice: currentPrice * 0.97,
-        stopLoss: currentPrice * 1.015,
-        reason: 'Downward momentum detected'
-      };
-    }
-    
+    // No clear signal
     return {
       action: 'hold',
       confidence: 0.5,
-      reason: 'No significant trend detected'
+      reason: 'No clear trading signal based on current market conditions'
     };
   }
   
-  /**
-   * Detects a bull run by checking for consecutive higher lows and higher highs
-   */
-  private detectBullRun(candles: Candle[]): boolean {
-    const recentCandles = candles.slice(-this.lookbackPeriod);
+  // Calculate Average True Range (ATR)
+  private calculateATR(candles: Candle[], period: number): number {
+    if (candles.length < period + 1) return 0;
     
-    let higherHighsCount = 0;
-    let higherLowsCount = 0;
+    const trs: number[] = [];
+    for (let i = 1; i < candles.length; i++) {
+      const high = candles[i].high;
+      const low = candles[i].low;
+      const prevClose = candles[i - 1].close;
+      
+      const tr1 = high - low;
+      const tr2 = Math.abs(high - prevClose);
+      const tr3 = Math.abs(low - prevClose);
+      
+      trs.push(Math.max(tr1, tr2, tr3));
+    }
     
-    // Check for higher highs
-    for (let i = 2; i < recentCandles.length; i++) {
-      if (recentCandles[i].high > recentCandles[i-2].high) {
-        higherHighsCount++;
+    // Calculate the ATR as an average of the last 'period' true ranges
+    const relevantTRs = trs.slice(-period);
+    const sum = relevantTRs.reduce((acc, val) => acc + val, 0);
+    return sum / relevantTRs.length;
+  }
+  
+  // Calculate Simple Moving Average
+  private calculateSMA(candles: Candle[], period: number): number {
+    if (candles.length < period) return 0;
+    
+    const relevantCandles = candles.slice(-period);
+    const sum = relevantCandles.reduce((acc, candle) => acc + candle.close, 0);
+    return sum / relevantCandles.length;
+  }
+  
+  // Calculate pivot points, support and resistance levels
+  private calculatePivotPoints(candles: Candle[]): { pivotPoint: number, supportLevels: number[], resistanceLevels: number[] } {
+    // Use the most recent complete candle for calculations
+    const lastCandle = candles[candles.length - 1];
+    const high = lastCandle.high;
+    const low = lastCandle.low;
+    const close = lastCandle.close;
+    
+    // Calculate the pivot point
+    const pivotPoint = (high + low + close) / 3;
+    
+    // Calculate support levels
+    const s1 = 2 * pivotPoint - high;
+    const s2 = pivotPoint - (high - low);
+    const s3 = low - 2 * (high - pivotPoint);
+    
+    // Calculate resistance levels
+    const r1 = 2 * pivotPoint - low;
+    const r2 = pivotPoint + (high - low);
+    const r3 = high + 2 * (pivotPoint - low);
+    
+    return {
+      pivotPoint,
+      supportLevels: [s1, s2, s3],
+      resistanceLevels: [r1, r2, r3]
+    };
+  }
+  
+  // Calculate volume ratio compared to average
+  private calculateVolumeRatio(candles: Candle[], period: number): number {
+    if (candles.length < period + 1) return 1;
+    
+    const currentVolume = candles[candles.length - 1].volume;
+    const previousVolumes = candles.slice(-period - 1, -1);
+    const avgVolume = previousVolumes.reduce((acc, candle) => acc + candle.volume, 0) / previousVolumes.length;
+    
+    return avgVolume > 0 ? currentVolume / avgVolume : 1;
+  }
+  
+  // Calculate trend strength using ADX-like approach
+  private calculateTrendStrength(candles: Candle[]): number {
+    if (candles.length < 14) return 0.5;
+    
+    // Simplified trend strength calculation
+    const closes = candles.map(c => c.close);
+    let upMoves = 0;
+    let downMoves = 0;
+    
+    for (let i = 1; i < closes.length; i++) {
+      if (closes[i] > closes[i - 1]) {
+        upMoves++;
+      } else if (closes[i] < closes[i - 1]) {
+        downMoves++;
       }
     }
     
-    // Check for higher lows
-    for (let i = 2; i < recentCandles.length; i++) {
-      if (recentCandles[i].low > recentCandles[i-2].low) {
-        higherLowsCount++;
-      }
-    }
+    const totalMoves = upMoves + downMoves;
+    if (totalMoves === 0) return 0.5;
     
-    // Bull run requires both higher highs and higher lows
-    const higherHighsRatio = higherHighsCount / (recentCandles.length - 2);
-    const higherLowsRatio = higherLowsCount / (recentCandles.length - 2);
+    // Calculate directional strength
+    const upStrength = upMoves / totalMoves;
+    const downStrength = downMoves / totalMoves;
     
-    return higherHighsRatio > 0.6 && higherLowsRatio > 0.5;
-  }
-  
-  /**
-   * Calculates dynamic stop loss based on current profit percentage
-   * - Minimum stop loss is applied when profit is low or negative
-   * - As profit increases, stop loss trails behind by trailingFactor
-   */
-  private calculateDynamicStopLoss(candles: Candle[], currentProfitPercentage: number): number {
-    if (currentProfitPercentage <= 0) {
-      return this.minimumStopLoss;
-    }
-    
-    // Dynamic stop loss: min stop loss + (profit * trailing factor)
-    // Example: 1% minimum stop loss, 80% trailing factor
-    // - At 5% profit: stop loss = 1% + (5% * 80%) = 5%
-    // - At 10% profit: stop loss = 1% + (10% * 80%) = 9%
-    const dynamicStopLoss = this.minimumStopLoss + (currentProfitPercentage * this.trailingFactor);
-    
-    return Math.max(this.minimumStopLoss, dynamicStopLoss);
-  }
-  
-  /**
-   * Detect a potential price reversal
-   */
-  private detectReversal(candles: Candle[]): boolean {
-    const recentCandles = candles.slice(-3);
-    
-    // Simple reversal pattern: price was going up, then makes a lower high and lower low
-    if (recentCandles[0].close < recentCandles[0].open &&  // Bearish candle
-        recentCandles[1].high < recentCandles[0].high &&  // Lower high
-        recentCandles[2].low < recentCandles[1].low) {    // Lower low
-      return true;
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Calculate volume trend (increasing or decreasing)
-   */
-  private calculateVolumeTrend(candles: Candle[]): number {
-    const recentCandles = candles.slice(-this.lookbackPeriod);
-    const olderCandles = candles.slice(-this.lookbackPeriod * 2, -this.lookbackPeriod);
-    
-    const recentVolume = recentCandles.reduce((sum, candle) => sum + candle.volume, 0);
-    const olderVolume = olderCandles.reduce((sum, candle) => sum + candle.volume, 0);
-    
-    return olderVolume > 0 ? recentVolume / olderVolume : 1;
+    // Return trend strength (0 = no trend, 1 = very strong trend)
+    return Math.abs(upStrength - downStrength);
   }
 }

@@ -218,7 +218,7 @@ export const PortfolioDiversificationTool = () => {
                   <SelectValue placeholder="Select time horizon" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="short">Short-term (< 1 year)</SelectItem>
+                  <SelectItem value="short">Short-term (&lt; 1 year)</SelectItem>
                   <SelectItem value="medium">Medium-term (1-3 years)</SelectItem>
                   <SelectItem value="long">Long-term (3+ years)</SelectItem>
                 </SelectContent>
@@ -244,7 +244,7 @@ export const PortfolioDiversificationTool = () => {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => [`${value}%`, 'Allocation']}
+                      formatter={(value) => [`${value}%`, 'Allocation']}
                       contentStyle={{ 
                         backgroundColor: 'var(--background)',
                         borderColor: 'var(--border)',
@@ -325,7 +325,7 @@ export const PortfolioDiversificationTool = () => {
                         ))}
                       </Pie>
                       <Tooltip 
-                        formatter={(value: number) => [`${value}%`, 'Allocation']}
+                        formatter={(value) => [`${value}%`, 'Allocation']}
                         contentStyle={{ 
                           backgroundColor: 'var(--background)',
                           borderColor: 'var(--border)',
@@ -356,7 +356,7 @@ export const PortfolioDiversificationTool = () => {
                         ))}
                       </Pie>
                       <Tooltip 
-                        formatter={(value: number) => [`${value}%`, 'Allocation']}
+                        formatter={(value) => [`${value}%`, 'Allocation']}
                         contentStyle={{ 
                           backgroundColor: 'var(--background)',
                           borderColor: 'var(--border)',

@@ -25,6 +25,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   const [isAutoScanning, setIsAutoScanning] = useState(false);
   const [scanInterval, setScanInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastScanTime, setLastScanTime] = useState<string>(lastDetected);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   // Format confidence as percentage
   const formattedConfidence = `${Math.round(confidence * 100)}%`;
@@ -44,6 +45,9 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
     setLastScanTime(new Date().toLocaleTimeString());
     
     if (newIsBullRun) {
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 2000);
+      
       toast.success('Bull run pattern detected!', {
         description: `Confidence: ${Math.round(newConfidence * 100)}%, Stop Loss: ${newStopLoss}%`,
       });
@@ -79,6 +83,14 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
     toast.info('Auto-scan disabled');
   };
   
+  // Trigger initial animation if bull run is active
+  useEffect(() => {
+    if (initialIsBullRun) {
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 2000);
+    }
+  }, [initialIsBullRun]);
+  
   // Clean up interval on unmount
   useEffect(() => {
     return () => {
@@ -89,15 +101,19 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   }, [scanInterval]);
   
   return (
-    <Card className={`border ${isBullRun ? 'border-green-400 dark:border-green-600' : 'border-gray-200 dark:border-gray-800'}`}>
+    <Card className={`border transition-all duration-300 ${isAnimating ? 'scale-[1.02]' : ''} 
+      ${isBullRun 
+        ? 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-900/20' 
+        : 'border-gray-200 dark:border-gray-800'}`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className={`h-5 w-5 ${isBullRun ? 'text-green-500' : 'text-gray-400'}`} />
+            <TrendingUp className={`h-5 w-5 ${isBullRun ? 
+              'text-green-500 animate-pulse' : 'text-gray-400'}`} />
             Bull Run Scanner
           </div>
           {isBullRun && (
-            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 animate-pulse">
               Active
             </Badge>
           )}
@@ -107,7 +123,8 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium">Status</span>
-            <span className={`font-semibold ${isBullRun ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
+            <span className={`font-semibold ${isBullRun ? 
+              'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
               {isBullRun ? 'Bull Run Detected' : 'No Bull Run'}
             </span>
           </div>

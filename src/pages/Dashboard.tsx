@@ -55,6 +55,14 @@ const Dashboard = () => {
           </div>
         </div>
         
+        {/* Bull Run Indicator at the top for visibility */}
+        <BullRunIndicator 
+          isBullRun={true}
+          confidence={0.85}
+          lastDetected="Just now"
+          stopLossPercentage={3.5}
+        />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Portfolio Value"
@@ -89,13 +97,7 @@ const Dashboard = () => {
           <div className="space-y-4">
             <BotStatus />
             <TradingSystemInfo />
-            {/* Add Bull Run Indicator here */}
-            <BullRunIndicator 
-              isBullRun={false}
-              confidence={0.7}
-              lastDetected="Not detected yet"
-              stopLossPercentage={2.0}
-            />
+            {/* Removed duplicate BullRunIndicator from here */}
           </div>
         </div>
         

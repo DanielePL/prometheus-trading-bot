@@ -1,15 +1,27 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BotControlPanel } from './bot-control';
 import { BotLogPanel } from './BotLogPanel';
 import { ApiKeyConfig } from './ApiKeyConfig';
 import { ConnectionStatusPanel } from './ConnectionStatusPanel';
 import { useTradingBot, tradingPairs, tradingStrategies } from '@/hooks/useTradingBot';
 import { useToast } from '@/hooks/use-toast';
+import { WifiIcon } from 'lucide-react';
 
 export const TradingBot = () => {
   const [state, actions] = useTradingBot();
   const { toast } = useToast();
+
+  // Initialize connection on component mount if API keys are available
+  useEffect(() => {
+    if (state.apiKeys.exchangeApiKey && state.apiKeys.exchangeApiSecret && !state.isExchangeConnected) {
+      actions.reconnectExchange();
+      toast({
+        title: "Connecting to Exchange",
+        description: `Attempting to connect to Kraken API...`
+      });
+    }
+  }, []);
 
   const handleReconnect = () => {
     actions.reconnectExchange();

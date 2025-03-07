@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Wifi, WifiOff, RefreshCw, Server } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Server, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ConnectionStatusPanelProps {
@@ -50,6 +50,13 @@ export const ConnectionStatusPanel: React.FC<ConnectionStatusPanelProps> = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isConnected && (
+          <div className="flex items-center text-green-600 mb-2">
+            <CheckCircle className="h-5 w-5 mr-2" />
+            <span>Connected to {exchangeName} API</span>
+          </div>
+        )}
+        
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <span className="text-sm font-medium">Exchange</span>

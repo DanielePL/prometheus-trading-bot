@@ -10,24 +10,48 @@ import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar
+  Landmark, ClipboardCheck, Calendar, Zap
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { useTradingBot } from '@/hooks/useTradingBot';
 
 const Dashboard = () => {
+  const { isConnected, connect } = useTradingBot();
+  
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome back! Here's an overview of your Prometheus trading bot performance.
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Welcome back! Here's an overview of your Prometheus trading bot performance.
+            </p>
+          </div>
+          
+          <div className="flex space-x-2">
+            {!isConnected && (
+              <Button onClick={connect} variant="default">
+                <Zap className="mr-2 h-4 w-4" />
+                Connect Bot
+              </Button>
+            )}
+            {isConnected && (
+              <Button variant="outline" asChild>
+                <Link to="/trading-bot">
+                  <Zap className="mr-2 h-4 w-4" />
+                  Manage Bot
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Portfolio Value"
-            value="$128,459.32"
+            value="$10,000.00"
             change={3.2}
             icon={<Wallet className="h-4 w-4" />}
           />
@@ -72,7 +96,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatsCard
             title="Total Balance"
-            value="$145,289.57"
+            value="$10,000.00"
             icon={<Landmark className="h-4 w-4" />}
           />
           <StatsCard

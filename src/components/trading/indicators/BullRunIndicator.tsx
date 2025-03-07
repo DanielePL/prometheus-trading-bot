@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ interface BullRunIndicatorProps {
   confidence: number;
   lastDetected?: string;
   stopLossPercentage: number;
+  symbol?: string;  // Added symbol as an optional property
 }
 
 type ScanResult = BullRunParameters & {
@@ -27,7 +29,8 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   isBullRun: initialIsBullRun,
   confidence: initialConfidence,
   lastDetected = 'Just now',
-  stopLossPercentage: initialStopLossPercentage
+  stopLossPercentage: initialStopLossPercentage,
+  symbol = 'BTC-USD'  // Default value for symbol
 }) => {
   const [isBullRun, setIsBullRun] = useState(initialIsBullRun);
   const [confidence, setConfidence] = useState(initialConfidence);
@@ -36,7 +39,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   const [scanInterval, setScanInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastScanTime, setLastScanTime] = useState<string>(lastDetected);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [tradingPair, setTradingPair] = useState('BTC-USD');
+  const [tradingPair, setTradingPair] = useState(symbol);
   const [scanningMarket, setScanningMarket] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [marketScanResults, setMarketScanResults] = useState<ScanResult[]>([]);

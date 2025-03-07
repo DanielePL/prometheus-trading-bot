@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 export interface NewsSource {
@@ -121,12 +122,32 @@ initializeStorage();
 
 // Fetch API keys from localStorage
 const getApiKeys = () => {
-  return {
+  const standardKeys = {
     redditClientId: localStorage.getItem('redditClientId') || '',
     redditApiKey: localStorage.getItem('redditApiKey') || '',
     newsIoApiKey: localStorage.getItem('newsIoApiKey') || '',
     alphaVantageApiKey: localStorage.getItem('alphaVantageApiKey') || '',
     etherscanApiKey: localStorage.getItem('etherscanApiKey') || '',
+  };
+  
+  // Get custom API keys
+  const customKeysStr = localStorage.getItem('customApiKeys');
+  let customKeys: Record<string, string> = {};
+  
+  if (customKeysStr) {
+    try {
+      const parsedKeys = JSON.parse(customKeysStr) as Array<{name: string, value: string}>;
+      parsedKeys.forEach(key => {
+        customKeys[key.name] = key.value;
+      });
+    } catch (e) {
+      console.error("Failed to parse custom API keys:", e);
+    }
+  }
+  
+  return {
+    ...standardKeys,
+    ...customKeys
   };
 };
 

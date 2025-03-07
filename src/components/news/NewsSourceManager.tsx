@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,8 @@ export const NewsSourceManager = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [newSourceDialogOpen, setNewSourceDialogOpen] = useState(false);
   const [apiKeysDialogOpen, setApiKeysDialogOpen] = useState(false);
+  
+  // Initialize with default API keys
   const [apiKeys, setApiKeys] = useState({
     redditClientId: localStorage.getItem('redditClientId') || '',
     redditApiKey: localStorage.getItem('redditApiKey') || '',
@@ -23,6 +26,11 @@ export const NewsSourceManager = () => {
     alphaVantageApiKey: localStorage.getItem('alphaVantageApiKey') || '',
     etherscanApiKey: localStorage.getItem('etherscanApiKey') || '',
   });
+  
+  // New state for custom API keys
+  const [customApiKeys, setCustomApiKeys] = useState<{name: string, value: string}[]>([]);
+  const [newApiKey, setNewApiKey] = useState({name: '', value: ''});
+  
   const [newSource, setNewSource] = useState<Omit<NewsSource, 'id'>>({
     name: '',
     type: 'custom',
@@ -33,6 +41,16 @@ export const NewsSourceManager = () => {
 
   useEffect(() => {
     setSources(getNewsSources());
+    
+    // Load custom API keys from localStorage
+    const customKeysStr = localStorage.getItem('customApiKeys');
+    if (customKeysStr) {
+      try {
+        setCustomApiKeys(JSON.parse(customKeysStr));
+      } catch (e) {
+        console.error("Failed to parse custom API keys:", e);
+      }
+    }
   }, []);
 
   const handleToggleSource = (id: string, enabled: boolean) => {
@@ -69,7 +87,33 @@ export const NewsSourceManager = () => {
 
   const handleSaveApiKeys = () => {
     saveApiKeys(apiKeys);
+    
+    // Save custom API keys
+    const customKeysObj: Record<string, string> = {};
+    customApiKeys.forEach(key => {
+      customKeysObj[key.name] = key.value;
+      localStorage.setItem(key.name, key.value);
+    });
+    
+    localStorage.setItem('customApiKeys', JSON.stringify(customApiKeys));
+    
     setApiKeysDialogOpen(false);
+  };
+  
+  const handleAddCustomApiKey = () => {
+    if (!newApiKey.name.trim()) return;
+    
+    setCustomApiKeys([...customApiKeys, { ...newApiKey }]);
+    setNewApiKey({ name: '', value: '' });
+  };
+  
+  const handleRemoveCustomApiKey = (index: number) => {
+    const keyToRemove = customApiKeys[index];
+    localStorage.removeItem(keyToRemove.name);
+    
+    const updatedKeys = [...customApiKeys];
+    updatedKeys.splice(index, 1);
+    setCustomApiKeys(updatedKeys);
   };
 
   const renderSourceTypeIcon = (type: string) => {
@@ -282,7 +326,7 @@ export const NewsSourceManager = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
             <div className="space-y-4">
               <div className="border-b pb-2">
                 <h3 className="text-sm font-medium">Reddit API</h3>
@@ -347,6 +391,70 @@ export const NewsSourceManager = () => {
                 />
               </div>
             </div>
+            
+            {/* Custom API Keys Section */}
+            <div className="space-y-4">
+              <div className="border-b pb-2 flex justify-between items-center">
+                <h3 className="text-sm font-medium">Custom API Keys</h3>
+              </div>
+              
+              {customApiKeys.map((key, index) => (
+                <div key={index} className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`custom-key-${index}`}>{key.name}</Label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveCustomApiKey(index)}
+                      className="h-6 w-6"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Input 
+                    id={`custom-key-${index}`}
+                    value={key.value}
+                    onChange={(e) => {
+                      const updated = [...customApiKeys];
+                      updated[index].value = e.target.value;
+                      setCustomApiKeys(updated);
+                    }}
+                    placeholder={`Enter ${key.name}`}
+                    type="password"
+                  />
+                </div>
+              ))}
+              
+              <div className="border-t pt-4 mt-2">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="newApiKeyName" className="mb-2 block">New API Key</Label>
+                    <Input 
+                      id="newApiKeyName"
+                      value={newApiKey.name}
+                      onChange={(e) => setNewApiKey({...newApiKey, name: e.target.value})}
+                      placeholder="API Key Name"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Input 
+                      value={newApiKey.value}
+                      onChange={(e) => setNewApiKey({...newApiKey, value: e.target.value})}
+                      placeholder="API Key Value"
+                      type="password"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleAddCustomApiKey}
+                    variant="outline"
+                    size="icon"
+                    className="mb-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
           
           <DialogFooter>
@@ -358,4 +466,3 @@ export const NewsSourceManager = () => {
     </Card>
   );
 };
-

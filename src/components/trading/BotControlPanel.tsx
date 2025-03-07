@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -127,7 +126,12 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
           {tradeMode === 'live' && !hasApiKeys && (
             <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
               <span className="text-sm">Exchange API keys required for live trading</span>
-              <Button size="sm" variant="outline" onClick={onConfigureApiKeys}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={onConfigureApiKeys}
+                type="button"
+              >
                 <KeyRound className="mr-2 h-4 w-4" />
                 Configure
               </Button>
@@ -148,6 +152,7 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
               variant="outline" 
               onClick={onConfigureApiKeys}
               className="h-8"
+              type="button"
             >
               <KeyRound className="mr-2 h-3 w-3" />
               API Keys
@@ -292,6 +297,7 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
               variant="outline"
               size="sm"
               onClick={onClearLogs}
+              type="button"
             >
               Clear Logs
             </Button>
@@ -299,6 +305,7 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
               variant={isRunning ? "destructive" : "default"}
               size="sm"
               onClick={() => isRunning ? onStopBot() : onStartBot()}
+              type="button"
             >
               {isRunning ? (
                 <>

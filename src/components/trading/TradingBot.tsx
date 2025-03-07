@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BotControlPanel } from './BotControlPanel';
@@ -269,6 +268,7 @@ export const TradingBot = () => {
   };
 
   const configureApiKeys = () => {
+    console.log("Opening API key configuration");
     setShowApiConfig(true);
   };
 

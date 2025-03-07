@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -7,8 +6,10 @@ import {
   TradingSignal,
   Candle,
   OrderBook,
-  MarketData
+  MarketData,
+  ExchangeAPI
 } from '@/components/trading/TradingBotAPI';
+import { KrakenAPI } from '@/components/trading/KrakenAPI';
 
 export interface TradingBotState {
   isRunning: boolean;
@@ -92,7 +93,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
     apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://api.exchange.com'
   });
-  
+  const [activeExchangeAPI, setActiveExchangeAPI] = useState<ExchangeAPI>(exchangeAPI);
   const { toast } = useToast();
 
   const addLog = (message: string) => {
@@ -100,18 +101,43 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     setLogs(prev => [...prev.slice(-19), `[${timestamp}] ${message}`]);
   };
 
+  const initializeExchangeAPI = () => {
+    if (apiKeys.exchangeApiKey && apiKeys.exchangeApiSecret) {
+      try {
+        addLog(`Initializing connection to Kraken API...`);
+        const krakenAPI = new KrakenAPI(
+          apiKeys.exchangeApiKey,
+          apiKeys.exchangeApiSecret,
+          apiKeys.apiEndpoint
+        );
+        setActiveExchangeAPI(krakenAPI);
+        addLog(`Connected to Kraken API successfully.`);
+        return true;
+      } catch (error) {
+        addLog(`Error connecting to Kraken API: ${error instanceof Error ? error.message : String(error)}`);
+        console.error('Kraken API connection error:', error);
+        setActiveExchangeAPI(exchangeAPI); // Fall back to mock API
+        return false;
+      }
+    } else {
+      addLog(`No API keys configured, using simulation mode.`);
+      setActiveExchangeAPI(exchangeAPI); // Use mock API
+      return false;
+    }
+  };
+
   const analyzeMarket = async () => {
     try {
       addLog(`Fetching market data for ${tradingPair}...`);
-      const data = await exchangeAPI.fetchMarketData(tradingPair);
+      const data = await activeExchangeAPI.fetchMarketData(tradingPair);
       setMarketData(data);
       addLog(`Current ${tradingPair} price: $${data.price.toFixed(2)}`);
       
       addLog('Retrieving historical price data for analysis...');
-      const candleData = await exchangeAPI.fetchCandles(tradingPair, '1h');
+      const candleData = await activeExchangeAPI.fetchCandles(tradingPair, '1h');
       setCandles(candleData);
       
-      const bookData = await exchangeAPI.getOrderBook(tradingPair);
+      const bookData = await activeExchangeAPI.getOrderBook(tradingPair);
       setOrderBook(bookData);
       addLog(`Order book depth: ${bookData.bids.length} bids, ${bookData.asks.length} asks`);
       
@@ -164,7 +190,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
         quantity: positionSize
       };
       
-      const result = await exchangeAPI.executeOrder(order);
+      const result = await activeExchangeAPI.executeOrder(order);
       
       if (result.status === 'rejected') {
         addLog(`Order rejected: ${result.id}`);
@@ -233,6 +259,18 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
       return;
     }
     
+    // Initialize the exchange API connection
+    const connected = initializeExchangeAPI();
+    
+    if (!connected && tradeMode === 'live') {
+      toast({
+        title: "API Connection Failed",
+        description: "Could not connect to exchange API. Live trading not available.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsRunning(true);
     
     setCpuUsage(0);
@@ -241,7 +279,12 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     
     addLog(`Bot started in ${tradeMode.toUpperCase()} mode with ${riskLevel.toUpperCase()} risk profile.`);
     addLog(`Using ${getStrategyByName(tradingStrategy).getName()} strategy on ${tradingPair}.`);
-    addLog(`Connected to exchange API for real-time market data.`);
+    
+    if (tradeMode === 'live') {
+      addLog(`Connected to Kraken API for live trading.`);
+    } else {
+      addLog(`Connected to Kraken API for market data (Paper trading mode).`);
+    }
     
     analyzeMarket();
     
@@ -310,6 +353,11 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     });
     
     addLog("Exchange API configuration updated");
+    
+    // If the bot is running, reinitialize the API connection
+    if (isRunning) {
+      initializeExchangeAPI();
+    }
   };
 
   const configureApiKeys = () => {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { KeyRound, X, Save, AlertCircle } from 'lucide-react';
+import { KeyRound, X, Save, AlertCircle, ExternalLink } from 'lucide-react';
 
 interface ApiKeyConfigProps {
   apiKeys: {
@@ -31,6 +31,10 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     }));
   };
 
+  const openKrakenAPIPage = () => {
+    window.open('https://www.kraken.com/u/security/api', '_blank');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <Card className="w-full max-w-md">
@@ -39,8 +43,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <div className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-amber-500" />
               <div>
-                <CardTitle>API Configuration</CardTitle>
-                <CardDescription>Configure your exchange API keys</CardDescription>
+                <CardTitle>Kraken API Configuration</CardTitle>
+                <CardDescription>Configure your Kraken API keys</CardDescription>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onCancel}>
@@ -58,16 +62,27 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               </div>
             </div>
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full" 
+            onClick={openKrakenAPIPage}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Open Kraken API Management
+          </Button>
 
           <div className="space-y-2">
             <Label htmlFor="apiEndpoint">API Endpoint</Label>
             <Input
               id="apiEndpoint"
               name="apiEndpoint"
-              placeholder="https://api.exchange.com"
+              placeholder="https://api.kraken.com"
               value={keys.apiEndpoint}
               onChange={handleChange}
             />
+            <p className="text-xs text-muted-foreground">Default: https://api.kraken.com</p>
           </div>
           
           <div className="space-y-2">
@@ -75,7 +90,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <Input
               id="exchangeApiKey"
               name="exchangeApiKey"
-              placeholder="Your exchange API key"
+              placeholder="Your Kraken API key"
               value={keys.exchangeApiKey}
               onChange={handleChange}
             />
@@ -87,7 +102,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               id="exchangeApiSecret"
               name="exchangeApiSecret"
               type="password"
-              placeholder="Your exchange API secret"
+              placeholder="Your Kraken API secret"
               value={keys.exchangeApiSecret}
               onChange={handleChange}
             />

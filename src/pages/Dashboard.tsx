@@ -37,6 +37,11 @@ const Dashboard = () => {
     toast.success('Dashboard data refreshed');
     setIsRefreshing(false);
   };
+
+  // Create a wrapper function that aligns with what TradingPairs expects
+  const handleSymbolChange = (symbol: string) => {
+    setActiveSymbol(symbol);
+  };
   
   return (
     <AppLayout>
@@ -129,7 +134,8 @@ const Dashboard = () => {
               </TabsContent>
               
               <TabsContent value="pairs">
-                <TradingPairs onSymbolChange={setActiveSymbol} />
+                {/* Pass the symbol change handler as expected by TradingPairs component */}
+                <TradingPairs onSelectSymbol={handleSymbolChange} />
               </TabsContent>
             </Tabs>
           </div>

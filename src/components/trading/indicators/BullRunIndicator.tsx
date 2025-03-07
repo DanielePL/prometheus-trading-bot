@@ -257,7 +257,11 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
                 <span>Scanning market...</span>
                 <span>{scanProgress}%</span>
               </div>
-              <Progress value={scanProgress} style={{ '--progress-color': 'var(--blue-500)' }} />
+              <Progress 
+                value={scanProgress} 
+                className="bg-secondary"
+                style={{ backgroundColor: 'var(--secondary)', '--progress-color': 'rgb(59, 130, 246)' } as React.CSSProperties} 
+              />
             </div>
           ) : isBullRun ? (
             <>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -92,28 +93,26 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
   
   return (
     <Card className={`
-      w-[5cm] h-[5cm] 
+      h-full w-full
       ${isBullRun 
         ? 'border-green-500 dark:border-green-400 bg-green-950/90 text-white dark:bg-green-900/90 shadow-[0_0_10px_rgba(34,197,94,0.5)]' 
         : 'border-gray-700 dark:border-gray-700 bg-gray-900/90 text-gray-100'}
       ${isAnimating ? 'animate-pulse' : ''}
-      transition-all duration-300 overflow-hidden rounded-md
+      transition-all duration-300 overflow-hidden
     `}>
-      <CardContent className="p-3 flex flex-col h-full justify-between">
+      <CardContent className="p-6 flex flex-col h-full justify-between">
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">
-            <span className="text-sm font-medium">Bull Run</span>
-            <span className="text-xs font-medium">Detector</span>
+            <span className="text-sm font-medium">Bull Run Scanner</span>
+            <span className="text-xs text-muted-foreground">Pattern Detector</span>
           </div>
           
-          {isBullRun && (
-            <Badge className="bg-green-500 text-white dark:bg-green-500 dark:text-white text-xs py-0 px-2">
-              Active
-            </Badge>
-          )}
+          <div className="p-2 rounded-full bg-secondary/50">
+            <Radar className="h-4 w-4" />
+          </div>
         </div>
         
-        <div className="space-y-2 flex-grow">
+        <div className="space-y-3 flex-grow">
           {isBullRun ? (
             <>
               <div className="flex justify-between items-center">
@@ -140,7 +139,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
           )}
         </div>
         
-        <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-700/50 dark:border-gray-700/50">
+        <div className="flex justify-between items-center pt-3 mt-1 border-t border-gray-700/50 dark:border-gray-700/50">
           <div className="flex items-center">
             <Radar className={`h-3 w-3 mr-1 ${isAutoScanning ? 'text-blue-400 animate-pulse' : 'text-gray-400'}`} />
             <span className="text-xs text-gray-400">
@@ -152,7 +151,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
             size="sm" 
             variant={isAutoScanning ? "destructive" : "secondary"}
             onClick={isAutoScanning ? stopAutoScan : startAutoScan}
-            className="text-xs h-6 px-2 min-w-0 bg-white/10 hover:bg-white/20 text-white rounded"
+            className="text-xs h-6 px-2 min-w-0 bg-white/10 hover:bg-white/20 text-white"
           >
             {isAutoScanning ? 'Stop' : 'Scan'}
           </Button>

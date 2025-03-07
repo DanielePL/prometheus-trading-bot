@@ -5,7 +5,6 @@ import { NewsSourceManager } from '@/components/news/NewsSourceManager';
 import { NewsResults } from '@/components/news/NewsResults';
 import { ScanStatusCard } from '@/components/news/ScanStatusCard';
 import { SemanticInsights } from '@/components/news/SemanticInsights';
-import { BullRunIndicator } from '@/components/trading/indicators/BullRunIndicator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { scanAllSources } from '@/services/newsCrawlerService';
@@ -15,22 +14,11 @@ import { toast } from 'sonner';
 const NewsScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [activeTab, setActiveTab] = useState('news');
-  const [isBullRun, setIsBullRun] = useState(false);
   
   const handleScan = async () => {
     setIsScanning(true);
     try {
       await scanAllSources();
-      
-      // Simulate bull run detection after scanning news
-      // In a real app, this would be based on actual analysis
-      const randomBullRun = Math.random() > 0.5;
-      setIsBullRun(randomBullRun);
-      
-      if (randomBullRun) {
-        toast.success('Bull run pattern detected in market data!');
-      }
-      
       toast.success('Scan completed successfully');
     } catch (error) {
       toast.error('Scan failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -76,11 +64,6 @@ const NewsScanner = () => {
                 </div>
                 
                 <div className="space-y-6">
-                  <BullRunIndicator 
-                    isBullRun={isBullRun}
-                    confidence={0.78}
-                    stopLossPercentage={isBullRun ? 6.5 : 1.0}
-                  />
                   <ScanStatusCard />
                   <SemanticInsights />
                 </div>

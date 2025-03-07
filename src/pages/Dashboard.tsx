@@ -17,7 +17,7 @@ import { Link } from 'react-router-dom';
 import { useTradingBot } from '@/hooks/useTradingBot';
 
 const Dashboard = () => {
-  const { isConnected, connect } = useTradingBot();
+  const [botState, botActions] = useTradingBot();
   
   return (
     <AppLayout>
@@ -31,13 +31,13 @@ const Dashboard = () => {
           </div>
           
           <div className="flex space-x-2">
-            {!isConnected && (
-              <Button onClick={connect} variant="default">
+            {!botState.isExchangeConnected && (
+              <Button onClick={botActions.reconnectExchange} variant="default">
                 <Zap className="mr-2 h-4 w-4" />
                 Connect Bot
               </Button>
             )}
-            {isConnected && (
+            {botState.isExchangeConnected && (
               <Button variant="outline" asChild>
                 <Link to="/trading-bot">
                   <Zap className="mr-2 h-4 w-4" />
@@ -52,24 +52,24 @@ const Dashboard = () => {
           <StatsCard
             title="Portfolio Value"
             value="$10,000.00"
-            change={3.2}
+            change={0}
             icon={<Wallet className="h-4 w-4" />}
           />
           <StatsCard
             title="Trading Profit (30d)"
-            value="$3,587.21"
-            change={5.8}
+            value="$0.00"
+            change={0}
             icon={<TrendingUp className="h-4 w-4" />}
           />
           <StatsCard
             title="Active Bots"
-            value="4"
+            value="1"
             icon={<BarChart2 className="h-4 w-4" />}
           />
           <StatsCard
             title="Win Rate"
-            value="68.2%"
-            change={1.4}
+            value="0.0%"
+            change={0}
             icon={<CircleDollarSign className="h-4 w-4" />}
           />
         </div>
@@ -101,12 +101,12 @@ const Dashboard = () => {
           />
           <StatsCard
             title="Total Trades"
-            value="427"
+            value="0"
             icon={<ClipboardCheck className="h-4 w-4" />}
           />
           <StatsCard
             title="Days Active"
-            value="124"
+            value="0"
             icon={<Calendar className="h-4 w-4" />}
           />
         </div>

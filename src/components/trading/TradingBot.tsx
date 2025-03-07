@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BotControlPanel } from './BotControlPanel';
@@ -179,10 +180,11 @@ export const TradingBot = () => {
   };
 
   const startBot = () => {
-    if (tradeMode === 'live' && (!apiKeys.exchangeApiKey || !apiKeys.exchangeApiSecret)) {
+    // Check for API keys regardless of trading mode
+    if (!apiKeys.exchangeApiKey || !apiKeys.exchangeApiSecret) {
       toast({
         title: "API Keys Required",
-        description: "Please configure your exchange API keys for live trading",
+        description: "Please configure your exchange API keys for market data",
         variant: "destructive"
       });
       setShowApiConfig(true);
@@ -197,6 +199,7 @@ export const TradingBot = () => {
     
     addLog(`Bot started in ${tradeMode.toUpperCase()} mode with ${riskLevel.toUpperCase()} risk profile.`);
     addLog(`Using ${getStrategyByName(tradingStrategy).getName()} strategy on ${tradingPair}.`);
+    addLog(`Connected to exchange API for real-time market data.`);
     
     analyzeMarket();
     

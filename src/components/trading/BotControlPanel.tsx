@@ -123,9 +123,9 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = ({
             </div>
           )}
           
-          {tradeMode === 'live' && !hasApiKeys && (
+          {!hasApiKeys && (
             <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
-              <span className="text-sm">Exchange API keys required for live trading</span>
+              <span className="text-sm">API keys required for market data access</span>
               <Button 
                 size="sm" 
                 variant="outline" 

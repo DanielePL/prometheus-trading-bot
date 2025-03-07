@@ -38,6 +38,10 @@ export interface TradingBotState {
     exchangeApiSecret: string;
     apiEndpoint: string;
   };
+  isExchangeConnected: boolean;
+  exchangeName: string;
+  exchangeLatency: number;
+  connectionQuality: number;
 }
 
 export interface TradingBotActions {
@@ -53,6 +57,9 @@ export interface TradingBotActions {
   setRiskLevel: (value: 'low' | 'medium' | 'high') => void;
   setMaxTradingAmount: (value: string) => void;
   setShowApiConfig: (value: boolean) => void;
+  reconnectExchange: () => void;
+  disconnectExchange: () => void;
+  testExchangeConnection: () => void;
 }
 
 export const tradingPairs = [
@@ -94,6 +101,11 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://api.exchange.com'
   });
   const [activeExchangeAPI, setActiveExchangeAPI] = useState<ExchangeAPI>(exchangeAPI);
+  const [isExchangeConnected, setIsExchangeConnected] = useState(false);
+  const [exchangeName, setExchangeName] = useState('Kraken');
+  const [exchangeLatency, setExchangeLatency] = useState(0);
+  const [connectionQuality, setConnectionQuality] = useState(0);
+  const [connectionCheckInterval, setConnectionCheckInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const addLog = (message: string) => {
@@ -112,18 +124,49 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
         );
         setActiveExchangeAPI(krakenAPI);
         addLog(`Connected to Kraken API successfully.`);
+        setIsExchangeConnected(true);
+        setExchangeName('Kraken');
+        simulateConnectionMetrics();
         return true;
       } catch (error) {
         addLog(`Error connecting to Kraken API: ${error instanceof Error ? error.message : String(error)}`);
         console.error('Kraken API connection error:', error);
         setActiveExchangeAPI(exchangeAPI); // Fall back to mock API
+        setIsExchangeConnected(false);
         return false;
       }
     } else {
       addLog(`No API keys configured, using simulation mode.`);
       setActiveExchangeAPI(exchangeAPI); // Use mock API
+      setIsExchangeConnected(false);
       return false;
     }
+  };
+
+  const simulateConnectionMetrics = () => {
+    if (connectionCheckInterval) {
+      clearInterval(connectionCheckInterval);
+    }
+    
+    setExchangeLatency(Math.floor(Math.random() * 50) + 10);
+    setConnectionQuality(90 + Math.floor(Math.random() * 10));
+    
+    const interval = setInterval(() => {
+      if (isExchangeConnected) {
+        const newLatency = Math.random() > 0.9 
+          ? Math.floor(Math.random() * 150) + 50 
+          : Math.floor(Math.random() * 50) + 10;
+        setExchangeLatency(newLatency);
+        
+        const qualityChange = Math.random() > 0.8 
+          ? -Math.floor(Math.random() * 20) 
+          : Math.floor(Math.random() * 5);
+        setConnectionQuality(prev => Math.max(40, Math.min(100, prev + qualityChange)));
+      }
+    }, 5000);
+    
+    setConnectionCheckInterval(interval);
+    return interval;
   };
 
   const analyzeMarket = async () => {
@@ -248,7 +291,6 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
   };
 
   const startBot = () => {
-    // Check for API keys regardless of trading mode
     if (!apiKeys.exchangeApiKey || !apiKeys.exchangeApiSecret) {
       toast({
         title: "API Keys Required",
@@ -259,7 +301,6 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
       return;
     }
     
-    // Initialize the exchange API connection
     const connected = initializeExchangeAPI();
     
     if (!connected && tradeMode === 'live') {
@@ -354,7 +395,6 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     
     addLog("Exchange API configuration updated");
     
-    // If the bot is running, reinitialize the API connection
     if (isRunning) {
       initializeExchangeAPI();
     }
@@ -363,6 +403,54 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
   const configureApiKeys = () => {
     console.log("Opening API key configuration");
     setShowApiConfig(true);
+  };
+
+  const reconnectExchange = () => {
+    addLog(`Attempting to reconnect to ${exchangeName}...`);
+    const connected = initializeExchangeAPI();
+    if (connected) {
+      addLog(`Successfully reconnected to ${exchangeName}.`);
+    } else {
+      addLog(`Failed to reconnect to ${exchangeName}.`);
+    }
+  };
+  
+  const disconnectExchange = () => {
+    addLog(`Disconnecting from ${exchangeName}...`);
+    setIsExchangeConnected(false);
+    if (connectionCheckInterval) {
+      clearInterval(connectionCheckInterval);
+      setConnectionCheckInterval(null);
+    }
+    setExchangeLatency(0);
+    setConnectionQuality(0);
+    
+    if (isRunning) {
+      stopBot();
+    }
+    
+    addLog(`Disconnected from ${exchangeName}.`);
+  };
+  
+  const testExchangeConnection = async () => {
+    addLog(`Testing connection to ${exchangeName}...`);
+    
+    try {
+      const startTime = Date.now();
+      await activeExchangeAPI.fetchMarketData(tradingPair);
+      const endTime = Date.now();
+      const latency = endTime - startTime;
+      
+      setExchangeLatency(latency);
+      setConnectionQuality(Math.max(40, 100 - Math.floor(latency / 10)));
+      
+      addLog(`Connection test successful. Latency: ${latency}ms`);
+    } catch (error) {
+      addLog(`Connection test failed: ${error instanceof Error ? error.message : String(error)}`);
+      setIsExchangeConnected(false);
+      setExchangeLatency(0);
+      setConnectionQuality(0);
+    }
   };
 
   useEffect(() => {
@@ -390,6 +478,14 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     };
   }, [isRunning, tradingPair, riskLevel, tradingStrategy]);
 
+  useEffect(() => {
+    return () => {
+      if (connectionCheckInterval) {
+        clearInterval(connectionCheckInterval);
+      }
+    };
+  }, [connectionCheckInterval]);
+
   const state: TradingBotState = {
     isRunning,
     tradeMode,
@@ -407,7 +503,11 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     orderBook,
     currentSignal,
     showApiConfig,
-    apiKeys
+    apiKeys,
+    isExchangeConnected,
+    exchangeName,
+    exchangeLatency,
+    connectionQuality
   };
 
   const actions: TradingBotActions = {
@@ -422,7 +522,10 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     setTradingStrategy,
     setRiskLevel,
     setMaxTradingAmount,
-    setShowApiConfig
+    setShowApiConfig,
+    reconnectExchange,
+    disconnectExchange,
+    testExchangeConnection
   };
 
   return [state, actions];

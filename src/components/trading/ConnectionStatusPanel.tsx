@@ -96,13 +96,13 @@ export const ConnectionStatusPanel: React.FC<ConnectionStatusPanelProps> = ({
           )}
         </div>
         
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-4 mt-2 border-t">
           {isConnected ? (
             <>
               <Button 
-                variant="outline" 
+                variant="destructive" 
                 size="sm"
-                className="flex-1 text-red-600 border-red-600 hover:bg-red-100 dark:hover:bg-red-900/30"
+                className="flex-1"
                 onClick={onDisconnect}
               >
                 <WifiOff className="h-4 w-4 mr-2" />
@@ -121,9 +121,9 @@ export const ConnectionStatusPanel: React.FC<ConnectionStatusPanelProps> = ({
             </>
           ) : (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              className="flex-1 text-green-600 border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
+              className="flex-1 bg-green-600 hover:bg-green-700"
               onClick={onReconnect}
             >
               <Wifi className="h-4 w-4 mr-2" />

@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TradingBot } from '@/components/trading/TradingBot';
 import { TradingSystem } from '@/components/trading/TradingSystem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Zap, BarChart2, Bell, LayoutDashboard } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Trading system component that integrates the TradingBot and other subcomponents
 const TradingBotPage = () => {

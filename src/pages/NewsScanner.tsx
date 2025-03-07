@@ -5,6 +5,7 @@ import { NewsSourceManager } from '@/components/news/NewsSourceManager';
 import { NewsResults } from '@/components/news/NewsResults';
 import { ScanStatusCard } from '@/components/news/ScanStatusCard';
 import { SemanticInsights } from '@/components/news/SemanticInsights';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const NewsScanner = () => {
   return (

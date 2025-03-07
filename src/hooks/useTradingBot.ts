@@ -71,6 +71,7 @@ export const tradingPairs = [
 ];
 
 export const tradingStrategies = [
+  { value: 'dynamicstoploss', label: 'Dynamic Stop Loss + Bull Run Scanner' },
   { value: 'macrossover', label: 'Moving Average Crossover' },
   { value: 'rsioscillator', label: 'RSI Oscillator' },
   { value: 'bollingerbands', label: 'Bollinger Bands' },
@@ -82,7 +83,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
   const [isRunning, setIsRunning] = useState(false);
   const [tradeMode, setTradeMode] = useState<'paper' | 'live'>('paper');
   const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('medium');
-  const [tradingStrategy, setTradingStrategy] = useState('macrossover');
+  const [tradingStrategy, setTradingStrategy] = useState('dynamicstoploss');
   const [maxTradingAmount, setMaxTradingAmount] = useState('1000');
   const [tradingPair, setTradingPair] = useState('BTC-USD');
   const [logs, setLogs] = useState<string[]>([]);

@@ -202,6 +202,9 @@ export class MockExchangeAPI implements ExchangeAPI {
 // Creating a singleton instance of the mock exchange API
 export const exchangeAPI = new MockExchangeAPI();
 
+// Import the new strategy
+import { DynamicStopLossStrategy } from './strategies/DynamicStopLossStrategy';
+
 // Strategy implementations
 
 export interface TradingStrategy {
@@ -547,6 +550,8 @@ export const getStrategyByName = (name: string): TradingStrategy => {
       return new RSIStrategy();
     case 'bollingerbands':
       return new BollingerBandsStrategy();
+    case 'dynamicstoploss':
+      return new DynamicStopLossStrategy();
     case 'volumeprofile':
       // For now, we'll just return MA as a fallback
       // In a real implementation, this would be a Volume Profile strategy

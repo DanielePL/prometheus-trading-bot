@@ -150,7 +150,7 @@ export class KrakenAPI implements ExchangeAPI {
       // Get order book data
       const depth = await this.makePublicRequest('Depth', { 
         pair: krakenSymbol,
-        count: 10 // Limit to 10 entries each side
+        count: '10' // Limit to 10 entries each side - Fixed by converting to string
       });
       
       // Get the result for our pair
@@ -208,7 +208,7 @@ export class KrakenAPI implements ExchangeAPI {
       // Get OHLC data
       const ohlc = await this.makePublicRequest('OHLC', {
         pair: krakenSymbol,
-        interval: interval.toString()
+        interval: interval.toString() // Convert number to string
       });
       
       // Get the result for our pair

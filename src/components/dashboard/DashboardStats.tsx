@@ -8,6 +8,7 @@ export const DashboardStats: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
+        {/* Top row: 3 stats (half width each) + Bull Run Scanner */}
         <div className="col-span-1">
           <StatsCard
             title="Portfolio Value"
@@ -45,25 +46,35 @@ export const DashboardStats: React.FC = () => {
         </div>
       </div>
       
-      <div className="grid grid-cols-3 gap-4">
-        <StatsCard
-          title="Total Balance"
-          value="$10,000.00"
-          icon={<Landmark className="h-4 w-4" />}
-          className="bg-[#121625] border-[#1E233A] text-white"
-        />
-        <StatsCard
-          title="Total Trades"
-          value="0"
-          icon={<ClipboardCheck className="h-4 w-4" />}
-          className="bg-[#121625] border-[#1E233A] text-white"
-        />
-        <StatsCard
-          title="Days Active"
-          value="0"
-          icon={<Calendar className="h-4 w-4" />}
-          className="bg-[#121625] border-[#1E233A] text-white"
-        />
+      {/* Bottom row: 3 stats (full width each) */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="col-span-1">
+          <StatsCard
+            title="Total Balance"
+            value="$10,000.00"
+            icon={<Landmark className="h-4 w-4" />}
+            className="bg-[#121625] border-[#1E233A] text-white"
+          />
+        </div>
+        <div className="col-span-1">
+          <StatsCard
+            title="Total Trades"
+            value="0"
+            icon={<ClipboardCheck className="h-4 w-4" />}
+            className="bg-[#121625] border-[#1E233A] text-white"
+          />
+        </div>
+        <div className="col-span-1">
+          <StatsCard
+            title="Days Active"
+            value="0"
+            icon={<Calendar className="h-4 w-4" />}
+            className="bg-[#121625] border-[#1E233A] text-white"
+          />
+        </div>
+        <div className="col-span-1">
+          {/* Empty column to align with Bull Run Scanner */}
+        </div>
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 interface PredictionEngineProps {
   cryptocurrency: string;
   eventCategories: string[];
+  dateRange?: { from: Date; to: Date };
 }
 
 // Helper function to get date strings for the next 30 days
@@ -43,7 +44,8 @@ const getNextDays = (days: number) => {
 
 export const PredictionEngine = ({
   cryptocurrency,
-  eventCategories
+  eventCategories,
+  dateRange
 }: PredictionEngineProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [predictions, setPredictions] = useState<any[]>([]);
@@ -56,7 +58,6 @@ export const PredictionEngine = ({
     horizon: number;
   } | null>(null);
   
-  // Generate mock prediction data
   useEffect(() => {
     // Base prices for different cryptocurrencies
     const basePrices: Record<string, number> = {

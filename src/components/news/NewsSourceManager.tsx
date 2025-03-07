@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ export const NewsSourceManager = () => {
   const [newSourceDialogOpen, setNewSourceDialogOpen] = useState(false);
   const [apiKeysDialogOpen, setApiKeysDialogOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState({
+    redditClientId: localStorage.getItem('redditClientId') || '',
     redditApiKey: localStorage.getItem('redditApiKey') || '',
     newsIoApiKey: localStorage.getItem('newsIoApiKey') || '',
     alphaVantageApiKey: localStorage.getItem('alphaVantageApiKey') || '',
@@ -174,7 +174,6 @@ export const NewsSourceManager = () => {
         )}
       </CardContent>
       
-      {/* Add New Source Dialog */}
       <Dialog open={newSourceDialogOpen} onOpenChange={setNewSourceDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -274,7 +273,6 @@ export const NewsSourceManager = () => {
         </DialogContent>
       </Dialog>
       
-      {/* API Keys Dialog */}
       <Dialog open={apiKeysDialogOpen} onOpenChange={setApiKeysDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -285,48 +283,69 @@ export const NewsSourceManager = () => {
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="redditApiKey">Reddit API Key</Label>
-              <Input 
-                id="redditApiKey" 
-                value={apiKeys.redditApiKey}
-                onChange={(e) => setApiKeys({...apiKeys, redditApiKey: e.target.value})}
-                placeholder="Enter Reddit API key"
-                type="password"
-              />
+            <div className="space-y-4">
+              <div className="border-b pb-2">
+                <h3 className="text-sm font-medium">Reddit API</h3>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="redditClientId">Reddit Client ID</Label>
+                <Input 
+                  id="redditClientId" 
+                  value={apiKeys.redditClientId}
+                  onChange={(e) => setApiKeys({...apiKeys, redditClientId: e.target.value})}
+                  placeholder="Enter Reddit Client ID"
+                  type="password"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="redditApiKey">Reddit Secret Key</Label>
+                <Input 
+                  id="redditApiKey" 
+                  value={apiKeys.redditApiKey}
+                  onChange={(e) => setApiKeys({...apiKeys, redditApiKey: e.target.value})}
+                  placeholder="Enter Reddit Secret Key"
+                  type="password"
+                />
+              </div>
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="newsIoApiKey">News.io API Key</Label>
-              <Input 
-                id="newsIoApiKey" 
-                value={apiKeys.newsIoApiKey}
-                onChange={(e) => setApiKeys({...apiKeys, newsIoApiKey: e.target.value})}
-                placeholder="Enter News.io API key"
-                type="password"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="alphaVantageApiKey">AlphaVantage API Key</Label>
-              <Input 
-                id="alphaVantageApiKey" 
-                value={apiKeys.alphaVantageApiKey}
-                onChange={(e) => setApiKeys({...apiKeys, alphaVantageApiKey: e.target.value})}
-                placeholder="Enter AlphaVantage API key"
-                type="password"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="etherscanApiKey">Etherscan API Key</Label>
-              <Input 
-                id="etherscanApiKey" 
-                value={apiKeys.etherscanApiKey}
-                onChange={(e) => setApiKeys({...apiKeys, etherscanApiKey: e.target.value})}
-                placeholder="Enter Etherscan API key"
-                type="password"
-              />
+            <div className="space-y-4">
+              <div className="border-b pb-2">
+                <h3 className="text-sm font-medium">Other Services</h3>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="newsIoApiKey">News.io API Key</Label>
+                <Input 
+                  id="newsIoApiKey" 
+                  value={apiKeys.newsIoApiKey}
+                  onChange={(e) => setApiKeys({...apiKeys, newsIoApiKey: e.target.value})}
+                  placeholder="Enter News.io API key"
+                  type="password"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="alphaVantageApiKey">AlphaVantage API Key</Label>
+                <Input 
+                  id="alphaVantageApiKey" 
+                  value={apiKeys.alphaVantageApiKey}
+                  onChange={(e) => setApiKeys({...apiKeys, alphaVantageApiKey: e.target.value})}
+                  placeholder="Enter AlphaVantage API key"
+                  type="password"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="etherscanApiKey">Etherscan API Key</Label>
+                <Input 
+                  id="etherscanApiKey" 
+                  value={apiKeys.etherscanApiKey}
+                  onChange={(e) => setApiKeys({...apiKeys, etherscanApiKey: e.target.value})}
+                  placeholder="Enter Etherscan API key"
+                  type="password"
+                />
+              </div>
             </div>
           </div>
           
@@ -339,3 +358,4 @@ export const NewsSourceManager = () => {
     </Card>
   );
 };
+

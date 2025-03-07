@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 export interface NewsSource {
@@ -123,6 +122,7 @@ initializeStorage();
 // Fetch API keys from localStorage
 const getApiKeys = () => {
   return {
+    redditClientId: localStorage.getItem('redditClientId') || '',
     redditApiKey: localStorage.getItem('redditApiKey') || '',
     newsIoApiKey: localStorage.getItem('newsIoApiKey') || '',
     alphaVantageApiKey: localStorage.getItem('alphaVantageApiKey') || '',

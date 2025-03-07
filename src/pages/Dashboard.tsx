@@ -8,6 +8,7 @@ import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { BotStatus } from '@/components/dashboard/BotStatus';
 import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
+import { BullRunIndicator } from '@/components/trading/indicators/BullRunIndicator';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
   Landmark, ClipboardCheck, Calendar, Zap, Newspaper
@@ -88,6 +89,13 @@ const Dashboard = () => {
           <div className="space-y-4">
             <BotStatus />
             <TradingSystemInfo />
+            {/* Add Bull Run Indicator here */}
+            <BullRunIndicator 
+              isBullRun={false}
+              confidence={0.7}
+              lastDetected="Not detected yet"
+              stopLossPercentage={2.0}
+            />
           </div>
         </div>
         

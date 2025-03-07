@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TradingBot } from '@/components/trading/TradingBot';
 import { TradingSystem } from '@/components/trading/TradingSystem';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Zap, BarChart2, GitBranch, Bell, LayoutDashboard } from 'lucide-react';
+import { Settings, Zap, BarChart2, Bell, LayoutDashboard } from 'lucide-react';
 
 // Trading system component that integrates the TradingBot and other subcomponents
 const TradingBotPage = () => {
@@ -25,6 +23,10 @@ const TradingBotPage = () => {
               <Zap className="h-4 w-4 mr-2" />
               Bot Control
             </TabsTrigger>
+            <TabsTrigger value="system">
+              <BarChart2 className="h-4 w-4 mr-2" />
+              Trading System
+            </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="h-4 w-4 mr-2" />
               Bot Settings
@@ -41,44 +43,14 @@ const TradingBotPage = () => {
           
           <TabsContent value="bot" className="space-y-4">
             <TradingBot />
-
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Trading System Information</CardTitle>
-                <CardDescription>Performance metrics and analysis</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Win Rate</h3>
-                    <div className="text-2xl font-bold">67%</div>
-                    <p className="text-xs text-muted-foreground">
-                      Based on last 100 trades
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Profit Factor</h3>
-                    <div className="text-2xl font-bold">1.73</div>
-                    <p className="text-xs text-muted-foreground">
-                      Ratio of gross profits to gross losses
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Average Trade</h3>
-                    <div className="text-2xl font-bold">$12.85</div>
-                    <p className="text-xs text-muted-foreground">
-                      Average profit per trade
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          </TabsContent>
+          
+          <TabsContent value="system" className="space-y-4">
+            <TradingSystem />
           </TabsContent>
           
           <TabsContent value="settings">
-            <Card>
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Bot Settings</CardTitle>
                 <CardDescription>Configure your trading bot parameters</CardDescription>

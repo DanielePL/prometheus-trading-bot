@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -31,7 +30,16 @@ const Dashboard = () => {
             </p>
           </div>
           
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
+            <div className="mr-4">
+              <BullRunIndicator 
+                isBullRun={true}
+                confidence={0.85}
+                lastDetected="Just now"
+                stopLossPercentage={3.5}
+              />
+            </div>
+            
             {!botState.isExchangeConnected && (
               <Button onClick={botActions.reconnectExchange} variant="default">
                 <Zap className="mr-2 h-4 w-4" />
@@ -54,14 +62,6 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
-        
-        {/* Bull Run Indicator at the top for visibility */}
-        <BullRunIndicator 
-          isBullRun={true}
-          confidence={0.85}
-          lastDetected="Just now"
-          stopLossPercentage={3.5}
-        />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
@@ -97,7 +97,6 @@ const Dashboard = () => {
           <div className="space-y-4">
             <BotStatus />
             <TradingSystemInfo />
-            {/* Removed duplicate BullRunIndicator from here */}
           </div>
         </div>
         

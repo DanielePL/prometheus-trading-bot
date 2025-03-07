@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BotControlPanel } from './BotControlPanel';
+import { BotControlPanel } from './bot-control';
 import { BotLogPanel } from './BotLogPanel';
 import { ApiKeyConfig } from './ApiKeyConfig';
 import { useTradingBot, tradingPairs, tradingStrategies } from '@/hooks/useTradingBot';

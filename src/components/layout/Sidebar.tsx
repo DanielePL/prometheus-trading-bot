@@ -1,154 +1,209 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  Activity, ArrowLeftRight, BarChart2, Briefcase, ChevronLeft, ChevronRight, 
-  CreditCard, Github, Globe, History, Home, LineChart, LogOut, 
-  Settings, TrendingUp, User, Wallet, Cloud, Zap, Newspaper
-} from 'lucide-react';
+
+import React, { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  LayoutDashboard,
+  BarChart3,
+  TrendingUp,
+  Briefcase,
+  History,
+  Settings,
+  PieChart,
+  Zap,
+  ScanSearch,
+  Globe,
+  Shield,
+  Layers,
+  Clock,
+  Newspaper,
+  Cloud,
+  CircleDollarSign,
+  UserCircle,
+  Home
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMobile } from '@/hooks/use-mobile';
 
-interface SidebarProps {
-  isOpen: boolean;
-  toggleSidebar: () => void;
-}
-
-interface SidebarItemProps {
-  icon: React.ElementType;
-  label: string;
-  to: string;
-  active?: boolean;
-}
-
-const SidebarItem = ({ icon: Icon, label, to, active }: SidebarItemProps) => (
-  <Link to={to} className="w-full">
-    <Button
-      variant="ghost"
-      className={cn(
-        "w-full justify-start gap-3 font-normal",
-        active ? "bg-accent/50 text-accent-foreground" : "hover:bg-accent/20"
-      )}
-    >
-      <Icon className="h-5 w-5" />
-      <span>{label}</span>
-    </Button>
-  </Link>
-);
-
-const SidebarSection = ({ 
-  title, 
-  children 
-}: { 
-  title: string; 
-  children: React.ReactNode 
-}) => (
-  <div className="space-y-1 py-2">
-    <h3 className="px-4 text-sm font-medium text-muted-foreground mb-1">{title}</h3>
-    {children}
-  </div>
-);
-
-export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
+export function Sidebar({ className }: { className?: string }) {
   const location = useLocation();
-  const currentPath = location.pathname;
-  
+  const isMobile = useMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleNavLinkClick = () => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    // Close sidebar on route change on mobile
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+
+  // Group 1: Main Navigation
+  const mainNavItems = [
+    {
+      title: "Home",
+      href: "/",
+      icon: <Home className="w-5 h-5" />,
+    },
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: <LayoutDashboard className="w-5 h-5" />,
+    },
+    {
+      title: "Markets",
+      href: "/markets",
+      icon: <Globe className="w-5 h-5" />,
+    },
+    {
+      title: "Trading Bot",
+      href: "/trading-bot",
+      icon: <Zap className="w-5 h-5" />,
+    },
+    {
+      title: "Advanced Trading",
+      href: "/advanced-trading",
+      icon: <Shield className="w-5 h-5" />,
+    },
+    {
+      title: "Portfolio",
+      href: "/portfolio",
+      icon: <Briefcase className="w-5 h-5" />,
+    },
+    {
+      title: "News Scanner",
+      href: "/news-scanner",
+      icon: <ScanSearch className="w-5 h-5" />,
+    },
+  ];
+
+  // Group 2: Analysis and Tools
+  const analysisNavItems = [
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: <BarChart3 className="w-5 h-5" />,
+    },
+    {
+      title: "Performance",
+      href: "/performance",
+      icon: <TrendingUp className="w-5 h-5" />,
+    },
+    {
+      title: "Strategies",
+      href: "/strategies",
+      icon: <PieChart className="w-5 h-5" />,
+    },
+    {
+      title: "Trade History",
+      href: "/history",
+      icon: <History className="w-5 h-5" />,
+    },
+  ];
+
+  // Group 3: Account and Settings
+  const accountNavItems = [
+    {
+      title: "Deposits",
+      href: "/deposits",
+      icon: <CircleDollarSign className="w-5 h-5" />,
+    },
+    {
+      title: "Cloud Sync",
+      href: "/cloud",
+      icon: <Cloud className="w-5 h-5" />,
+    },
+    {
+      title: "Profile",
+      href: "/profile",
+      icon: <UserCircle className="w-5 h-5" />,
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: <Settings className="w-5 h-5" />,
+    },
+  ];
+
   return (
-    <>
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
-      
-      <aside 
-        className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 w-64 border-r bg-card",
-          "transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0 md:w-16",
-          "flex flex-col"
-        )}
-      >
-        <div className="py-6 px-4 flex justify-between items-center border-b h-16">
-          <div className="flex items-center gap-2">
-            {isOpen ? (
-              <>
-                <Globe className="h-6 w-6 text-accent" />
-                <span className="font-bold text-lg">Prometheus</span>
-              </>
-            ) : (
-              <Globe className="h-6 w-6 mx-auto text-accent" />
-            )}
-          </div>
-          <Button 
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 hidden md:flex" 
-            onClick={toggleSidebar}
-          >
-            {isOpen ? <ChevronLeft /> : <ChevronRight />}
-          </Button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto py-2 px-2">
-          <SidebarSection title={isOpen ? "Dashboard" : ""}>
-            <SidebarItem icon={Home} label="Overview" to="/" active={currentPath === '/'} />
-            <SidebarItem icon={Activity} label="Performance" to="/performance" active={currentPath === '/performance'} />
-            <SidebarItem icon={BarChart2} label="Markets" to="/markets" active={currentPath === '/markets'} />
-            <SidebarItem icon={Cloud} label="Cloud" to="/cloud" active={currentPath === '/cloud'} />
-            <SidebarItem icon={Newspaper} label="Market Intelligence" to="/news-scanner" active={currentPath === '/news-scanner'} />
-          </SidebarSection>
-          
-          <SidebarSection title={isOpen ? "Trading" : ""}>
-            <SidebarItem icon={TrendingUp} label="Strategies" to="/strategies" active={currentPath === '/strategies'} />
-            <SidebarItem icon={ArrowLeftRight} label="Trades" to="/trades" active={currentPath === '/trades'} />
-            <SidebarItem icon={Zap} label="Trading Bot" to="/trading-bot" active={currentPath === '/trading-bot'} />
-            <SidebarItem icon={History} label="History" to="/history" active={currentPath === '/history'} />
-            <SidebarItem icon={LineChart} label="Analytics" to="/analytics" active={currentPath === '/analytics'} />
-          </SidebarSection>
-          
-          <SidebarSection title={isOpen ? "Account" : ""}>
-            <SidebarItem icon={Briefcase} label="Portfolio" to="/portfolio" active={currentPath === '/portfolio'} />
-            <SidebarItem icon={Wallet} label="Assets" to="/assets" active={currentPath === '/assets'} />
-            <SidebarItem icon={CreditCard} label="Deposits" to="/deposits" active={currentPath === '/deposits'} />
-          </SidebarSection>
-        </div>
-        
-        <div className="border-t py-2 px-2">
-          <SidebarItem icon={User} label="Profile" to="/profile" />
-          <SidebarItem icon={Settings} label="Settings" to="/settings" />
-          <Button 
-            variant="ghost" 
-            className={cn(
-              "w-full justify-start gap-3 font-normal text-destructive hover:bg-destructive/10 hover:text-destructive",
-              !isOpen && "justify-center p-2"
-            )}
-          >
-            <LogOut className="h-5 w-5" />
-            {isOpen && <span>Logout</span>}
-          </Button>
-        </div>
-        
-        <div className="py-2 px-4 text-xs text-muted-foreground border-t">
-          {isOpen ? (
-            <div className="flex items-center justify-between">
-              <span>v1.0.0</span>
-              <a 
-                href="https://github.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+    <div className={cn("pb-12", className)}>
+      <div className="space-y-4 py-4">
+        <div className="px-4 py-2">
+          <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight">
+            Main
+          </h2>
+          <div className="space-y-1">
+            {mainNavItems.map((item) => (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                onClick={handleNavLinkClick}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center justify-start w-full px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
+                    isActive ? "bg-accent text-accent-foreground" : "transparent",
+                  )
+                }
               >
-                <Github className="h-4 w-4" />
-              </a>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <Github className="h-4 w-4" />
-            </div>
-          )}
+                {item.icon}
+                <span className="ml-3">{item.title}</span>
+              </NavLink>
+            ))}
+          </div>
         </div>
-      </aside>
-    </>
+        <div className="px-4 py-2">
+          <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight">
+            Analysis
+          </h2>
+          <div className="space-y-1">
+            {analysisNavItems.map((item) => (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                onClick={handleNavLinkClick}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center justify-start w-full px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
+                    isActive ? "bg-accent text-accent-foreground" : "transparent",
+                  )
+                }
+              >
+                {item.icon}
+                <span className="ml-3">{item.title}</span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
+        <div className="px-4 py-2">
+          <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight">
+            Account
+          </h2>
+          <div className="space-y-1">
+            {accountNavItems.map((item) => (
+              <NavLink
+                key={item.href}
+                to={item.href}
+                onClick={handleNavLinkClick}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center justify-start w-full px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
+                    isActive ? "bg-accent text-accent-foreground" : "transparent",
+                  )
+                }
+              >
+                {item.icon}
+                <span className="ml-3">{item.title}</span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
-};
+}

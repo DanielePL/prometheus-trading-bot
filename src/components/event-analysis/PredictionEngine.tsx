@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -371,7 +372,7 @@ export const PredictionEngine = ({
               <div className="space-y-3">
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map(event => (
-                    <Alert key={event.id} variant="outline" className="py-3">
+                    <Alert key={event.id} variant="default" className="py-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <AlertTitle className="flex items-center">
@@ -437,3 +438,4 @@ export const PredictionEngine = ({
     </Card>
   );
 };
+

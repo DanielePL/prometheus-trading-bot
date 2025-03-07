@@ -3,226 +3,194 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { DateRange } from 'react-day-picker';
 import { DateRangePicker } from '@/components/event-analysis/DateRangePicker';
 import { EventCorrelationView } from '@/components/event-analysis/EventCorrelationView';
-import { PredictionEngine } from '@/components/event-analysis/PredictionEngine';
 import { PatternIdentifier } from '@/components/event-analysis/PatternIdentifier';
 import { WorldEventTimeline } from '@/components/event-analysis/WorldEventTimeline';
-import { Download, Filter, Calendar, LineChart, Settings, Brain } from 'lucide-react';
-import { toast } from 'sonner';
+import { PredictionEngine } from '@/components/event-analysis/PredictionEngine';
+import { addMonths, subMonths } from 'date-fns';
 
-const EventAnalysis = () => {
-  const [selectedCrypto, setSelectedCrypto] = useState('BTC');
-  const [timeframe, setTimeframe] = useState('1y');
-  const [eventCategories, setEventCategories] = useState<string[]>(['economic', 'political', 'regulatory']);
-  const [dateRange, setDateRange] = useState({ from: new Date(2020, 0, 1), to: new Date() });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+export default function EventAnalysis() {
+  // Default date range of last 6 months
+  const defaultFrom = subMonths(new Date(), 6);
+  const defaultTo = new Date();
   
-  const handleRunAnalysis = () => {
-    setIsAnalyzing(true);
-    toast.info("Starting deep analysis of historical data and events");
-    
-    // Simulate analysis completion
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      toast.success("Analysis complete - patterns identified");
-    }, 3000);
+  const [cryptocurrency, setCryptocurrency] = useState('Bitcoin');
+  const [dateRange, setDateRange] = useState<DateRange>({ from: defaultFrom, to: defaultTo });
+  const [selectedTab, setSelectedTab] = useState('correlation');
+  const [eventCategories, setEventCategories] = useState(['economic', 'political', 'regulatory', 'disaster']);
+  
+  const handleEventCategoryChange = (category: string, checked: boolean) => {
+    if (checked) {
+      setEventCategories([...eventCategories, category]);
+    } else {
+      setEventCategories(eventCategories.filter(cat => cat !== category));
+    }
+  };
+  
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
   };
   
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Event-Based Analysis</h1>
-            <p className="text-muted-foreground mt-1">
-              Analyze cryptocurrency patterns in relation to world events
+      <div className="container p-4 mx-auto max-w-7xl">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">Event Analysis</h1>
+            <p className="text-muted-foreground">
+              Analyze how real-world events correlate with cryptocurrency price movements
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <Calendar className="mr-2 h-4 w-4" />
-              Historical View
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Export Analysis
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={handleRunAnalysis}
-              disabled={isAnalyzing}
-            >
-              <Brain className={`mr-2 h-4 w-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
-              {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-base">Analysis Parameters</CardTitle>
-              <CardDescription>Configure data sources and parameters</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Cryptocurrency</label>
-                <Select 
-                  value={selectedCrypto} 
-                  onValueChange={setSelectedCrypto}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select cryptocurrency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
-                    <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
-                    <SelectItem value="SOL">Solana (SOL)</SelectItem>
-                    <SelectItem value="ADA">Cardano (ADA)</SelectItem>
-                    <SelectItem value="DOT">Polkadot (DOT)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Time Frame</label>
-                <Select 
-                  value={timeframe} 
-                  onValueChange={setTimeframe}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select time frame" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1m">1 Month</SelectItem>
-                    <SelectItem value="3m">3 Months</SelectItem>
-                    <SelectItem value="6m">6 Months</SelectItem>
-                    <SelectItem value="1y">1 Year</SelectItem>
-                    <SelectItem value="3y">3 Years</SelectItem>
-                    <SelectItem value="5y">5 Years</SelectItem>
-                    <SelectItem value="max">All Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date Range</label>
-                <DateRangePicker 
-                  dateRange={dateRange} 
-                  onUpdate={setDateRange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Event Categories</label>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    variant={eventCategories.includes('economic') ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => {
-                      if (eventCategories.includes('economic')) {
-                        setEventCategories(eventCategories.filter(c => c !== 'economic'));
-                      } else {
-                        setEventCategories([...eventCategories, 'economic']);
-                      }
-                    }}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="md:col-span-1">
+              <CardHeader>
+                <CardTitle>Analysis Parameters</CardTitle>
+                <CardDescription>Configure your analysis settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="cryptocurrency">Cryptocurrency</Label>
+                  <Select 
+                    value={cryptocurrency} 
+                    onValueChange={setCryptocurrency}
                   >
-                    Economic
-                  </Button>
-                  <Button 
-                    variant={eventCategories.includes('political') ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => {
-                      if (eventCategories.includes('political')) {
-                        setEventCategories(eventCategories.filter(c => c !== 'political'));
-                      } else {
-                        setEventCategories([...eventCategories, 'political']);
-                      }
-                    }}
-                  >
-                    Political
-                  </Button>
-                  <Button 
-                    variant={eventCategories.includes('regulatory') ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => {
-                      if (eventCategories.includes('regulatory')) {
-                        setEventCategories(eventCategories.filter(c => c !== 'regulatory'));
-                      } else {
-                        setEventCategories([...eventCategories, 'regulatory']);
-                      }
-                    }}
-                  >
-                    Regulatory
-                  </Button>
-                  <Button 
-                    variant={eventCategories.includes('disaster') ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => {
-                      if (eventCategories.includes('disaster')) {
-                        setEventCategories(eventCategories.filter(c => c !== 'disaster'));
-                      } else {
-                        setEventCategories([...eventCategories, 'disaster']);
-                      }
-                    }}
-                  >
-                    Disasters
-                  </Button>
+                    <SelectTrigger id="cryptocurrency">
+                      <SelectValue placeholder="Select cryptocurrency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Bitcoin">Bitcoin (BTC)</SelectItem>
+                      <SelectItem value="Ethereum">Ethereum (ETH)</SelectItem>
+                      <SelectItem value="Solana">Solana (SOL)</SelectItem>
+                      <SelectItem value="Cardano">Cardano (ADA)</SelectItem>
+                      <SelectItem value="Ripple">Ripple (XRP)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <div className="md:col-span-3 space-y-4">
-            <Tabs defaultValue="correlation" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="correlation">Event Correlation</TabsTrigger>
-                <TabsTrigger value="patterns">Pattern Identification</TabsTrigger>
-                <TabsTrigger value="prediction">Prediction Engine</TabsTrigger>
-                <TabsTrigger value="timeline">Event Timeline</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="correlation">
-                <EventCorrelationView 
-                  cryptocurrency={selectedCrypto}
-                  dateRange={dateRange}
-                  eventCategories={eventCategories}
-                />
-              </TabsContent>
-              
-              <TabsContent value="patterns">
-                <PatternIdentifier 
-                  cryptocurrency={selectedCrypto}
-                  dateRange={dateRange}
-                  eventCategories={eventCategories}
-                />
-              </TabsContent>
-              
-              <TabsContent value="prediction">
-                <PredictionEngine 
-                  cryptocurrency={selectedCrypto}
-                  eventCategories={eventCategories}
-                />
-              </TabsContent>
-              
-              <TabsContent value="timeline">
-                <WorldEventTimeline 
-                  dateRange={dateRange}
-                  eventCategories={eventCategories}
-                  cryptocurrency={selectedCrypto}
-                />
-              </TabsContent>
-            </Tabs>
+                
+                <div className="space-y-2">
+                  <Label>Time Period</Label>
+                  <DateRangePicker 
+                    dateRange={dateRange}
+                    onUpdate={handleDateRangeChange}
+                  />
+                </div>
+                
+                <div className="space-y-3">
+                  <Label>Event Categories</Label>
+                  <div className="grid gap-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="economic" 
+                        checked={eventCategories.includes('economic')}
+                        onCheckedChange={(checked) => handleEventCategoryChange('economic', checked as boolean)}
+                      />
+                      <Label htmlFor="economic" className="font-normal">Economic Events</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="political" 
+                        checked={eventCategories.includes('political')}
+                        onCheckedChange={(checked) => handleEventCategoryChange('political', checked as boolean)}
+                      />
+                      <Label htmlFor="political" className="font-normal">Political Events</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="regulatory" 
+                        checked={eventCategories.includes('regulatory')}
+                        onCheckedChange={(checked) => handleEventCategoryChange('regulatory', checked as boolean)}
+                      />
+                      <Label htmlFor="regulatory" className="font-normal">Regulatory Changes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="disaster" 
+                        checked={eventCategories.includes('disaster')}
+                        onCheckedChange={(checked) => handleEventCategoryChange('disaster', checked as boolean)}
+                      />
+                      <Label htmlFor="disaster" className="font-normal">Disasters & Crises</Label>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="md:col-span-3">
+              <CardHeader>
+                <Tabs 
+                  defaultValue="correlation" 
+                  value={selectedTab} 
+                  onValueChange={setSelectedTab}
+                  className="w-full"
+                >
+                  <TabsList className="grid grid-cols-4 mb-4">
+                    <TabsTrigger value="correlation">Correlation</TabsTrigger>
+                    <TabsTrigger value="patterns">Patterns</TabsTrigger>
+                    <TabsTrigger value="prediction">Prediction</TabsTrigger>
+                    <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                  </TabsList>
+                  
+                  <CardTitle>
+                    {selectedTab === 'correlation' && 'Event Correlation Analysis'}
+                    {selectedTab === 'patterns' && 'Pattern Identification'}
+                    {selectedTab === 'prediction' && 'Future Event Prediction'}
+                    {selectedTab === 'timeline' && 'World Event Timeline'}
+                  </CardTitle>
+                  <CardDescription>
+                    {selectedTab === 'correlation' && `Analyze how ${cryptocurrency} price correlates with world events`}
+                    {selectedTab === 'patterns' && `Identify patterns between ${cryptocurrency} price movements and world events`}
+                    {selectedTab === 'prediction' && `Predict how ${cryptocurrency} might react to upcoming events`}
+                    {selectedTab === 'timeline' && `View a timeline of events that impacted ${cryptocurrency}`}
+                  </CardDescription>
+                </Tabs>
+              </CardHeader>
+              <Separator />
+              <CardContent className="pt-6">
+                <TabsContent value="correlation" className="mt-0">
+                  <EventCorrelationView 
+                    cryptocurrency={cryptocurrency}
+                    dateRange={dateRange as { from: Date; to: Date }}
+                    eventCategories={eventCategories}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="patterns" className="mt-0">
+                  <PatternIdentifier 
+                    cryptocurrency={cryptocurrency}
+                    dateRange={dateRange as { from: Date; to: Date }}
+                    eventCategories={eventCategories}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="prediction" className="mt-0">
+                  <PredictionEngine 
+                    cryptocurrency={cryptocurrency}
+                    dateRange={dateRange as { from: Date; to: Date }}
+                    eventCategories={eventCategories}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="timeline" className="mt-0">
+                  <WorldEventTimeline 
+                    cryptocurrency={cryptocurrency}
+                    dateRange={dateRange as { from: Date; to: Date }}
+                    eventCategories={eventCategories}
+                  />
+                </TabsContent>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
     </AppLayout>
   );
-};
-
-export default EventAnalysis;
+}

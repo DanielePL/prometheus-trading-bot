@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/popover"
 
 interface DateRangePickerProps {
-  dateRange: DateRange;
-  onUpdate: (range: DateRange) => void;
+  dateRange: DateRange | undefined;
+  onUpdate: (range: DateRange | undefined) => void;
   className?: string;
 }
 

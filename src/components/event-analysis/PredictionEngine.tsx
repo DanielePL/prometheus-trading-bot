@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -212,7 +211,7 @@ export const PredictionEngine = ({
           </div>
           <div className="flex gap-2">
             <Button 
-              variant="outline" 
+              variant="default" 
               size="sm"
               onClick={handleCopyReport}
             >

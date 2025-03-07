@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Index from '@/pages/Index';
@@ -17,7 +18,6 @@ import TradingBot from '@/pages/TradingBot';
 import AdvancedTrading from '@/pages/AdvancedTrading';
 import Cloud from '@/pages/Cloud';
 import NewsScanner from '@/pages/NewsScanner';
-import TradingBotPage from '@/pages/TradingBotPage';
 import EventAnalysis from '@/pages/EventAnalysis';
 
 import './App.css';
@@ -40,7 +40,7 @@ function App() {
           <Route path="/deposits" element={<Deposits />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/tradingbot" element={<TradingBotPage />} />
+          <Route path="/tradingbot" element={<TradingBot />} />
           <Route path="/performance" element={<Performance />} />
           <Route path="/event-analysis" element={<EventAnalysis />} />
           <Route path="/news-scanner" element={<NewsScanner />} />

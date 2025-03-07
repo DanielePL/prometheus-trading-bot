@@ -233,7 +233,7 @@ export const PatternIdentifier = ({
                   <TableCell>{getCategoryBadge(pattern.category)}</TableCell>
                   <TableCell className="text-center">
                     <div className="space-y-1">
-                      <Progress value={pattern.confidence} className="h-2" indicatorClassName={getConfidenceColor(pattern.confidence)} />
+                      <Progress value={pattern.confidence} className={`h-2 ${getConfidenceColor(pattern.confidence)}`} />
                       <div className="text-xs font-medium">{pattern.confidence}%</div>
                     </div>
                   </TableCell>

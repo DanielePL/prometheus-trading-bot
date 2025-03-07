@@ -305,16 +305,21 @@ const generateMockSentimentAnalysis = (items: NewsItem[]): SentimentAnalysis => 
   const negativeCount = sentiments.filter(s => s === 'negative').length;
   const neutralCount = sentiments.filter(s => s === 'neutral').length;
   
-  const overallSentiment: 'positive' | 'negative' | 'neutral' = 
-    positiveCount > negativeCount && positiveCount > neutralCount ? 'positive' :
-    negativeCount > positiveCount && negativeCount > neutralCount ? 'negative' : 'neutral';
+  let overallSentiment: 'positive' | 'negative' | 'neutral';
+  if (positiveCount > negativeCount && positiveCount > neutralCount) {
+    overallSentiment = 'positive';
+  } else if (negativeCount > positiveCount && negativeCount > neutralCount) {
+    overallSentiment = 'negative';
+  } else {
+    overallSentiment = 'neutral';
+  }
   
   const topics = [
     {topic: 'Bitcoin', sentiment: 'positive' as const, count: Math.floor(Math.random() * 10) + 5},
     {topic: 'Ethereum', sentiment: 'positive' as const, count: Math.floor(Math.random() * 8) + 3},
     {topic: 'Regulation', sentiment: 'neutral' as const, count: Math.floor(Math.random() * 6) + 2},
     {topic: 'Federal Reserve', sentiment: 'negative' as const, count: Math.floor(Math.random() * 5) + 1},
-    {topic: 'Market Volatility', sentiment: overallSentiment as const, count: Math.floor(Math.random() * 7) + 3}
+    {topic: 'Market Volatility', sentiment: overallSentiment, count: Math.floor(Math.random() * 7) + 3}
   ];
   
   const recommendation = overallSentiment === 'positive' ? 

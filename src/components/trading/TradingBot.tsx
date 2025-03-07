@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { BotControlPanel } from './BotControlPanel';
@@ -267,6 +268,10 @@ export const TradingBot = () => {
     addLog("Exchange API configuration updated");
   };
 
+  const configureApiKeys = () => {
+    setShowApiConfig(true);
+  };
+
   useEffect(() => {
     if (!isRunning) return;
     
@@ -315,7 +320,7 @@ export const TradingBot = () => {
         onTradingStrategyChange={setTradingStrategy}
         onRiskLevelChange={(val: any) => setRiskLevel(val)}
         onMaxTradingAmountChange={setMaxTradingAmount}
-        onConfigureApiKeys={() => setShowApiConfig(true)}
+        onConfigureApiKeys={configureApiKeys}
         hasApiKeys={!!apiKeys.exchangeApiKey && !!apiKeys.exchangeApiSecret}
       />
       

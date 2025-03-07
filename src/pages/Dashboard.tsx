@@ -10,7 +10,7 @@ import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { BullRunIndicator } from '@/components/trading/indicators/BullRunIndicator';
 import { 
-  Wallet, TrendingUp, BarChart2, CircleDollarSign, 
+  Wallet, TrendingUp, CircleDollarSign, 
   Landmark, ClipboardCheck, Calendar, Zap, Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,7 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatsCard
             title="Portfolio Value"
             value="$10,000.00"
@@ -68,11 +68,6 @@ const Dashboard = () => {
             change={0}
             icon={<TrendingUp className="h-4 w-4" />}
           />
-          <StatsCard
-            title="Active Bots"
-            value="1"
-            icon={<BarChart2 className="h-4 w-4" />}
-          />
           <div className="relative">
             <StatsCard
               title="Win Rate"
@@ -80,7 +75,7 @@ const Dashboard = () => {
               change={0}
               icon={<CircleDollarSign className="h-4 w-4" />}
             />
-            <div className="absolute top-1/2 -right-1/2 transform -translate-y-1/2 z-10">
+            <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-[90%] z-10">
               <BullRunIndicator 
                 isBullRun={true}
                 confidence={0.85}

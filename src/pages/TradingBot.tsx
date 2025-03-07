@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { TradingBot } from '@/components/trading/TradingBot';
 import { TradingSystem } from '@/components/trading/TradingSystem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Zap, BarChart2, Bell, LayoutDashboard } from 'lucide-react';
+import { Settings, Zap, BarChart2, Bell, LayoutDashboard, Brain, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Trading system component that integrates the TradingBot and other subcomponents
@@ -29,6 +29,10 @@ const TradingBotPage = () => {
               <BarChart2 className="h-4 w-4 mr-2" />
               Trading System
             </TabsTrigger>
+            <TabsTrigger value="risk">
+              <Shield className="h-4 w-4 mr-2" />
+              Risk Management
+            </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="h-4 w-4 mr-2" />
               Bot Settings
@@ -36,6 +40,10 @@ const TradingBotPage = () => {
             <TabsTrigger value="dashboard">
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="ai">
+              <Brain className="h-4 w-4 mr-2" />
+              AI Advisor
             </TabsTrigger>
             <TabsTrigger value="alerts">
               <Bell className="h-4 w-4 mr-2" />
@@ -49,6 +57,20 @@ const TradingBotPage = () => {
           
           <TabsContent value="system" className="space-y-4">
             <TradingSystem />
+          </TabsContent>
+          
+          <TabsContent value="risk">
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Advanced Risk Management</CardTitle>
+                <CardDescription>Advanced tools to protect your capital and manage risk exposure</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground py-24 text-center">
+                  Advanced risk management panel to be implemented
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="settings">
@@ -74,6 +96,20 @@ const TradingBotPage = () => {
               <CardContent>
                 <p className="text-muted-foreground py-24 text-center">
                   Trading performance dashboard to be implemented
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="ai">
+            <Card>
+              <CardHeader>
+                <CardTitle>AI Trading Advisor</CardTitle>
+                <CardDescription>AI-powered market analysis and trading recommendations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground py-24 text-center">
+                  AI trading advisor panel to be implemented
                 </p>
               </CardContent>
             </Card>

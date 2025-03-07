@@ -63,7 +63,7 @@ const NewsScanner = () => {
                 <SemanticInsights />
               </div>
               <div className="space-y-6">
-                <ScanStatusCard onScan={handleScan} isScanning={isScanning} />
+                <ScanStatusCard />
               </div>
             </div>
           </TabsContent>

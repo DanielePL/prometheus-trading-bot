@@ -3,12 +3,12 @@ import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Wallet, ArrowUpRight, ArrowDownRight, Plus, RefreshCcw, 
+  Wallet, ArrowUpRight, ArrowDownRight, Plus, RefreshCw, 
   Search, SlidersHorizontal, ExternalLink, Copy
 } from 'lucide-react';
 
@@ -89,7 +89,7 @@ const Assets = () => {
           </div>
           <div className="flex space-x-2">
             <Button variant="outline" size="sm">
-              <RefreshCcw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
             <Button className="gap-2">

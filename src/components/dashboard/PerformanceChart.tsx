@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
-import { Bitcoin } from 'lucide-react';
 
 // Mock data for chart
 const generateData = (days: number, baseValue: number, volatility: number) => {
@@ -51,16 +50,8 @@ export const PerformanceChart = () => {
   return (
     <Card className="col-span-full h-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Bitcoin Performance</CardTitle>
-            <CardDescription>Track your BTC trading performance over time</CardDescription>
-          </div>
-          <div className="flex items-center bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full">
-            <Bitcoin className="h-4 w-4 mr-1.5" />
-            <span className="text-sm font-medium">BTC-USD</span>
-          </div>
-        </div>
+        <CardTitle>Performance Overview</CardTitle>
+        <CardDescription>Track your trading performance over time</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="daily" className="w-full">
@@ -74,8 +65,8 @@ export const PerformanceChart = () => {
             
             <div className="flex items-center text-sm">
               <div className="flex items-center mr-4">
-                <div className="w-3 h-3 rounded-full bg-orange-500 mr-1"></div>
-                <span>Bitcoin</span>
+                <div className="w-3 h-3 rounded-full bg-accent mr-1"></div>
+                <span>Performance</span>
               </div>
             </div>
           </div>
@@ -101,10 +92,10 @@ export const PerformanceChart = () => {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#f59e0b" // Bitcoin orange
+                    stroke="hsl(var(--accent))"
                     strokeWidth={2}
-                    dot={{ stroke: '#f59e0b', strokeWidth: 2, fill: 'var(--background)' }}
-                    activeDot={{ stroke: '#f59e0b', strokeWidth: 2, r: 6, fill: '#f59e0b' }}
+                    dot={{ stroke: 'hsl(var(--accent))', strokeWidth: 2, fill: 'var(--background)' }}
+                    activeDot={{ stroke: 'hsl(var(--accent))', strokeWidth: 2, r: 6, fill: 'hsl(var(--accent))' }}
                     isAnimationActive={true}
                     animationDuration={1000}
                   />

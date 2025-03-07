@@ -17,17 +17,17 @@ export const StatsCard = ({ title, value, change, icon, className }: StatsCardPr
   
   return (
     <Card className={cn("overflow-hidden h-full", className)}>
-      <CardContent className="p-4 flex flex-col h-full">
-        <div className="flex justify-between items-center mb-2">
-          <p className="text-sm font-medium">{title}</p>
+      <CardContent className="p-3 flex flex-col h-full">
+        <div className="flex justify-between items-center">
+          <p className="text-xs font-medium">{title}</p>
           <div className="p-1 rounded-full bg-blue-900/30">{icon}</div>
         </div>
         
-        <div className="mt-1">
-          <div className="text-2xl font-bold">{value}</div>
+        <div>
+          <div className="text-xl font-bold">{value}</div>
           
           {change !== undefined && (
-            <div className="flex items-center mt-1">
+            <div className="flex items-center">
               <div className={cn(
                 "flex items-center text-xs font-medium",
                 isPositive ? "text-green-400" : "text-red-400"

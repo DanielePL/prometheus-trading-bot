@@ -66,7 +66,9 @@ export const RiskMetricsPanel = () => {
           <Progress 
             value={metrics.portfolioHeatIndex} 
             className="h-2" 
-            indicatorClassName={getProgressColor(metrics.portfolioHeatIndex)} 
+            style={{ 
+              '--progress-color': getProgressColor(metrics.portfolioHeatIndex) 
+            } as React.CSSProperties} 
           />
         </div>
         
@@ -81,7 +83,9 @@ export const RiskMetricsPanel = () => {
           <Progress 
             value={metrics.drawdown} 
             className="h-2" 
-            indicatorClassName={getProgressColor(metrics.drawdown)} 
+            style={{ 
+              '--progress-color': getProgressColor(metrics.drawdown) 
+            } as React.CSSProperties} 
           />
         </div>
         
@@ -93,7 +97,9 @@ export const RiskMetricsPanel = () => {
           <Progress 
             value={metrics.correlationRisk} 
             className="h-2" 
-            indicatorClassName={getProgressColor(metrics.correlationRisk)} 
+            style={{ 
+              '--progress-color': getProgressColor(metrics.correlationRisk) 
+            } as React.CSSProperties} 
           />
         </div>
         
@@ -105,7 +111,9 @@ export const RiskMetricsPanel = () => {
           <Progress 
             value={metrics.volatility} 
             className="h-2" 
-            indicatorClassName={getProgressColor(metrics.volatility)} 
+            style={{ 
+              '--progress-color': getProgressColor(metrics.volatility) 
+            } as React.CSSProperties} 
           />
         </div>
       </div>

@@ -31,7 +31,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <Sidebar className="h-full" />
+      </div>
       <div className={`flex flex-col flex-grow transition-all duration-300 ease-in-out ${sidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
         <Navbar toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
         <main className="flex-grow px-4 md:px-8 py-6 md:py-8">

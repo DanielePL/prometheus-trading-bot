@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -28,7 +27,6 @@ import {
 } from '@/components/ui/slider';
 import { 
   PieChart, 
-  Chart, 
   DollarSign, 
   CopyPlus,
   Layers, 
@@ -158,7 +156,7 @@ export const PortfolioDiversificationTool = () => {
         actions.push({
           asset: key,
           action,
-          amount: `$${Math.abs(amountChange)}`,
+          amount: `$${Math.abs(Number(amountChange))}`,
           changePercent: `${value.change > 0 ? '+' : ''}${value.change.toFixed(1)}%`
         });
       }

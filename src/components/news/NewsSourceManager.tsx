@@ -5,18 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2, Settings, RefreshCw, Key } from 'lucide-react';
+import { Plus, Trash2, Settings, RefreshCw, Key, Globe, Link2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getNewsSources, addNewsSource, updateNewsSource, deleteNewsSource, saveApiKeys, NewsSource } from '@/services/newsCrawlerService';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const NewsSourceManager = () => {
   const [sources, setSources] = useState<NewsSource[]>([]);
   const [newSourceDialogOpen, setNewSourceDialogOpen] = useState(false);
   const [apiKeysDialogOpen, setApiKeysDialogOpen] = useState(false);
+  const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
+  const [quickAddUrl, setQuickAddUrl] = useState('');
+  const [quickAddName, setQuickAddName] = useState('');
   
   // Initialize with default API keys
   const [apiKeys, setApiKeys] = useState({
@@ -85,6 +89,26 @@ export const NewsSourceManager = () => {
     setNewSourceDialogOpen(false);
   };
 
+  const handleQuickAddSource = () => {
+    if (!quickAddUrl || !quickAddName) return;
+    
+    const newCustomSource = {
+      name: quickAddName,
+      type: 'custom' as const,
+      url: quickAddUrl,
+      enabled: true,
+      parameters: {}
+    };
+    
+    const added = addNewsSource(newCustomSource);
+    setSources([...sources, added]);
+    
+    // Reset form
+    setQuickAddUrl('');
+    setQuickAddName('');
+    setQuickAddDialogOpen(false);
+  };
+
   const handleSaveApiKeys = () => {
     saveApiKeys(apiKeys);
     
@@ -140,12 +164,44 @@ export const NewsSourceManager = () => {
             <CardDescription>Manage data sources for market intelligence</CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={() => setApiKeysDialogOpen(true)}>
-              <Key className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => setNewSourceDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" onClick={() => setQuickAddDialogOpen(true)}>
+                    <Globe className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Quick add website</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" onClick={() => setApiKeysDialogOpen(true)}>
+                    <Key className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>API Keys</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" onClick={() => setNewSourceDialogOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Add source</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </CardHeader>
@@ -313,6 +369,70 @@ export const NewsSourceManager = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewSourceDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleAddSource}>Add Source</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Quick Add Website Dialog */}
+      <Dialog open={quickAddDialogOpen} onOpenChange={setQuickAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Quick Add Website</DialogTitle>
+            <DialogDescription>
+              Add a news website to monitor
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="websiteName">Website Name</Label>
+              <Input 
+                id="websiteName" 
+                value={quickAddName}
+                onChange={(e) => setQuickAddName(e.target.value)}
+                placeholder="Bloomberg News"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="websiteUrl">Website URL</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="websiteUrl" 
+                  value={quickAddUrl}
+                  onChange={(e) => setQuickAddUrl(e.target.value)}
+                  placeholder="https://www.bloomberg.com/markets"
+                />
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => {
+                    // Auto-extract name from URL if name field is empty
+                    if (!quickAddName && quickAddUrl) {
+                      try {
+                        const url = new URL(quickAddUrl);
+                        const domain = url.hostname.replace('www.', '');
+                        setQuickAddName(domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1));
+                      } catch (e) {
+                        // Invalid URL, do nothing
+                      }
+                    }
+                  }}
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickAddDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleQuickAddSource}
+              disabled={!quickAddUrl || !quickAddName}
+            >
+              Add Website
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

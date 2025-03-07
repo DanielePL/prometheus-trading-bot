@@ -4,6 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PerformanceChart } from '@/components/dashboard/PerformanceChart';
 import { MarketDepthVisualization } from '@/components/markets/MarketDepthVisualization';
 import { TradingPairs } from '@/components/dashboard/TradingPairs';
+import { BotStatus } from '@/components/dashboard/BotStatus';
+import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
+import { Button } from '@/components/ui/button';
+import { BarChart3 } from 'lucide-react';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 
 interface DashboardChartsProps {
   activeSymbol: string;

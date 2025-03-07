@@ -12,7 +12,8 @@ import {
   RefreshCw,
   Database,
   ScrollText,
-  Flame
+  Flame,
+  FileText
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +23,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
+import { PaperTradesPanel } from '@/components/trading/paper-trades';
 
 export const BotStatus = () => {
   const [isRunning, setIsRunning] = React.useState(true);
@@ -31,9 +34,9 @@ export const BotStatus = () => {
   const [isTraining, setIsTraining] = React.useState(false);
   const [showLogs, setShowLogs] = React.useState(false);
   const [botLogs, setBotLogs] = React.useState<string[]>([]);
+  const [showPaperTrades, setShowPaperTrades] = React.useState(false);
   const { toast } = useToast();
   
-  // Simulate progress change
   React.useEffect(() => {
     if (isRunning) {
       const interval = setInterval(() => {
@@ -47,7 +50,6 @@ export const BotStatus = () => {
     }
   }, [isRunning]);
   
-  // Sample logs generation - in a real app, these would come from your backend
   React.useEffect(() => {
     if (isRunning) {
       const generateRandomLogs = () => {
@@ -65,13 +67,11 @@ export const BotStatus = () => {
         ];
         
         setBotLogs(prev => {
-          // Keep the most recent 100 logs
           const newLogs = [...prev, logTypes[Math.floor(Math.random() * logTypes.length)]];
           return newLogs.slice(-100);
         });
       };
       
-      // Generate initial logs
       if (botLogs.length === 0) {
         const initialLogs = [
           `[${new Date().toLocaleTimeString()}] Bot started in ${isPaperTrading ? 'PAPER' : 'LIVE'} mode`,
@@ -111,7 +111,6 @@ export const BotStatus = () => {
       description: "Training Prometheus ML model with latest data",
     });
     
-    // Simulate model training completion
     setTimeout(() => {
       setIsTraining(false);
       toast({
@@ -130,9 +129,12 @@ export const BotStatus = () => {
       title: "Historical Data",
       description: "Accessing historical trading data...",
     });
-    // In a real app, this would navigate to or open a historical data view
   };
-  
+
+  const viewPaperTrades = () => {
+    setShowPaperTrades(true);
+  };
+
   return (
     <>
       <Card className="h-full">
@@ -250,6 +252,10 @@ export const BotStatus = () => {
                 <ScrollText className="mr-2 h-4 w-4" />
                 View Logs
               </Button>
+              <Button variant="outline" size="sm" onClick={viewPaperTrades}>
+                <FileText className="mr-2 h-4 w-4" />
+                Paper Trades
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -279,6 +285,18 @@ export const BotStatus = () => {
           <div className="flex justify-end">
             <Button onClick={() => setShowLogs(false)}>Close</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPaperTrades} onOpenChange={setShowPaperTrades}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Paper Trading Simulator</DialogTitle>
+            <DialogDescription>
+              Practice trading with virtual funds and no risk
+            </DialogDescription>
+          </DialogHeader>
+          <PaperTradesPanel />
         </DialogContent>
       </Dialog>
     </>

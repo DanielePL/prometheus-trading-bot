@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   Activity, ArrowLeftRight, BarChart2, Briefcase, ChevronLeft, ChevronRight, 
   CreditCard, Github, Globe, History, Home, LineChart, LogOut, 
-  Settings, TrendingUp, User, Wallet, Cloud, Zap
+  Settings, TrendingUp, User, Wallet, Cloud, Zap, Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -101,6 +101,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             <SidebarItem icon={Activity} label="Performance" to="/performance" active={currentPath === '/performance'} />
             <SidebarItem icon={BarChart2} label="Markets" to="/markets" active={currentPath === '/markets'} />
             <SidebarItem icon={Cloud} label="Cloud" to="/cloud" active={currentPath === '/cloud'} />
+            <SidebarItem icon={Newspaper} label="News Scanner" to="/news-scanner" active={currentPath === '/news-scanner'} />
           </SidebarSection>
           
           <SidebarSection title={isOpen ? "Trading" : ""}>

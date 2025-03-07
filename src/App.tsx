@@ -17,6 +17,7 @@ import Analytics from "./pages/Analytics";
 import Portfolio from "./pages/Portfolio";
 import Assets from "./pages/Assets";
 import TradingBot from "./pages/TradingBot";
+import NewsScanner from "./pages/NewsScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => {
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/assets" element={<Assets />} />
             <Route path="/trading-bot" element={<TradingBot />} />
+            <Route path="/news-scanner" element={<NewsScanner />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

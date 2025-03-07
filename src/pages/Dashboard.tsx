@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -10,7 +9,7 @@ import { TradingSystemInfo } from '@/components/dashboard/TradingSystemInfo';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
 import { 
   Wallet, TrendingUp, BarChart2, CircleDollarSign, 
-  Landmark, ClipboardCheck, Calendar, Zap
+  Landmark, ClipboardCheck, Calendar, Zap, Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -22,7 +21,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground mt-1">
@@ -45,6 +44,12 @@ const Dashboard = () => {
                 </Link>
               </Button>
             )}
+            <Button variant="outline" asChild>
+              <Link to="/news-scanner">
+                <Newspaper className="mr-2 h-4 w-4" />
+                News Scanner
+              </Link>
+            </Button>
           </div>
         </div>
         

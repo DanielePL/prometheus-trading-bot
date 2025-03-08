@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -572,6 +573,7 @@ const Strategies = () => {
                 id="apply-all-coins-strategy"
                 checked={newStrategy.applyToAllCoins}
                 onCheckedChange={(checked) => setNewStrategy({...newStrategy, applyToAllCoins: checked})}
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label htmlFor="apply-all-coins-strategy" className="flex-1">
                 Apply to All Monitored Coins

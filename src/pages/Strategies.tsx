@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   TrendingUp, Settings, PlayCircle, PauseCircle, AlertCircle, 
-  Check, Settings2, Edit, Trash2, Plus, Cloud, Server
+  Check, Settings2, Edit, Trash2, Plus, Cloud, Server, Globe
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -52,6 +51,7 @@ interface Strategy {
   trades: number;
   pairs: string[];
   deployedTo?: string;
+  applyToAllCoins?: boolean;
 }
 
 const strategies: Strategy[] = [
@@ -120,7 +120,8 @@ const Strategies = () => {
     winRate: 0,
     profitFactor: 0,
     trades: 0,
-    pairs: ['BTC/USDT']
+    pairs: ['BTC/USDT'],
+    applyToAllCoins: false
   });
   const { toast } = useToast();
 
@@ -229,7 +230,8 @@ const Strategies = () => {
       winRate: 0,
       profitFactor: 0,
       trades: 0,
-      pairs: ['BTC/USDT']
+      pairs: ['BTC/USDT'],
+      applyToAllCoins: false
     });
   };
 
@@ -240,7 +242,9 @@ const Strategies = () => {
     
     toast({
       title: "New Strategy Created",
-      description: "A new trading strategy has been created. Configure it to get started.",
+      description: strategy.applyToAllCoins 
+        ? "A new trading strategy has been created for all monitored coins."
+        : "A new trading strategy has been created for specific trading pairs.",
     });
   };
 
@@ -562,37 +566,56 @@ const Strategies = () => {
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Trading Pairs</Label>
-              <div className="flex flex-wrap gap-2">
-                {newStrategy.pairs.map((pair) => (
-                  <Badge key={pair} variant="secondary" className="py-1.5 px-2">
-                    {pair}
-                    <button 
-                      className="ml-1.5 text-muted-foreground hover:text-foreground"
-                      onClick={() => setNewStrategy({
-                        ...newStrategy, 
-                        pairs: newStrategy.pairs.filter(p => p !== pair)
-                      })}
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </Badge>
-                ))}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-7"
-                  onClick={() => setNewStrategy({
-                    ...newStrategy,
-                    pairs: [...newStrategy.pairs, 'ETH/USDT']
-                  })}
-                >
-                  <Plus size={14} />
-                  Add Pair
-                </Button>
-              </div>
+            
+            <div className="flex items-center justify-between py-2">
+              <Label htmlFor="apply-all-coins-strategy" className="cursor-pointer">Apply to All Monitored Coins</Label>
+              <Switch
+                id="apply-all-coins-strategy"
+                checked={newStrategy.applyToAllCoins}
+                onCheckedChange={(checked) => setNewStrategy({...newStrategy, applyToAllCoins: checked})}
+              />
             </div>
+            
+            {!newStrategy.applyToAllCoins && (
+              <div className="space-y-2">
+                <Label>Trading Pairs</Label>
+                <div className="flex flex-wrap gap-2">
+                  {newStrategy.pairs.map((pair) => (
+                    <Badge key={pair} variant="secondary" className="py-1.5 px-2">
+                      {pair}
+                      <button 
+                        className="ml-1.5 text-muted-foreground hover:text-foreground"
+                        onClick={() => setNewStrategy({
+                          ...newStrategy, 
+                          pairs: newStrategy.pairs.filter(p => p !== pair)
+                        })}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </Badge>
+                  ))}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7"
+                    onClick={() => setNewStrategy({
+                      ...newStrategy,
+                      pairs: [...newStrategy.pairs, 'ETH/USDT']
+                    })}
+                  >
+                    <Plus size={14} />
+                    Add Pair
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {newStrategy.applyToAllCoins && (
+              <div className="p-3 rounded-md bg-muted/50 flex items-center gap-2">
+                <Globe size={16} className="text-primary"/>
+                <span className="text-sm">Strategy will be applied to all monitored coins</span>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreatingStrategy(false)}>Cancel</Button>

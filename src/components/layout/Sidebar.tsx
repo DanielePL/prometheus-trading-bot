@@ -63,7 +63,7 @@ export function Sidebar({ className }: { className?: string }) {
     },
     {
       title: "Trading Bot",
-      href: "/trading-bot",
+      href: "/tradingbot",
       icon: <Zap className="w-5 h-5" />,
     },
     {

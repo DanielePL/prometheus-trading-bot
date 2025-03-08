@@ -78,7 +78,9 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
         <Progress 
           value={cpuUsage} 
           className="h-2" 
-          indicator={cpuUsage > 80 ? "bg-red-500" : cpuUsage > 50 ? "bg-yellow-500" : undefined}
+          style={{ 
+            '--progress-color': cpuUsage > 80 ? 'var(--destructive)' : cpuUsage > 50 ? 'orange' : 'var(--primary)'
+          } as React.CSSProperties}
         />
       </div>
       
@@ -90,7 +92,9 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
         <Progress 
           value={memoryUsage} 
           className="h-2"
-          indicator={memoryUsage > 80 ? "bg-red-500" : memoryUsage > 50 ? "bg-yellow-500" : undefined}
+          style={{ 
+            '--progress-color': memoryUsage > 80 ? 'var(--destructive)' : memoryUsage > 50 ? 'orange' : 'var(--primary)'
+          } as React.CSSProperties}
         />
       </div>
       

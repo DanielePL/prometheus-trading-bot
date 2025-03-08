@@ -50,7 +50,6 @@ export const CloudConnection: React.FC<CloudConnectionProps> = ({
         />
       ) : (
         <DisconnectedState
-          connectionStatus={connectionStatus}
           selectedService={selectedService}
           setSelectedService={setSelectedService}
           connectionConfig={connectionConfig}

@@ -110,6 +110,18 @@ const Strategies = () => {
   const [editedStrategy, setEditedStrategy] = useState<Strategy | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [strategyToDelete, setStrategyToDelete] = useState<string | null>(null);
+  const [isCreatingStrategy, setIsCreatingStrategy] = useState(false);
+  const [newStrategy, setNewStrategy] = useState<Strategy>({
+    id: '',
+    name: 'New Strategy',
+    description: 'A new trading strategy',
+    status: 'inactive',
+    performanceScore: 0,
+    winRate: 0,
+    profitFactor: 0,
+    trades: 0,
+    pairs: ['BTC/USDT']
+  });
   const { toast } = useToast();
 
   const handleStatusChange = (strategyId: string, isActive: boolean) => {
@@ -207,7 +219,8 @@ const Strategies = () => {
   };
 
   const handleCreateNewStrategy = () => {
-    const newStrategy: Strategy = {
+    setIsCreatingStrategy(true);
+    setNewStrategy({
       id: `${Date.now()}`,
       name: "New Strategy",
       description: "A new trading strategy",
@@ -217,9 +230,13 @@ const Strategies = () => {
       profitFactor: 0,
       trades: 0,
       pairs: ['BTC/USDT']
-    };
-    
-    setStrategiesList(prev => [...prev, newStrategy]);
+    });
+  };
+
+  const saveNewStrategy = () => {
+    const strategy = { ...newStrategy, id: `${Date.now()}` };
+    setStrategiesList(prev => [...prev, strategy]);
+    setIsCreatingStrategy(false);
     
     toast({
       title: "New Strategy Created",
@@ -517,6 +534,72 @@ const Strategies = () => {
           ))}
         </div>
       </div>
+
+      {/* Create New Strategy Dialog */}
+      <Dialog open={isCreatingStrategy} onOpenChange={setIsCreatingStrategy}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Strategy</DialogTitle>
+            <DialogDescription>
+              Set up a new trading strategy
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-strategy-name">Strategy Name</Label>
+              <Input 
+                id="new-strategy-name" 
+                value={newStrategy.name} 
+                onChange={(e) => setNewStrategy({...newStrategy, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-strategy-description">Description</Label>
+              <Textarea 
+                id="new-strategy-description" 
+                value={newStrategy.description}
+                onChange={(e) => setNewStrategy({...newStrategy, description: e.target.value})}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Trading Pairs</Label>
+              <div className="flex flex-wrap gap-2">
+                {newStrategy.pairs.map((pair) => (
+                  <Badge key={pair} variant="secondary" className="py-1.5 px-2">
+                    {pair}
+                    <button 
+                      className="ml-1.5 text-muted-foreground hover:text-foreground"
+                      onClick={() => setNewStrategy({
+                        ...newStrategy, 
+                        pairs: newStrategy.pairs.filter(p => p !== pair)
+                      })}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </Badge>
+                ))}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7"
+                  onClick={() => setNewStrategy({
+                    ...newStrategy,
+                    pairs: [...newStrategy.pairs, 'ETH/USDT']
+                  })}
+                >
+                  <Plus size={14} />
+                  Add Pair
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreatingStrategy(false)}>Cancel</Button>
+            <Button onClick={saveNewStrategy}>Create Strategy</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

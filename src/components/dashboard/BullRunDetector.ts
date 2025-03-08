@@ -1,11 +1,32 @@
-
 import { Candle, OrderBook } from '../trading/TradingBotAPI';
+import { MarketData } from '@/types/market';
 
 export interface BullRunParameters {
   isBullRun: boolean;
   confidence: number;
   stopLossPercentage: number;
   lastDetected: string;
+}
+
+export interface MarketAnalysisReport {
+  marketSentiment: 'bullish' | 'bearish' | 'neutral';
+  sentimentScore: number; // 0-100
+  keyNarratives: string[];
+  technicalSignals: {
+    bullish: string[];
+    bearish: string[];
+    neutral: string[];
+  };
+  tierOneCoins: string[]; // High confidence bull run candidates
+  tierTwoCoins: string[]; // Strong potential but needs confirmation
+  tierThreeCoins: string[]; // High-risk, high-reward picks
+  whaleActivity: {
+    buying: string[];
+    selling: string[];
+    neutral: string[];
+  };
+  breakoutCoins: string[];
+  date: string;
 }
 
 export class BullRunDetector {
@@ -22,12 +43,21 @@ export class BullRunDetector {
   private resultCache: Map<string, { result: BullRunParameters, timestamp: number }> = new Map();
   private cacheTTL: number = 5 * 60 * 1000; // 5 minutes cache TTL
   
+  // Latest market analysis report
+  private latestReport: MarketAnalysisReport | null = null;
+  
   constructor() {
     // Load detection history from localStorage if available
     try {
       const storedHistory = localStorage.getItem('bull_run_history');
       if (storedHistory) {
         this.detectionHistory = JSON.parse(storedHistory);
+      }
+      
+      // Load latest report from localStorage if available
+      const storedReport = localStorage.getItem('market_analysis_report');
+      if (storedReport) {
+        this.latestReport = JSON.parse(storedReport);
       }
     } catch (error) {
       console.error('Error loading bull run history:', error);
@@ -120,6 +150,173 @@ export class BullRunDetector {
     }
     
     return result;
+  }
+  
+  /**
+   * Generate comprehensive market analysis report
+   * This simulates what a crypto consultant would produce
+   */
+  generateMarketAnalysisReport(marketData: MarketData[]): MarketAnalysisReport {
+    // Get top coins by market cap
+    const topCoins = [...marketData].sort((a, b) => 
+      parseFloat(b.marketCap) - parseFloat(a.marketCap)
+    ).slice(0, 20);
+    
+    // Filter coins with positive momentum
+    const bullishCoins = topCoins.filter(coin => coin.change24h > 3);
+    const veryBullishCoins = topCoins.filter(coin => coin.change24h > 8);
+    const moderateCoins = topCoins.filter(coin => coin.change24h > 0 && coin.change24h <= 3);
+    const bearishCoins = topCoins.filter(coin => coin.change24h < 0);
+    
+    // Calculate overall market sentiment
+    const overallSentiment = this.calculateMarketSentiment(topCoins);
+    
+    // Generate narratives based on market conditions
+    const narratives = this.generateKeyNarratives(topCoins);
+    
+    // Create market tiers
+    const tierOneCoins = veryBullishCoins.map(c => c.symbol).slice(0, 3);
+    const tierTwoCoins = bullishCoins.filter(c => !tierOneCoins.includes(c.symbol))
+      .map(c => c.symbol).slice(0, 4);
+    const tierThreeCoins = moderateCoins.filter(c => 
+      !tierOneCoins.includes(c.symbol) && !tierTwoCoins.includes(c.symbol)
+    ).map(c => c.symbol).slice(0, 5);
+    
+    // Technical signals
+    const technicalSignals = {
+      bullish: [
+        "BTC trading above key moving averages",
+        "ETH/BTC ratio stabilizing",
+        "Market volume increasing across major exchanges"
+      ],
+      bearish: [
+        "RSI approaching overbought territory for some alts",
+        "Futures funding rates elevated on some pairs"
+      ],
+      neutral: [
+        "Mid-caps showing mixed performance",
+        "Volatility decreasing in recent days"
+      ]
+    };
+    
+    // Simulate whale activity based on volume and price action
+    const whaleActivity = {
+      buying: veryBullishCoins.filter(c => parseFloat(c.volume) > 50000000).map(c => c.symbol),
+      selling: bearishCoins.filter(c => parseFloat(c.volume) > 50000000).map(c => c.symbol),
+      neutral: moderateCoins.filter(c => parseFloat(c.volume) > 50000000).map(c => c.symbol)
+    };
+    
+    // Identify potential breakouts
+    const breakoutCoins = veryBullishCoins
+      .filter(c => c.change24h > 10)
+      .map(c => c.symbol);
+    
+    const report: MarketAnalysisReport = {
+      marketSentiment: overallSentiment.sentiment,
+      sentimentScore: overallSentiment.score,
+      keyNarratives: narratives,
+      technicalSignals,
+      tierOneCoins,
+      tierTwoCoins,
+      tierThreeCoins,
+      whaleActivity,
+      breakoutCoins,
+      date: new Date().toISOString()
+    };
+    
+    // Cache the report
+    this.latestReport = report;
+    localStorage.setItem('market_analysis_report', JSON.stringify(report));
+    
+    return report;
+  }
+  
+  /**
+   * Get the latest market analysis report
+   * If no report exists or it's older than 24 hours, return null
+   */
+  getLatestMarketAnalysisReport(): MarketAnalysisReport | null {
+    if (!this.latestReport) return null;
+    
+    // Check if report is recent (within 24 hours)
+    const reportDate = new Date(this.latestReport.date);
+    const now = new Date();
+    const hoursDifference = (now.getTime() - reportDate.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursDifference > 24) return null;
+    
+    return this.latestReport;
+  }
+  
+  /**
+   * Calculate the overall market sentiment based on price changes
+   */
+  private calculateMarketSentiment(coins: MarketData[]): { sentiment: 'bullish' | 'bearish' | 'neutral', score: number } {
+    if (coins.length === 0) {
+      return { sentiment: 'neutral', score: 50 };
+    }
+    
+    // Weight by market cap (approximated by position in the array)
+    const weightedChanges = coins.map((coin, index) => {
+      const weight = 1 - (index / coins.length); // Higher weight for top coins
+      return coin.change24h * weight;
+    });
+    
+    const totalChange = weightedChanges.reduce((sum, change) => sum + change, 0);
+    const avgChange = totalChange / weightedChanges.length;
+    
+    // Convert to 0-100 scale
+    const sentimentScore = Math.min(100, Math.max(0, 50 + avgChange * 5));
+    
+    let sentiment: 'bullish' | 'bearish' | 'neutral' = 'neutral';
+    if (sentimentScore > 65) sentiment = 'bullish';
+    else if (sentimentScore < 35) sentiment = 'bearish';
+    
+    return { sentiment, score: sentimentScore };
+  }
+  
+  /**
+   * Generate key market narratives based on performance of different sectors
+   */
+  private generateKeyNarratives(coins: MarketData[]): string[] {
+    const narratives: string[] = [];
+    
+    // Check Bitcoin dominance
+    const btc = coins.find(c => c.symbol === 'BTC');
+    if (btc && btc.change24h > 3) {
+      narratives.push("Bitcoin leading the market with strong momentum");
+    } else if (btc && btc.change24h < -3) {
+      narratives.push("Bitcoin showing weakness, putting pressure on the market");
+    }
+    
+    // Check Ethereum
+    const eth = coins.find(c => c.symbol === 'ETH');
+    if (eth && eth.change24h > 5) {
+      narratives.push("Ethereum outperforming, suggesting potential alt season");
+    }
+    
+    // Check for sector-specific trends (simplified simulation)
+    const aiCoins = coins.filter(c => ['FET', 'OCEAN', 'RNDR', 'AGIX'].includes(c.symbol));
+    const defiCoins = coins.filter(c => ['AAVE', 'UNI', 'SNX', 'COMP'].includes(c.symbol));
+    const layer2Coins = coins.filter(c => ['MATIC', 'OP', 'ARB'].includes(c.symbol));
+    
+    if (aiCoins.length > 0 && aiCoins.reduce((sum, c) => sum + c.change24h, 0) / aiCoins.length > 5) {
+      narratives.push("AI-related cryptocurrencies showing strong momentum");
+    }
+    
+    if (defiCoins.length > 0 && defiCoins.reduce((sum, c) => sum + c.change24h, 0) / defiCoins.length > 5) {
+      narratives.push("DeFi tokens rebounding as sector interest returns");
+    }
+    
+    if (layer2Coins.length > 0 && layer2Coins.reduce((sum, c) => sum + c.change24h, 0) / layer2Coins.length > 5) {
+      narratives.push("Layer 2 scaling solutions experiencing growing adoption");
+    }
+    
+    // Add some general market narratives
+    narratives.push("Institutional adoption continues to drive market sentiment");
+    narratives.push("Regulatory clarity improving in major markets");
+    
+    return narratives;
   }
   
   // Calculate recent volume ratio compared to average

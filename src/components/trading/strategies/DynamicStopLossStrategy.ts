@@ -1,12 +1,12 @@
-
 import { TradingStrategy, TradingSignal, Candle, OrderBook } from '../TradingBotAPI';
-import { BullRunParameters } from '../../dashboard/BullRunDetector';
+import { BullRunParameters, MarketAnalysisReport } from '../../dashboard/BullRunDetector';
 
 export class DynamicStopLossStrategy implements TradingStrategy {
   private volatilityMultiplier: number = 2.0;
   private atrPeriod: number = 14;
   private bullRunConfidence: number = 0;
   private lastBullRun: Date | null = null;
+  private marketReport: MarketAnalysisReport | null = null;
 
   constructor() {
     // Initialize bull run data from local storage if available
@@ -17,13 +17,19 @@ export class DynamicStopLossStrategy implements TradingStrategy {
         this.bullRunConfidence = confidence || 0;
         this.lastBullRun = timestamp ? new Date(timestamp) : null;
       }
+      
+      // Load market analysis report if available
+      const storedReport = localStorage.getItem('market_analysis_report');
+      if (storedReport) {
+        this.marketReport = JSON.parse(storedReport);
+      }
     } catch (error) {
       console.error('Error loading bull run data:', error);
     }
   }
 
   getName(): string {
-    return "Dynamic Stop Loss with Bull Run Detection";
+    return "Dynamic Stop Loss with Market Analysis";
   }
 
   // Allow updating the bull run parameters from external components
@@ -37,8 +43,13 @@ export class DynamicStopLossStrategy implements TradingStrategy {
       timestamp: this.lastBullRun.toISOString()
     }));
   }
+  
+  // Allow updating the market analysis report from external components
+  updateMarketReport(report: MarketAnalysisReport): void {
+    this.marketReport = report;
+  }
 
-  analyze(candles: Candle[], orderBook: OrderBook): TradingSignal {
+  analyze(candles: Candle[], orderBook: OrderBook, symbol?: string): TradingSignal {
     if (candles.length < this.atrPeriod + 1) {
       return {
         action: 'hold',
@@ -80,6 +91,33 @@ export class DynamicStopLossStrategy implements TradingStrategy {
       bullRunFactor = isRecent ? this.bullRunConfidence : 0;
     }
     
+    // Incorporate market report data if available and the symbol is provided
+    let marketReportBoost = 0;
+    if (this.marketReport && symbol) {
+      const coinSymbol = symbol.split('-')[0]; // Extract coin symbol from trading pair
+      
+      // Check if the coin is in tier 1, tier 2, or tier 3
+      if (this.marketReport.tierOneCoins.includes(coinSymbol)) {
+        marketReportBoost = 0.15; // High confidence boost
+      } else if (this.marketReport.tierTwoCoins.includes(coinSymbol)) {
+        marketReportBoost = 0.1; // Medium confidence boost
+      } else if (this.marketReport.tierThreeCoins.includes(coinSymbol)) {
+        marketReportBoost = 0.05; // Low confidence boost
+      }
+      
+      // Additional boost for breakout coins
+      if (this.marketReport.breakoutCoins.includes(coinSymbol)) {
+        marketReportBoost += 0.05;
+      }
+      
+      // Adjust boost based on overall market sentiment
+      if (this.marketReport.marketSentiment === 'bullish') {
+        marketReportBoost *= 1.2;
+      } else if (this.marketReport.marketSentiment === 'bearish') {
+        marketReportBoost *= 0.8;
+      }
+    }
+    
     // Dynamic stop loss calculation based on ATR and bull run factor
     const baseStopLossPercentage = atr / currentPrice * 100;
     const adjustedStopLossPercentage = bullRunFactor > 0.5 
@@ -89,16 +127,16 @@ export class DynamicStopLossStrategy implements TradingStrategy {
     // Combine all factors to make a decision
     
     // Strong uptrend with volume confirmation and bull run
-    if (sma20 > sma50 && sma50 > sma200 && volumeRatio > 1.2 && bullRunFactor > 0.6) {
+    if (sma20 > sma50 && sma50 > sma200 && volumeRatio > 1.2 && (bullRunFactor > 0.6 || marketReportBoost > 0.1)) {
       const nearestResistance = resistanceLevels.find(r => r > currentPrice) || currentPrice * 1.05;
       const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
       
       return {
         action: 'buy',
-        confidence: Math.min(0.8 + bullRunFactor * 0.2, 0.95),
+        confidence: Math.min(0.8 + bullRunFactor * 0.2 + marketReportBoost, 0.95),
         targetPrice: nearestResistance,
         stopLoss,
-        reason: `Strong uptrend with volume confirmation${bullRunFactor > 0 ? ' and bull run pattern' : ''}`
+        reason: `Strong uptrend with volume confirmation${bullRunFactor > 0 ? ', bull run pattern' : ''}${marketReportBoost > 0 ? ' and positive market analysis' : ''}`
       };
     }
     
@@ -117,15 +155,15 @@ export class DynamicStopLossStrategy implements TradingStrategy {
     }
     
     // Breakout from range with volume surge during bull run
-    if (trendStrength < 0.3 && priceChange > 0.02 && volumeRatio > 2 && bullRunFactor > 0.7) {
+    if (trendStrength < 0.3 && priceChange > 0.02 && volumeRatio > 2 && (bullRunFactor > 0.7 || marketReportBoost > 0.1)) {
       const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
       
       return {
         action: 'buy',
-        confidence: 0.75,
+        confidence: 0.75 + marketReportBoost,
         targetPrice: currentPrice * 1.1,
         stopLoss,
-        reason: 'Breakout from range with volume surge during bull run'
+        reason: `Breakout from range with volume surge${marketReportBoost > 0 ? ' and positive market analysis' : ''}`
       };
     }
     
@@ -136,24 +174,24 @@ export class DynamicStopLossStrategy implements TradingStrategy {
       
       return {
         action: 'buy',
-        confidence: 0.6,
+        confidence: 0.6 + marketReportBoost,
         targetPrice: sma20 * 1.02,
         stopLoss,
         reason: 'Pullback to support in overall uptrend'
       };
     }
     
-    // Bounce from support during bull run
-    if (bullRunFactor > 0.6 && 
+    // Bounce from support during bull run or for tier 1/2 coins
+    if ((bullRunFactor > 0.6 || marketReportBoost > 0.1) && 
         supportLevels.some(s => Math.abs(s - currentPrice) / currentPrice < 0.01)) {
       const stopLoss = currentPrice * (1 - adjustedStopLossPercentage / 100);
       
       return {
         action: 'buy',
-        confidence: 0.7,
+        confidence: 0.7 + marketReportBoost,
         targetPrice: currentPrice * 1.05,
         stopLoss,
-        reason: 'Bounce from support during bull run phase'
+        reason: `Bounce from support during${bullRunFactor > 0.6 ? ' bull run phase' : ''}${marketReportBoost > 0 ? ' for highly rated coin' : ''}`
       };
     }
     

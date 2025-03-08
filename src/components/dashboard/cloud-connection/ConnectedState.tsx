@@ -29,6 +29,11 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
   disconnectService,
   restartService
 }) => {
+  // Open terminal in new window
+  const openTerminal = () => {
+    window.open(`ssh://root@${connectionConfig?.ipAddress}:${connectionConfig?.port || 22}`, '_blank');
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
@@ -73,7 +78,7 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
         <Progress 
           value={cpuUsage} 
           className="h-2" 
-          color={cpuUsage > 80 ? "bg-red-500" : cpuUsage > 50 ? "bg-yellow-500" : ""}
+          indicator={cpuUsage > 80 ? "bg-red-500" : cpuUsage > 50 ? "bg-yellow-500" : undefined}
         />
       </div>
       
@@ -85,7 +90,7 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
         <Progress 
           value={memoryUsage} 
           className="h-2"
-          color={memoryUsage > 80 ? "bg-red-500" : memoryUsage > 50 ? "bg-yellow-500" : ""}
+          indicator={memoryUsage > 80 ? "bg-red-500" : memoryUsage > 50 ? "bg-yellow-500" : undefined}
         />
       </div>
       
@@ -112,9 +117,10 @@ export const ConnectedState: React.FC<ConnectedStateProps> = ({
         <Button 
           variant="outline"
           className="flex-1"
+          onClick={openTerminal}
         >
           <Terminal className="mr-2 h-4 w-4" />
-          Console
+          Terminal
         </Button>
       </div>
     </div>

@@ -34,7 +34,7 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Select Cloud Service</Label>
+        <Label className="text-sm font-medium">Cloud Provider</Label>
         <Select 
           value={selectedService} 
           onValueChange={(value) => setSelectedService(value as CloudServiceType)}
@@ -43,8 +43,8 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
             <SelectValue placeholder="Select a cloud service" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="aws">AWS EC2</SelectItem>
             <SelectItem value="digitalocean">DigitalOcean Droplet</SelectItem>
+            <SelectItem value="aws">AWS EC2</SelectItem>
             <SelectItem value="gcp">Google Cloud Compute</SelectItem>
             <SelectItem value="railway">Railway.app</SelectItem>
             <SelectItem value="azure">Azure VM</SelectItem>
@@ -54,33 +54,35 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label className="text-sm font-medium">IP Address</Label>
+        <Label className="text-sm font-medium">IP Address or Hostname</Label>
         <Input 
           type="text" 
-          placeholder="Enter IP address" 
+          placeholder="Enter IP address (e.g., 123.456.789.0)" 
           value={ipAddress}
           onChange={(e) => setIpAddress(e.target.value)}
         />
       </div>
       
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Port</Label>
+        <Label className="text-sm font-medium">SSH Port</Label>
         <Input 
           type="number" 
-          placeholder="Enter port" 
+          placeholder="Enter port (default: 22)" 
           value={port}
           onChange={(e) => setPort(e.target.value)}
         />
+        <p className="text-xs text-muted-foreground">The default SSH port is 22, only change if you're using a custom port</p>
       </div>
       
       <div className="space-y-2">
-        <Label className="text-sm font-medium">API Key (if required)</Label>
+        <Label className="text-sm font-medium">API Key / Access Token <span className="text-xs text-muted-foreground">(optional)</span></Label>
         <Input 
           type="password" 
-          placeholder="Enter API key" 
+          placeholder="Enter DigitalOcean API key" 
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
         />
+        <p className="text-xs text-muted-foreground">For additional functionality like remote server management</p>
       </div>
       
       <Button 

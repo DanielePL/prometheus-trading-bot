@@ -15,6 +15,41 @@ export const useCloudConnection = () => {
   const [isRestarting, setIsRestarting] = useState<boolean>(false);
   const { toast } = useToast();
 
+  // Load saved connection from localStorage on mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('cloudConnectionConfig');
+    const savedService = localStorage.getItem('cloudServiceType');
+    const savedStatus = localStorage.getItem('cloudConnectionStatus');
+    
+    if (savedConfig) {
+      setConnectionConfig(JSON.parse(savedConfig));
+    }
+    
+    if (savedService) {
+      setSelectedService(savedService as CloudServiceType);
+    }
+    
+    if (savedStatus === 'connected') {
+      // Try to restore connection
+      setConnectionStatus('connecting');
+      setTimeout(() => {
+        setConnectionStatus('connected');
+        startResourceUpdates();
+        setLastSync('Restored connection');
+      }, 1500);
+    }
+  }, []);
+
+  // Save connection config to localStorage when it changes
+  useEffect(() => {
+    if (Object.keys(connectionConfig).length > 0) {
+      localStorage.setItem('cloudConnectionConfig', JSON.stringify(connectionConfig));
+    }
+    
+    localStorage.setItem('cloudServiceType', selectedService);
+    localStorage.setItem('cloudConnectionStatus', connectionStatus);
+  }, [connectionConfig, selectedService, connectionStatus]);
+
   // Simulate connection status checks
   useEffect(() => {
     if (connectionStatus === 'connecting') {
@@ -36,8 +71,16 @@ export const useCloudConnection = () => {
   // Simulate resource usage updates when connected
   const startResourceUpdates = () => {
     const interval = setInterval(() => {
-      setCpuUsage(Math.floor(Math.random() * 60) + 10);
-      setMemoryUsage(Math.floor(Math.random() * 40) + 30);
+      // More realistic resource usage patterns
+      setCpuUsage(prevCpu => {
+        const variation = Math.random() > 0.7 ? Math.floor(Math.random() * 20) - 10 : Math.floor(Math.random() * 6) - 3;
+        return Math.max(5, Math.min(95, prevCpu + variation));
+      });
+      
+      setMemoryUsage(prevMem => {
+        const variation = Math.random() > 0.7 ? Math.floor(Math.random() * 15) - 5 : Math.floor(Math.random() * 4) - 2;
+        return Math.max(10, Math.min(90, prevMem + variation));
+      });
       
       // Update uptime
       const [hours, minutes] = uptime.split('h ');

@@ -27,6 +27,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Strategy {
   id: string;
@@ -93,6 +106,10 @@ const Strategies = () => {
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentServer, setDeploymentServer] = useState('digitalocean');
+  const [isEditingStrategy, setIsEditingStrategy] = useState(false);
+  const [editedStrategy, setEditedStrategy] = useState<Strategy | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [strategyToDelete, setStrategyToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleStatusChange = (strategyId: string, isActive: boolean) => {
@@ -134,9 +151,80 @@ const Strategies = () => {
       
       toast({
         title: "Strategy Deployed",
-        description: `${selectedStrategy.name} has been successfully deployed to your DigitalOcean Droplet.`,
+        description: `${selectedStrategy.name} has been successfully deployed to your ${deploymentServer === 'digitalocean' ? 'DigitalOcean Droplet' : 'Local Environment'}.`,
       });
     }, 2000);
+  };
+
+  const handleEditStrategy = (strategy: Strategy) => {
+    setEditedStrategy({...strategy});
+    setIsEditingStrategy(true);
+  };
+
+  const saveStrategyChanges = () => {
+    if (!editedStrategy) return;
+
+    setStrategiesList(prev => 
+      prev.map(strategy => 
+        strategy.id === editedStrategy.id 
+          ? editedStrategy
+          : strategy
+      )
+    );
+    
+    setIsEditingStrategy(false);
+    setEditedStrategy(null);
+    
+    toast({
+      title: "Strategy Updated",
+      description: "Your strategy has been successfully updated.",
+    });
+  };
+
+  const handleDeletePrompt = (strategyId: string) => {
+    setStrategyToDelete(strategyId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteStrategy = () => {
+    if (!strategyToDelete) return;
+    
+    setStrategiesList(prev => prev.filter(strategy => strategy.id !== strategyToDelete));
+    setStrategyToDelete(null);
+    setIsDeleteDialogOpen(false);
+    
+    toast({
+      title: "Strategy Deleted",
+      description: "The strategy has been permanently deleted.",
+    });
+  };
+
+  const handleConfigureStrategy = (strategy: Strategy) => {
+    toast({
+      title: "Configure Strategy",
+      description: `Opening configuration for ${strategy.name}. This would typically show a detailed settings panel.`,
+    });
+  };
+
+  const handleCreateNewStrategy = () => {
+    const newStrategy: Strategy = {
+      id: `${Date.now()}`,
+      name: "New Strategy",
+      description: "A new trading strategy",
+      status: 'inactive',
+      performanceScore: 0,
+      winRate: 0,
+      profitFactor: 0,
+      trades: 0,
+      pairs: ['BTC/USDT']
+    };
+    
+    setStrategiesList(prev => [...prev, newStrategy]);
+    
+    toast({
+      title: "New Strategy Created",
+      description: "A new trading strategy has been created. Configure it to get started.",
+    });
   };
 
   return (
@@ -149,7 +237,7 @@ const Strategies = () => {
               Manage and configure your Prometheus trading strategies
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleCreateNewStrategy}>
             <Plus size={16} />
             New Strategy
           </Button>
@@ -243,14 +331,119 @@ const Strategies = () => {
                   </div>
                   
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleConfigureStrategy(strategy)}
+                    >
                       <Settings2 className="h-4 w-4 mr-1" />
                       Configure
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
+                    
+                    <Dialog open={isEditingStrategy && editedStrategy?.id === strategy.id} onOpenChange={(open) => !open && setIsEditingStrategy(false)}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={() => handleEditStrategy(strategy)}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Edit Strategy</DialogTitle>
+                          <DialogDescription>
+                            Modify your trading strategy details
+                          </DialogDescription>
+                        </DialogHeader>
+                        {editedStrategy && (
+                          <div className="py-4 space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="strategy-name">Strategy Name</Label>
+                              <Input 
+                                id="strategy-name" 
+                                value={editedStrategy.name} 
+                                onChange={(e) => setEditedStrategy({...editedStrategy, name: e.target.value})}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="strategy-description">Description</Label>
+                              <Textarea 
+                                id="strategy-description" 
+                                value={editedStrategy.description}
+                                onChange={(e) => setEditedStrategy({...editedStrategy, description: e.target.value})}
+                                rows={3}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Trading Pairs</Label>
+                              <div className="flex flex-wrap gap-2">
+                                {editedStrategy.pairs.map((pair) => (
+                                  <Badge key={pair} variant="secondary" className="py-1.5 px-2">
+                                    {pair}
+                                    <button 
+                                      className="ml-1.5 text-muted-foreground hover:text-foreground"
+                                      onClick={() => setEditedStrategy({
+                                        ...editedStrategy, 
+                                        pairs: editedStrategy.pairs.filter(p => p !== pair)
+                                      })}
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </Badge>
+                                ))}
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-7"
+                                  onClick={() => setEditedStrategy({
+                                    ...editedStrategy,
+                                    pairs: [...editedStrategy.pairs, 'ETH/USDT']
+                                  })}
+                                >
+                                  <Plus size={14} />
+                                  Add Pair
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setIsEditingStrategy(false)}>Cancel</Button>
+                          <Button onClick={saveStrategyChanges}>Save Changes</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    <AlertDialog open={isDeleteDialogOpen && strategyToDelete === strategy.id} onOpenChange={setIsDeleteDialogOpen}>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-800/30"
+                          onClick={() => handleDeletePrompt(strategy.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Strategy</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this strategy? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel onClick={() => setStrategyToDelete(null)}>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={confirmDeleteStrategy}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 

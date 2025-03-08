@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Radar, Plus, ChevronRight, ChevronDown, Search, Trending, TrendingUp, Flame, AlertTriangle } from 'lucide-react';
+import { Radar, Plus, ChevronRight, ChevronDown, Search, TrendingUp, Flame, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
@@ -400,7 +399,7 @@ export const BullRunIndicator: React.FC<BullRunIndicatorProps> = ({
                   
                   <div className="space-y-1 border-t border-green-800/50 pt-2">
                     <div className="font-semibold flex items-center">
-                      <Trending className="h-3.5 w-3.5 mr-1.5 text-green-300" />
+                      <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-green-300" />
                       Key Market Narratives
                     </div>
                     <ul className="list-disc list-inside pl-1 space-y-0.5">

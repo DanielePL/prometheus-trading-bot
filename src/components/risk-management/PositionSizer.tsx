@@ -20,11 +20,15 @@ import {
   Button 
 } from '@/components/ui/button';
 import { 
-  Calculator 
+  Calculator,
+  CheckCircle2
 } from 'lucide-react';
 import { 
   useToast 
 } from '@/hooks/use-toast';
+import {
+  Switch
+} from '@/components/ui/switch';
 
 export const PositionSizer = () => {
   const [accountSize, setAccountSize] = useState<string>("10000");
@@ -34,6 +38,7 @@ export const PositionSizer = () => {
   const [positionSize, setPositionSize] = useState<string>("0");
   const [contractsToTrade, setContractsToTrade] = useState<string>("0");
   const [symbol, setSymbol] = useState<string>("BTC-USD");
+  const [applyToAllCoins, setApplyToAllCoins] = useState<boolean>(false);
   const { toast } = useToast();
 
   const calculatePosition = () => {
@@ -59,8 +64,10 @@ export const PositionSizer = () => {
       setContractsToTrade(shares.toFixed(4));
       
       toast({
-        title: "Position Size Calculated",
-        description: `Position value: $${posValue.toFixed(2)}`,
+        title: applyToAllCoins ? "Position Size Applied to All Coins" : "Position Size Calculated",
+        description: applyToAllCoins 
+          ? `Risk parameters will be applied to all monitored coins` 
+          : `Position value: $${posValue.toFixed(2)}`,
       });
     } catch (error) {
       toast({
@@ -86,8 +93,17 @@ export const PositionSizer = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="trading-pair">Trading Pair</Label>
-          <Select value={symbol} onValueChange={setSymbol}>
+          <Label htmlFor="trading-pair" className="flex justify-between">
+            <span>Trading Pair</span>
+            <span className={applyToAllCoins ? "text-muted-foreground text-sm" : ""}>
+              {applyToAllCoins ? "(Using all monitored coins)" : ""}
+            </span>
+          </Label>
+          <Select 
+            value={symbol} 
+            onValueChange={setSymbol}
+            disabled={applyToAllCoins}
+          >
             <SelectTrigger id="trading-pair">
               <SelectValue placeholder="Select trading pair" />
             </SelectTrigger>
@@ -100,6 +116,15 @@ export const PositionSizer = () => {
             </SelectContent>
           </Select>
         </div>
+      </div>
+      
+      <div className="flex items-center justify-between py-2">
+        <Label htmlFor="apply-all-coins" className="cursor-pointer">Apply to All Monitored Coins</Label>
+        <Switch
+          id="apply-all-coins"
+          checked={applyToAllCoins}
+          onCheckedChange={setApplyToAllCoins}
+        />
       </div>
       
       <div className="space-y-2">
@@ -145,21 +170,41 @@ export const PositionSizer = () => {
         className="w-full" 
         onClick={calculatePosition}
       >
-        <Calculator className="mr-2 h-4 w-4" />
-        Calculate Position Size
+        {applyToAllCoins ? (
+          <>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Apply Risk Parameters to All Coins
+          </>
+        ) : (
+          <>
+            <Calculator className="mr-2 h-4 w-4" />
+            Calculate Position Size
+          </>
+        )}
       </Button>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-        <div className="p-4 rounded-md bg-muted">
-          <div className="text-sm text-muted-foreground">Position Value</div>
-          <div className="text-xl font-bold">${positionSize}</div>
+      {!applyToAllCoins && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div className="p-4 rounded-md bg-muted">
+            <div className="text-sm text-muted-foreground">Position Value</div>
+            <div className="text-xl font-bold">${positionSize}</div>
+          </div>
+          
+          <div className="p-4 rounded-md bg-muted">
+            <div className="text-sm text-muted-foreground">Units to Trade</div>
+            <div className="text-xl font-bold">{contractsToTrade} {symbol.split('-')[0]}</div>
+          </div>
         </div>
-        
+      )}
+      
+      {applyToAllCoins && (
         <div className="p-4 rounded-md bg-muted">
-          <div className="text-sm text-muted-foreground">Units to Trade</div>
-          <div className="text-xl font-bold">{contractsToTrade} {symbol.split('-')[0]}</div>
+          <div className="text-sm font-medium">Multi-Asset Risk Management</div>
+          <div className="text-sm text-muted-foreground mt-1">
+            Risk of {riskPercentage}% will be applied to all monitored coins with appropriate position sizing.
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

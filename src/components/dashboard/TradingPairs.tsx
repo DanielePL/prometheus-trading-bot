@@ -3,7 +3,9 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface TradingPair {
   id: string;
@@ -68,6 +70,8 @@ const tradingPairs: TradingPair[] = [
 ];
 
 export const TradingPairs: React.FC<TradingPairsProps> = ({ onSelectSymbol }) => {
+  const { toast } = useToast();
+  
   const handleRowClick = (pair: TradingPair) => {
     // Extract the symbol from the pair name (e.g., "BTC/USDT" -> "BTC-USD")
     const symbol = pair.name.replace('/', '-').replace('USDT', 'USD');
@@ -75,12 +79,35 @@ export const TradingPairs: React.FC<TradingPairsProps> = ({ onSelectSymbol }) =>
       onSelectSymbol(symbol);
     }
   };
+  
+  const handleAllCoinsStrategy = () => {
+    toast({
+      title: "Apply to All Coins",
+      description: "Your strategy will be applied to all monitored coins"
+    });
+    
+    // If a callback exists, we pass a special value indicating "all coins"
+    if (onSelectSymbol) {
+      onSelectSymbol("ALL_COINS");
+    }
+  };
 
   return (
     <Card className="col-span-full">
-      <CardHeader>
-        <CardTitle>Trading Pairs</CardTitle>
-        <CardDescription>Active trading pairs monitored by your bot</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div>
+          <CardTitle>Trading Pairs</CardTitle>
+          <CardDescription>Active trading pairs monitored by your bot</CardDescription>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="h-8 gap-1"
+          onClick={handleAllCoinsStrategy}
+        >
+          <Globe size={14} />
+          <span className="hidden sm:inline">Apply to</span> All Coins
+        </Button>
       </CardHeader>
       <CardContent>
         <Table>

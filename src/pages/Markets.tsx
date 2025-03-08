@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,10 +48,14 @@ const Markets = () => {
           <TabsContent value="tracked" className="space-y-4">
             <Card>
               <CardContent className="p-0">
-                <MarketTable 
-                  data={trackedCoins} 
-                  handleTrackToggle={handleTrackToggle} 
-                />
+                {trackedCoins.length > 0 ? (
+                  <MarketTable 
+                    data={trackedCoins} 
+                    handleTrackToggle={handleTrackToggle} 
+                  />
+                ) : (
+                  <EmptyTrackedState />
+                )}
               </CardContent>
             </Card>
           </TabsContent>

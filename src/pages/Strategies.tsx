@@ -567,13 +567,15 @@ const Strategies = () => {
               />
             </div>
             
-            <div className="flex items-center justify-between py-2">
-              <Label htmlFor="apply-all-coins-strategy" className="cursor-pointer">Apply to All Monitored Coins</Label>
+            <div className="flex items-center space-x-2 py-2 border rounded-md p-3 bg-muted/30">
               <Switch
                 id="apply-all-coins-strategy"
                 checked={newStrategy.applyToAllCoins}
                 onCheckedChange={(checked) => setNewStrategy({...newStrategy, applyToAllCoins: checked})}
               />
+              <Label htmlFor="apply-all-coins-strategy" className="flex-1">
+                Apply to All Monitored Coins
+              </Label>
             </div>
             
             {!newStrategy.applyToAllCoins && (
@@ -611,7 +613,7 @@ const Strategies = () => {
             )}
             
             {newStrategy.applyToAllCoins && (
-              <div className="p-3 rounded-md bg-muted/50 flex items-center gap-2">
+              <div className="p-3 rounded-md bg-primary/10 flex items-center gap-2 border">
                 <Globe size={16} className="text-primary"/>
                 <span className="text-sm">Strategy will be applied to all monitored coins</span>
               </div>

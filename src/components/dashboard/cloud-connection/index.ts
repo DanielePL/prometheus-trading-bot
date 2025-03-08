@@ -1,2 +1,4 @@
 
-export { CloudConnectionCard as CloudConnection } from './CloudConnectionCard';
+export { CloudConnection } from './CloudConnection';
+export * from './types';
+export * from './utils';

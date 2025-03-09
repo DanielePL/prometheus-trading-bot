@@ -47,16 +47,16 @@ export const CloudConnectionCard: React.FC = () => {
             <DisconnectedState 
               selectedService={selectedService}
               setSelectedService={setSelectedService}
+              connectionConfig={connectionConfig}
               connectToService={connectToService}
             />
           ) : (
             <ConnectedState 
               selectedService={selectedService}
-              connectionConfig={connectionConfig}
               uptime={uptime}
-              lastSync={lastSync}
               cpuUsage={cpuUsage}
               memoryUsage={memoryUsage}
+              lastSync={lastSync}
               isRestarting={isRestarting}
               disconnectService={disconnectService}
               restartService={restartService}

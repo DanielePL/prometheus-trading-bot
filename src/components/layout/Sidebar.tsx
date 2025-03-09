@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,8 @@ import {
   Cloud,
   CircleDollarSign,
   UserCircle,
-  Home
+  Home,
+  Link
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -117,6 +119,11 @@ export function Sidebar({ className }: { className?: string }) {
       title: "Cloud Sync",
       href: "/cloud",
       icon: <Cloud className="w-5 h-5" />,
+    },
+    {
+      title: "Connections",
+      href: "/connections",
+      icon: <Link className="w-5 h-5" />,
     },
     {
       title: "Profile",

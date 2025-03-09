@@ -18,6 +18,7 @@ import AdvancedTrading from '@/pages/AdvancedTrading';
 import Cloud from '@/pages/Cloud';
 import NewsScanner from '@/pages/NewsScanner';
 import EventAnalysis from '@/pages/EventAnalysis';
+import Connections from '@/pages/Connections';
 
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -44,6 +45,7 @@ function App() {
           <Route path="/event-analysis" element={<EventAnalysis />} />
           <Route path="/news-scanner" element={<NewsScanner />} />
           <Route path="/cloud" element={<Cloud />} />
+          <Route path="/connections" element={<Connections />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />

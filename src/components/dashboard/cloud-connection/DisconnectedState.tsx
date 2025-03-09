@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Cloud, Server, AlertCircle } from 'lucide-react';
+import { Cloud, Server } from 'lucide-react';
 import { CloudServiceType, CloudConnectionConfig } from './types';
 import { getServiceName, getServiceDescription } from './utils';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface DisconnectedStateProps {
   selectedService: CloudServiceType;
@@ -22,7 +21,7 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
   setSelectedService,
   connectionConfig,
   connectToService,
-  isAuthenticated = false
+  isAuthenticated = false // Keep the prop but ignore its value
 }) => {
   const [ipAddress, setIpAddress] = useState(connectionConfig?.ipAddress || '');
   const [port, setPort] = useState(connectionConfig?.port?.toString() || '22');
@@ -40,18 +39,7 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
     });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <Alert variant="destructive" className="bg-red-500/10">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Authentication Required</AlertTitle>
-        <AlertDescription>
-          You need to be logged in to save cloud connections.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
+  // Always show the connection form, regardless of authentication status
   return (
     <div className="space-y-4">
       <div className="space-y-2">

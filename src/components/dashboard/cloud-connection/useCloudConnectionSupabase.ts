@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { ConnectionStatusType, CloudServiceType, CloudConnectionConfig } from './types';
@@ -19,19 +18,15 @@ export const useCloudConnectionSupabase = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // Check authentication status on mount
   useEffect(() => {
     checkAuthStatus();
     
-    // Subscribe to auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
     });
     
-    // Load saved connection from Supabase on mount
     loadConnectionFromSupabase();
     
-    // Cleanup interval on unmount
     return () => {
       if (resourceUpdateInterval) {
         clearInterval(resourceUpdateInterval);
@@ -84,7 +79,6 @@ export const useCloudConnectionSupabase = () => {
         });
         setConnectionId(connection.id);
         
-        // Restore connection with real API call
         setConnectionStatus('connecting');
         const connected = await makeRealConnectionToDigitalOcean(connection.api_key);
         
@@ -106,7 +100,6 @@ export const useCloudConnectionSupabase = () => {
     }
   };
 
-  // Save connection to Supabase
   const saveConnectionToSupabase = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -121,13 +114,11 @@ export const useCloudConnectionSupabase = () => {
         return false;
       }
       
-      // Deactivate previous connections
       await supabase
         .from('cloud_connections')
         .update({ is_active: false })
         .eq('user_id', user.id);
       
-      // Insert new connection
       const { data, error } = await supabase
         .from('cloud_connections')
         .insert({
@@ -160,7 +151,6 @@ export const useCloudConnectionSupabase = () => {
     }
   };
 
-  // Record metrics to Supabase
   const recordMetrics = async () => {
     if (!connectionId) return;
     
@@ -178,10 +168,8 @@ export const useCloudConnectionSupabase = () => {
     }
   };
 
-  // Make real connection to Digital Ocean API
   const makeRealConnectionToDigitalOcean = async (apiKey: string) => {
     try {
-      // Real API call to Digital Ocean
       const response = await fetch('https://api.digitalocean.com/v2/account', {
         method: 'GET',
         headers: {
@@ -203,11 +191,9 @@ export const useCloudConnectionSupabase = () => {
       return false;
     }
   };
-  
-  // Get real resource metrics from Digital Ocean API
+
   const getDigitalOceanMetrics = async (apiKey: string, dropletId: string) => {
     try {
-      // Real API call to Digital Ocean for droplet metrics
       const response = await fetch(`https://api.digitalocean.com/v2/monitoring/metrics?host_id=${dropletId}&start=30m&end=0m`, {
         method: 'GET',
         headers: {
@@ -223,8 +209,6 @@ export const useCloudConnectionSupabase = () => {
       
       const metricsData = await response.json();
       
-      // Parse real metrics
-      // Note: This is a simplified example - actual metrics parsing would depend on DO's API response structure
       if (metricsData?.metrics?.cpu) {
         setCpuUsage(parseFloat(metricsData.metrics.cpu.usage) || 0);
       }
@@ -246,30 +230,17 @@ export const useCloudConnectionSupabase = () => {
     }
   };
 
-  // Start real resource updates polling
   const startResourceUpdates = (apiKey: string, dropletId: string) => {
-    // Initial metrics fetch
     getDigitalOceanMetrics(apiKey, dropletId);
     
-    // Set up interval for periodic updates
     const interval = window.setInterval(() => {
       getDigitalOceanMetrics(apiKey, dropletId);
-    }, 30000); // Update every 30 seconds
+    }, 30000);
     
     setResourceUpdateInterval(interval);
   };
 
   const connectToService = async (config?: CloudConnectionConfig) => {
-    // Check if user is authenticated before proceeding
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be logged in to save cloud connections.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     if (config) {
       setConnectionConfig(config);
     }
@@ -284,14 +255,11 @@ export const useCloudConnectionSupabase = () => {
       description: `Establishing connection to ${getServiceName(selectedService)}${configDescription}...`,
     });
     
-    // Save connection to Supabase
-    const saved = await saveConnectionToSupabase();
-    if (!saved) {
-      setConnectionStatus('disconnected');
-      return;
+    let saved = true;
+    if (isAuthenticated) {
+      saved = await saveConnectionToSupabase();
     }
     
-    // Make real connection to Digital Ocean
     const apiKey = config?.apiKey || connectionConfig.apiKey;
     const connected = await makeRealConnectionToDigitalOcean(apiKey);
     
@@ -299,7 +267,6 @@ export const useCloudConnectionSupabase = () => {
       setConnectionStatus('connected');
       setLastSync('Just now');
       
-      // Start real resource updates
       const dropletId = config?.instanceId || connectionConfig.instanceId;
       startResourceUpdates(apiKey, dropletId);
       
@@ -323,13 +290,11 @@ export const useCloudConnectionSupabase = () => {
     setCpuUsage(0);
     setMemoryUsage(0);
     
-    // Clear resource update interval
     if (resourceUpdateInterval) {
       clearInterval(resourceUpdateInterval);
       setResourceUpdateInterval(null);
     }
     
-    // Update is_active in Supabase
     if (connectionId) {
       try {
         await supabase
@@ -356,7 +321,6 @@ export const useCloudConnectionSupabase = () => {
     });
     
     try {
-      // Real API call to restart a droplet
       const response = await fetch(`https://api.digitalocean.com/v2/droplets/${connectionConfig.instanceId}/actions`, {
         method: 'POST',
         headers: {
@@ -379,7 +343,6 @@ export const useCloudConnectionSupabase = () => {
         return;
       }
       
-      // Wait for restart to complete
       setTimeout(() => {
         setIsRestarting(false);
         setLastSync('Just now');
@@ -389,7 +352,7 @@ export const useCloudConnectionSupabase = () => {
           title: "Cloud Service Restarted",
           description: `${getServiceName(selectedService)} has been restarted successfully.`,
         });
-      }, 10000); // Assuming restart takes about 10 seconds
+      }, 10000);
     } catch (error) {
       console.error('Error restarting droplet:', error);
       toast({

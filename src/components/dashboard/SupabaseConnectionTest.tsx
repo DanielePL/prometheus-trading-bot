@@ -5,6 +5,14 @@ import { Button } from '@/components/ui/button';
 import { testSupabaseConnection, getConnectionTests } from '@/integrations/supabase/testConnection';
 import { useToast } from '@/hooks/use-toast';
 import { Database, CheckCircle, XCircle, RefreshCw, Clock } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 
 interface TestResult {
   success: boolean;
@@ -15,6 +23,7 @@ interface TestResult {
 
 export const SupabaseConnectionTest = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingPrevious, setLoadingPrevious] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [previousTests, setPreviousTests] = useState<any[]>([]);
   const [showPreviousTests, setShowPreviousTests] = useState(false);
@@ -63,6 +72,7 @@ export const SupabaseConnectionTest = () => {
   };
 
   const loadPreviousTests = async () => {
+    setLoadingPrevious(true);
     setShowPreviousTests(true);
     
     try {
@@ -84,6 +94,8 @@ export const SupabaseConnectionTest = () => {
         description: 'Failed to load previous connection tests',
         variant: 'destructive',
       });
+    } finally {
+      setLoadingPrevious(false);
     }
   };
 
@@ -147,36 +159,56 @@ export const SupabaseConnectionTest = () => {
           )}
           
           {!showPreviousTests && (
-            <Button variant="outline" onClick={loadPreviousTests} className="mt-2">
-              Load Previous Tests from Database
+            <Button 
+              variant="outline" 
+              onClick={loadPreviousTests} 
+              className="mt-2"
+              disabled={loadingPrevious}
+            >
+              {loadingPrevious ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load Previous Tests from Database'
+              )}
             </Button>
           )}
           
-          {showPreviousTests && previousTests.length > 0 && (
+          {showPreviousTests && (
             <div className="space-y-3 mt-4">
               <h3 className="text-lg font-medium">Tests from Database</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-2">Test Name</th>
-                      <th className="text-left py-2 px-2">Status</th>
-                      <th className="text-left py-2 px-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previousTests.map((test) => (
-                      <tr key={test.id} className="border-b">
-                        <td className="py-2 px-2">{test.test_name}</td>
-                        <td className="py-2 px-2">{test.status}</td>
-                        <td className="py-2 px-2">
-                          {new Date(test.created_at).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {loadingPrevious ? (
+                <div className="flex justify-center items-center py-4">
+                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : previousTests.length > 0 ? (
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Test Name</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {previousTests.map((test) => (
+                        <TableRow key={test.id}>
+                          <TableCell className="font-mono text-xs">{test.test_name}</TableCell>
+                          <TableCell>{test.status}</TableCell>
+                          <TableCell>{new Date(test.created_at).toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No previous tests found
+                </div>
+              )}
             </div>
           )}
         </div>

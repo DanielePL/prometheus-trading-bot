@@ -56,7 +56,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         )}
         {botState.isExchangeConnected && (
           <Button variant="outline" asChild>
-            <Link to="/trading-bot">
+            <Link to="/tradingbot">
               <Zap className="mr-2 h-4 w-4" />
               Manage Bot
             </Link>

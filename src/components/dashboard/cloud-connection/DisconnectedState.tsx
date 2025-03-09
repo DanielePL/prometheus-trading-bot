@@ -11,17 +11,19 @@ import { Label } from '@/components/ui/label';
 interface DisconnectedStateProps {
   selectedService: CloudServiceType;
   setSelectedService: (service: CloudServiceType) => void;
+  connectionConfig: CloudConnectionConfig;
   connectToService: (config?: CloudConnectionConfig) => void;
 }
 
 export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
   selectedService,
   setSelectedService,
+  connectionConfig,
   connectToService
 }) => {
-  const [ipAddress, setIpAddress] = useState('');
-  const [port, setPort] = useState('22');
-  const [apiKey, setApiKey] = useState('');
+  const [ipAddress, setIpAddress] = useState(connectionConfig?.ipAddress || '');
+  const [port, setPort] = useState(connectionConfig?.port?.toString() || '22');
+  const [apiKey, setApiKey] = useState(connectionConfig?.apiKey || '');
   
   const handleConnect = () => {
     connectToService({

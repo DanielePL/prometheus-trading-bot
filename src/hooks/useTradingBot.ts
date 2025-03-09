@@ -82,14 +82,37 @@ export const tradingStrategies = [
   { value: 'supportresistance', label: 'Support & Resistance' },
 ];
 
+// Create a shared state for the trading bot that persists across component mounts
+let globalBotRunning = false;
+let globalAnalysisInterval: NodeJS.Timeout | null = null;
+let globalResourceInterval: NodeJS.Timeout | null = null;
+let globalConnectionCheckInterval: NodeJS.Timeout | null = null;
+let globalLogs: string[] = [];
+let globalIsExchangeConnected = false;
+
 export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
-  const [isRunning, setIsRunning] = useState(false);
-  const [tradeMode, setTradeMode] = useState<'paper' | 'live'>('paper');
-  const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('medium');
-  const [tradingStrategy, setTradingStrategy] = useState('dynamicstoploss');
-  const [maxTradingAmount, setMaxTradingAmount] = useState('1000');
-  const [tradingPair, setTradingPair] = useState('BTC-USD');
-  const [logs, setLogs] = useState<string[]>([]);
+  // Initialize from localStorage or use defaults
+  const [isRunning, setIsRunning] = useState(() => {
+    const stored = localStorage.getItem('tradingBotRunning') === 'true';
+    globalBotRunning = stored;
+    return stored;
+  });
+  const [tradeMode, setTradeMode] = useState<'paper' | 'live'>(() => 
+    localStorage.getItem('tradingBotMode') as 'paper' | 'live' || 'paper'
+  );
+  const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>(() => 
+    localStorage.getItem('tradingBotRiskLevel') as 'low' | 'medium' | 'high' || 'medium'
+  );
+  const [tradingStrategy, setTradingStrategy] = useState(() => 
+    localStorage.getItem('tradingBotStrategy') || 'dynamicstoploss'
+  );
+  const [maxTradingAmount, setMaxTradingAmount] = useState(() => 
+    localStorage.getItem('tradingBotMaxAmount') || '1000'
+  );
+  const [tradingPair, setTradingPair] = useState(() => 
+    localStorage.getItem('tradingBotPair') || 'BTC-USD'
+  );
+  const [logs, setLogs] = useState<string[]>(globalLogs);
   const [cpuUsage, setCpuUsage] = useState(0);
   const [memoryUsage, setMemoryUsage] = useState(0);
   const [executionTime, setExecutionTime] = useState(0);
@@ -105,17 +128,31 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://api.exchange.com'
   });
   const [activeExchangeAPI, setActiveExchangeAPI] = useState<ExchangeAPI>(exchangeAPI);
-  const [isExchangeConnected, setIsExchangeConnected] = useState(false);
+  const [isExchangeConnected, setIsExchangeConnected] = useState(globalIsExchangeConnected);
   const [exchangeName, setExchangeName] = useState('Kraken');
   const [exchangeLatency, setExchangeLatency] = useState(0);
   const [connectionQuality, setConnectionQuality] = useState(0);
-  const [connectionCheckInterval, setConnectionCheckInterval] = useState<NodeJS.Timeout | null>(null);
-  const [autoPaperTrade, setAutoPaperTrade] = useState(false);
+  const [connectionCheckInterval, setConnectionCheckInterval] = useState<NodeJS.Timeout | null>(globalConnectionCheckInterval);
+  const [autoPaperTrade, setAutoPaperTrade] = useState(() => 
+    localStorage.getItem('autoPaperTrade') === 'true'
+  );
   const { toast } = useToast();
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('tradingBotMode', tradeMode);
+    localStorage.setItem('tradingBotRiskLevel', riskLevel);
+    localStorage.setItem('tradingBotStrategy', tradingStrategy);
+    localStorage.setItem('tradingBotMaxAmount', maxTradingAmount);
+    localStorage.setItem('tradingBotPair', tradingPair);
+    localStorage.setItem('autoPaperTrade', autoPaperTrade.toString());
+  }, [tradeMode, riskLevel, tradingStrategy, maxTradingAmount, tradingPair, autoPaperTrade]);
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev.slice(-19), `[${timestamp}] ${message}`]);
+    const newLog = `[${timestamp}] ${message}`;
+    setLogs(prev => [...prev.slice(-19), newLog]);
+    globalLogs = [...globalLogs.slice(-19), newLog];
   };
 
   const initializeExchangeAPI = () => {
@@ -130,6 +167,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
         setActiveExchangeAPI(krakenAPI);
         addLog(`Connected to Kraken API successfully.`);
         setIsExchangeConnected(true);
+        globalIsExchangeConnected = true;
         setExchangeName('Kraken');
         simulateConnectionMetrics();
         return true;
@@ -138,12 +176,14 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
         console.error('Kraken API connection error:', error);
         setActiveExchangeAPI(exchangeAPI); // Fall back to mock API
         setIsExchangeConnected(false);
+        globalIsExchangeConnected = false;
         return false;
       }
     } else {
       addLog(`No API keys configured, using simulation mode.`);
       setActiveExchangeAPI(exchangeAPI); // Use mock API
       setIsExchangeConnected(false);
+      globalIsExchangeConnected = false;
       return false;
     }
   };
@@ -171,6 +211,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     }, 5000);
     
     setConnectionCheckInterval(interval);
+    globalConnectionCheckInterval = interval;
     return interval;
   };
 
@@ -352,6 +393,8 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     }
     
     setIsRunning(true);
+    globalBotRunning = true;
+    localStorage.setItem('tradingBotRunning', 'true');
     
     setCpuUsage(0);
     setMemoryUsage(0);
@@ -368,6 +411,25 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     
     analyzeMarket();
     
+    // Set up intervals for analysis and resource monitoring
+    if (!globalAnalysisInterval) {
+      globalAnalysisInterval = setInterval(() => {
+        if (globalBotRunning) {
+          analyzeMarket();
+        }
+      }, 30000);
+    }
+    
+    if (!globalResourceInterval) {
+      globalResourceInterval = setInterval(() => {
+        if (globalBotRunning) {
+          setCpuUsage(Math.floor(Math.random() * 40) + 20);
+          setMemoryUsage(Math.floor(Math.random() * 30) + 40);
+          setExecutionTime(prev => prev + 3);
+        }
+      }, 3000);
+    }
+    
     toast({
       title: 'Trading Bot Started',
       description: `Bot is now running in ${tradeMode} trading mode.`,
@@ -376,6 +438,9 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
 
   const stopBot = () => {
     setIsRunning(false);
+    globalBotRunning = false;
+    localStorage.setItem('tradingBotRunning', 'false');
+    
     addLog('Bot stopped. Trading algorithms terminated.');
     
     toast({
@@ -404,6 +469,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
 
   const clearLogs = () => {
     setLogs([]);
+    globalLogs = [];
     toast({ title: "Logs Cleared" });
   };
 
@@ -457,9 +523,11 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
   const disconnectExchange = () => {
     addLog(`Disconnecting from ${exchangeName}...`);
     setIsExchangeConnected(false);
+    globalIsExchangeConnected = false;
     if (connectionCheckInterval) {
       clearInterval(connectionCheckInterval);
       setConnectionCheckInterval(null);
+      globalConnectionCheckInterval = null;
     }
     setExchangeLatency(0);
     setConnectionQuality(0);
@@ -487,6 +555,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     } catch (error) {
       addLog(`Connection test failed: ${error instanceof Error ? error.message : String(error)}`);
       setIsExchangeConnected(false);
+      globalIsExchangeConnected = false;
       setExchangeLatency(0);
       setConnectionQuality(0);
     }
@@ -495,6 +564,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
   const toggleAutoPaperTrade = () => {
     const newState = !autoPaperTrade;
     setAutoPaperTrade(newState);
+    localStorage.setItem('autoPaperTrade', newState.toString());
     
     if (newState) {
       addLog('Auto paper trading enabled - will automatically execute paper trades on strong signals');
@@ -511,38 +581,25 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     }
   };
 
+  // Clean up any intervals when the component is unmounted
   useEffect(() => {
-    if (!isRunning) return;
-    
-    const analysisInterval = setInterval(() => {
-      analyzeMarket();
-    }, 30000);
-    
-    const resourceInterval = setInterval(() => {
-      setCpuUsage(Math.floor(Math.random() * 40) + 20);
-      setMemoryUsage(Math.floor(Math.random() * 30) + 40);
-      setExecutionTime(prev => prev + 3);
-    }, 3000);
-    
     return () => {
-      clearInterval(analysisInterval);
-      clearInterval(resourceInterval);
-      
-      if (!isRunning) {
-        setCpuUsage(0);
-        setMemoryUsage(0);
-        setExecutionTime(0);
-      }
+      // Don't clear the global intervals on unmount, just keep them running
+      // This way, the analysis continues even if the component is unmounted
     };
-  }, [isRunning, tradingPair, riskLevel, tradingStrategy]);
+  }, []);
 
+  // Replace local state with global state when running, for persistence
   useEffect(() => {
-    return () => {
-      if (connectionCheckInterval) {
-        clearInterval(connectionCheckInterval);
-      }
-    };
-  }, [connectionCheckInterval]);
+    setIsExchangeConnected(globalIsExchangeConnected);
+    setLogs(globalLogs);
+    setIsRunning(globalBotRunning);
+  }, []);
+
+  // Effect to update global variables when local states change
+  useEffect(() => {
+    globalIsExchangeConnected = isExchangeConnected;
+  }, [isExchangeConnected]);
 
   const state: TradingBotState = {
     isRunning,

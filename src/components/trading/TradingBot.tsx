@@ -15,6 +15,15 @@ export const TradingBot = () => {
 
   // Initialize connection on component mount if API keys are available
   useEffect(() => {
+    // Check if we have stored bot running state in localStorage
+    const storedBotRunning = localStorage.getItem('tradingBotRunning') === 'true';
+    
+    // If bot should be running but isn't currently running, start it
+    if (storedBotRunning && !state.isRunning) {
+      setTimeout(() => actions.startBot(), 500); // Slight delay to ensure proper initialization
+    }
+    
+    // Connect to exchange if API keys are available
     if (state.apiKeys.exchangeApiKey && state.apiKeys.exchangeApiSecret && !state.isExchangeConnected) {
       actions.reconnectExchange();
       toast({
@@ -23,6 +32,11 @@ export const TradingBot = () => {
       });
     }
   }, []);
+  
+  // Update localStorage when bot running state changes
+  useEffect(() => {
+    localStorage.setItem('tradingBotRunning', state.isRunning ? 'true' : 'false');
+  }, [state.isRunning]);
 
   const handleReconnect = () => {
     actions.reconnectExchange();

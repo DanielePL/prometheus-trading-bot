@@ -39,47 +39,6 @@ const CloudPage = () => {
           
           <TabsContent value="connection" className="space-y-4">
             <CloudConnection />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Connection Guide</CardTitle>
-                <CardDescription>
-                  How to set up your cloud infrastructure for Prometheus
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Step 1: Create a DigitalOcean Droplet</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Sign up for DigitalOcean and create a new Droplet (their name for a cloud server).
-                    Recommended specs: 2GB RAM / 1 CPU / 50GB SSD ($12/month).
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Step 2: Generate API Key</h3>
-                  <p className="text-sm text-muted-foreground">
-                    In your DigitalOcean account, go to API → Generate New Token to create an API key with read and write permissions.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Step 3: Connect</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Enter your Droplet's IP address (found in the DigitalOcean dashboard), default port (22),
-                    and the API key you generated in the Cloud Connection card above.
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Step 4: Install Trading System</h3>
-                  <p className="text-sm text-muted-foreground">
-                    After connecting, the system will automatically install Docker and set up the
-                    Prometheus trading system containers on your cloud server.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
           
           <TabsContent value="resources">

@@ -5,15 +5,19 @@ import { SupabaseConnectionTest } from '@/components/dashboard/SupabaseConnectio
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CloudConnectionCard } from '@/components/dashboard/cloud-connection/CloudConnectionCard';
-import { Database, Cloud, Globe } from 'lucide-react';
+import { Database, Cloud, Globe, Plus } from 'lucide-react';
 import { ConnectionStatusPanel } from '@/components/trading/ConnectionStatusPanel';
 import { ApiKeyConfig } from '@/components/trading/ApiKeyConfig';
 import { useTradingBot } from '@/hooks/useTradingBot';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 const Connections = () => {
   const [state, actions] = useTradingBot();
   const { toast } = useToast();
+  const [activeExchange, setActiveExchange] = useState(state.exchangeName);
+  const [showAddExchange, setShowAddExchange] = useState(false);
   
   const handleReconnect = () => {
     actions.reconnectExchange();
@@ -98,6 +102,50 @@ const Connections = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Current Exchange: {state.exchangeName}</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowAddExchange(!showAddExchange)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Exchange
+                  </Button>
+                </div>
+                
+                {showAddExchange && (
+                  <div className="p-4 border rounded-lg bg-muted/30 space-y-3">
+                    <h4 className="font-medium">Add New Exchange</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Configure a new exchange connection. The system currently supports Kraken and Binance APIs.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          actions.setShowApiConfig(true);
+                          setShowAddExchange(false);
+                          toast({
+                            title: "Configure Kraken",
+                            description: "Enter your Kraken API credentials"
+                          });
+                        }}
+                      >
+                        Configure Kraken
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        disabled
+                        title="Coming soon"
+                      >
+                        Configure Binance
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
                 <ConnectionStatusPanel
                   isConnected={state.isExchangeConnected}
                   exchangeName={state.exchangeName}

@@ -13,8 +13,8 @@ interface AuthContextProps {
 const AuthContext = createContext<AuthContextProps>({
   session: null,
   user: null,
-  isLoading: true,
-  isAuthenticated: true, // Set default to true to bypass auth checks
+  isLoading: false, // Set to false by default
+  isAuthenticated: true, // Set to true to always bypass auth checks
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -26,11 +26,11 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Set to false to skip loading state
+  const [isLoading, setIsLoading] = useState(false); // Start with false to prevent loading state
 
+  // Auth listener is still implemented but authentication is bypassed
   useEffect(() => {
     const getSession = async () => {
-      setIsLoading(true);
       try {
         // Get the current session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -38,8 +38,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(currentSession?.user ?? null);
       } catch (error) {
         console.error('Error getting session:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -51,7 +49,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('Auth state changed:', event);
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      setIsLoading(false);
     });
 
     // Cleanup on unmount
@@ -60,11 +57,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  // Override the isAuthenticated value to always return true
   const value = {
     session,
     user,
     isLoading,
-    isAuthenticated: true, // Override to always return true
+    isAuthenticated: true, // Always set to true to bypass authentication
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

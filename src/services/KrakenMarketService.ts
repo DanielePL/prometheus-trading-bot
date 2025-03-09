@@ -3,9 +3,10 @@ import { KrakenAPI } from '@/components/trading/KrakenAPI';
 import { useToast } from '@/hooks/use-toast';
 
 // Default endpoint for Kraken API - using a CORS proxy to avoid browser restrictions
+// Updated to use a more reliable endpoint pattern
 const DEFAULT_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
 // Fallback endpoint option if the main one fails
-const FALLBACK_API_ENDPOINT = 'https://api-pub.bitfinex.com';
+const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';
 
 // Test API credentials - FOR TESTING PURPOSES ONLY
 // In production, these should be securely stored
@@ -25,6 +26,8 @@ export class KrakenMarketService {
     const apiKey = TEST_API_KEY;
     const apiSecret = TEST_API_SECRET;
     const apiEndpoint = DEFAULT_API_ENDPOINT;
+    
+    console.log('Initializing KrakenMarketService with endpoint:', apiEndpoint);
     
     // Initialize the Kraken API
     this.api = new KrakenAPI(apiKey, apiSecret, apiEndpoint);
@@ -184,12 +187,21 @@ export class KrakenMarketService {
     }
 
     try {
+      // Use the Time endpoint as a simple test if the connection works
+      console.log('Checking time endpoint first to verify connectivity...');
+      const timeResponse = await fetch(`${this.api.getApiEndpoint()}/0/public/Time`);
+      if (!timeResponse.ok) {
+        throw new Error(`Cannot reach Kraken Time endpoint: ${timeResponse.statusText}`);
+      }
+      
+      console.log('Time endpoint check successful, fetching pairs...');
       const response = await fetch(`${this.api.getApiEndpoint()}/0/public/AssetPairs`);
       if (!response.ok) {
         throw new Error(`Kraken API error: ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('AssetPairs API response:', data);
       
       if (data.error && data.error.length > 0) {
         throw new Error(`Kraken API error: ${data.error.join(', ')}`);
@@ -201,6 +213,7 @@ export class KrakenMarketService {
           return this.formatKrakenPair(pair, info.wsname);
         });
       
+      console.log(`Found ${usdPairs.length} USD trading pairs`);
       return await this.updateMarketData(usdPairs);
     } catch (error) {
       console.error('Error fetching Kraken market pairs:', error);

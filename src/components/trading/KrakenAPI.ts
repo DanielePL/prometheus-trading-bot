@@ -33,13 +33,14 @@ export class KrakenAPI implements ExchangeAPI {
       console.log('Testing connection to endpoint:', this.apiEndpoint);
       // Simple request to check if API is accessible - with timeout to prevent long waits
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased from 5s to 10s
       
       const response = await fetch(`${this.apiEndpoint}/0/public/Time`, {
         signal: controller.signal,
         mode: 'cors',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'User-Agent': 'TradingBot/1.0' // Added User-Agent header
         }
       });
       
@@ -77,15 +78,33 @@ export class KrakenAPI implements ExchangeAPI {
       console.log('Testing detailed connection to:', this.apiEndpoint);
       const startTime = Date.now();
       
+      // First, attempt a preflight check
+      console.log('Performing OPTIONS preflight check...');
+      try {
+        const preflightResponse = await fetch(`${this.apiEndpoint}/0/public/Time`, {
+          method: 'OPTIONS',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'TradingBot/1.0'
+          }
+        });
+        console.log('Preflight response:', preflightResponse.status, preflightResponse.statusText);
+      } catch (preflightError) {
+        console.log('Preflight check failed (this is often normal):', preflightError);
+        // Continue anyway, as many CORS proxies don't respond to OPTIONS requests
+      }
+      
       // Simple request to check if API is accessible - with timeout to prevent long waits
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (increased from 5s)
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout to 15 seconds
       
+      console.log('Making actual API request...');
       const response = await fetch(`${this.apiEndpoint}/0/public/Time`, {
         signal: controller.signal,
         mode: 'cors',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'User-Agent': 'TradingBot/1.0' // Added User-Agent header
         }
       });
       
@@ -105,7 +124,21 @@ export class KrakenAPI implements ExchangeAPI {
         };
       }
       
-      const data = await response.json();
+      // Attempt to read the response as JSON
+      let data;
+      try {
+        const textResponse = await response.text();
+        console.log('Raw response:', textResponse.substring(0, 200) + '...');
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        return {
+          success: false,
+          latency,
+          message: `Failed to parse response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`
+        };
+      }
+      
       console.log('API response data:', data);
       
       if (data.error && data.error.length > 0) {
@@ -138,8 +171,8 @@ export class KrakenAPI implements ExchangeAPI {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return {
           success: false,
-          latency: 10000, // Timeout duration (increased from 5000)
-          message: 'Connection timed out after 10 seconds'
+          latency: 15000, // Timeout duration
+          message: 'Connection timed out after 15 seconds'
         };
       }
       
@@ -147,7 +180,7 @@ export class KrakenAPI implements ExchangeAPI {
         return {
           success: false,
           latency: 0,
-          message: 'Network error: CORS issue or API endpoint unreachable'
+          message: 'Network error: CORS issue or API endpoint unreachable. Make sure the CORS proxy is working.'
         };
       }
       

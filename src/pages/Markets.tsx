@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -9,14 +8,16 @@ import { MarketTabs } from '@/components/markets/MarketTabs';
 import { EmptyTrackedState } from '@/components/markets/EmptyTrackedState';
 import { useMarketData } from '@/hooks/useMarketData';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertCircle, WifiOff, CheckCircle, Info, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertCircle, WifiOff, CheckCircle, Info, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConnectionStatusPanel } from '@/components/trading/ConnectionStatusPanel';
 import { useToast } from '@/hooks/use-toast';
 import { krakenMarketService } from '@/services/KrakenMarketService';
+import { ApiKeyConfig } from '@/components/trading/ApiKeyConfig';
 
 const Markets = () => {
   const { toast } = useToast();
+  const [showApiConfig, setShowApiConfig] = useState(false);
   const {
     searchTerm,
     setSearchTerm,
@@ -44,6 +45,19 @@ const Markets = () => {
       description: "Attempting to establish connection...",
     });
     retryConnection();
+  };
+  
+  const handleApiKeysConfiguration = () => {
+    setShowApiConfig(true);
+  };
+  
+  const handleSaveApiKeys = (apiKeys: any) => {
+    setShowApiConfig(false);
+    toast({
+      title: "API Keys Saved",
+      description: "Reloading page to apply new configuration...",
+    });
+    // Page will be reloaded by the ApiKeyConfig component
   };
   
   return (
@@ -79,7 +93,27 @@ const Markets = () => {
                 <Alert variant="destructive" className="mb-4">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Connection error: {connectionError}
+                    <div className="space-y-2">
+                      <div>Connection error: {connectionError}</div>
+                      <div className="text-sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleApiKeysConfiguration}
+                        >
+                          Configure API Keys
+                        </Button>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="text-white"
+                          onClick={() => window.open('https://www.kraken.com/u/security/api', '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Kraken API Docs
+                        </Button>
+                      </div>
+                    </div>
                   </AlertDescription>
                 </Alert>
               )}
@@ -197,23 +231,23 @@ const Markets = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     {connectionError 
                       ? "The connection to Kraken API failed. You can try again or configure your API keys."
-                      : "To use live market data, you need to configure your Kraken API keys. Go to the Trading Bot page and click \"Configure API Keys\" to set them up."}
+                      : "To use live market data, you need to configure your Kraken API keys."}
                   </p>
                   <div className="flex flex-col space-y-2">
                     <Button 
                       variant="default" 
                       className="w-full"
-                      onClick={handleRetryConnection}
+                      onClick={handleApiKeysConfiguration}
                     >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Retry Connection
+                      Configure API Keys
                     </Button>
                     <Button 
                       variant="outline" 
                       className="w-full"
-                      onClick={() => window.location.href = '/tradingbot'}
+                      onClick={handleRetryConnection}
                     >
-                      Configure API Keys
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry Connection
                     </Button>
                   </div>
                 </CardContent>
@@ -222,6 +256,18 @@ const Markets = () => {
           </div>
         </div>
       </div>
+      
+      {showApiConfig && (
+        <ApiKeyConfig
+          apiKeys={{
+            exchangeApiKey: localStorage.getItem('exchangeApiKey') || '',
+            exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
+            apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://cors-proxy.fringe.zone/https://api.kraken.com'
+          }}
+          onSave={handleSaveApiKeys}
+          onCancel={() => setShowApiConfig(false)}
+        />
+      )}
     </AppLayout>
   );
 };

@@ -1,15 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { KeyRound, X, Save, AlertCircle, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, X, Save, AlertCircle, ExternalLink, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Test API credentials - FOR TESTING PURPOSES ONLY
 // These should match the ones in KrakenMarketService.ts
 const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
 const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
-const TEST_API_ENDPOINT = 'https://cors-proxy.fringe.zone/wss://ws-auth.kraken.com/v2';
+const TEST_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
 
 interface ApiKeyConfigProps {
   apiKeys: {
@@ -33,6 +35,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
   });
   const [showSecret, setShowSecret] = useState(false);
   const [savedKeys, setSavedKeys] = useState<{[key: string]: string}>({});
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null);
 
   // Load any previously saved credentials from localStorage on component mount
   useEffect(() => {
@@ -74,6 +78,65 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
 
   const toggleShowSecret = () => {
     setShowSecret(!showSecret);
+  };
+
+  const testConnection = async () => {
+    setTestingConnection(true);
+    setTestResult(null);
+    
+    try {
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 15000);
+      
+      const response = await fetch(`${keys.apiEndpoint}/0/public/Time`, {
+        signal: abortController.signal,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'TradingBot/1.0'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        setTestResult({
+          success: false,
+          message: `HTTP error: ${response.status} ${response.statusText}`
+        });
+        return;
+      }
+      
+      const data = await response.json();
+      if (data.error && data.error.length > 0) {
+        setTestResult({
+          success: false,
+          message: `API error: ${data.error.join(', ')}`
+        });
+        return;
+      }
+      
+      setTestResult({
+        success: true,
+        message: `Connection successful! Server time: ${new Date(data.result.unixtime * 1000).toLocaleString()}`
+      });
+    } catch (error) {
+      let errorMessage = "Connection failed";
+      
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        errorMessage = "Connection timed out after 15 seconds";
+      } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        errorMessage = "Network error: CORS issue or API endpoint unreachable";
+      } else {
+        errorMessage = `Error: ${error instanceof Error ? error.message : String(error)}`;
+      }
+      
+      setTestResult({
+        success: false,
+        message: errorMessage
+      });
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   const handleSave = () => {
@@ -127,7 +190,10 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               <AlertCircle className="h-4 w-4 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium">Test Environment Notice</p>
-                <p>Using hardcoded test API keys. In production, these would be securely stored.</p>
+                <p>
+                  Using hardcoded test API keys. In production, these would be securely stored.
+                  If your API connection is failing, try using the "Test Connection" button below to diagnose issues.
+                </p>
               </div>
             </div>
           </div>
@@ -152,7 +218,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               onChange={handleChange}
             />
             <p className="text-xs text-muted-foreground">
-              Test endpoint: {TEST_API_ENDPOINT}
+              Using CORS proxy is necessary for browser-based access. Default: {TEST_API_ENDPOINT}
             </p>
           </div>
           
@@ -191,6 +257,28 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             </div>
             <p className="text-xs text-green-600 dark:text-green-400">Using test API secret</p>
           </div>
+          
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={testConnection}
+            disabled={testingConnection}
+          >
+            {testingConnection ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Test Connection
+          </Button>
+          
+          {testResult && (
+            <Alert variant={testResult.success ? "default" : "destructive"}>
+              <AlertDescription>
+                {testResult.message}
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t px-6 py-4">
           <Button variant="outline" onClick={onCancel}>

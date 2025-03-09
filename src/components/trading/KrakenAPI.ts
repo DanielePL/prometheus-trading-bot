@@ -1,3 +1,4 @@
+
 // This file contains the Kraken API integration
 import { 
   ExchangeAPI, 
@@ -21,6 +22,11 @@ export class KrakenAPI implements ExchangeAPI {
     this.testConnection();
   }
 
+  // Get the API endpoint
+  public getApiEndpoint(): string {
+    return this.apiEndpoint;
+  }
+  
   // Test if we can connect to Kraken API
   private async testConnection(): Promise<void> {
     try {

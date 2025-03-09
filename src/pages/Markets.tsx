@@ -9,11 +9,13 @@ import { MarketTabs } from '@/components/markets/MarketTabs';
 import { EmptyTrackedState } from '@/components/markets/EmptyTrackedState';
 import { useMarketData } from '@/hooks/useMarketData';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertCircle, WifiOff, CheckCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle, WifiOff, CheckCircle, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConnectionStatusPanel } from '@/components/trading/ConnectionStatusPanel';
+import { useToast } from '@/hooks/use-toast';
 
 const Markets = () => {
+  const { toast } = useToast();
   const {
     searchTerm,
     setSearchTerm,
@@ -27,6 +29,14 @@ const Markets = () => {
     connectionError,
     retryConnection
   } = useMarketData();
+  
+  const handleRetryConnection = () => {
+    toast({
+      title: "Reconnecting to Kraken API",
+      description: "Attempting to establish connection...",
+    });
+    retryConnection();
+  };
   
   return (
     <AppLayout>
@@ -67,9 +77,9 @@ const Markets = () => {
               )}
               
               {isUsingLiveData ? (
-                <Alert className="mb-4">
+                <Alert className="mb-4 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <AlertDescription>
+                  <AlertDescription className="text-green-700 dark:text-green-300">
                     Displaying live market data from Kraken API
                   </AlertDescription>
                 </Alert>
@@ -77,7 +87,16 @@ const Markets = () => {
                 <Alert variant="destructive" className="mb-4">
                   <WifiOff className="h-4 w-4" />
                   <AlertDescription>
-                    Using demonstration data. Connect to Kraken API for live data.
+                    Using demonstration data. {connectionError ? `Connection failed: ${connectionError}` : 'Connect to Kraken API for live data.'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {filteredMarketData.length === 0 && !isLoading && (
+                <Alert className="mb-4">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    No market data found. {isUsingLiveData ? 'Try refreshing the data.' : 'Try connecting to the Kraken API.'}
                   </AlertDescription>
                 </Alert>
               )}
@@ -88,6 +107,7 @@ const Markets = () => {
                     <MarketTable 
                       data={filteredMarketData} 
                       handleTrackToggle={handleTrackToggle} 
+                      isLoading={isLoading}
                     />
                   </CardContent>
                 </Card>
@@ -100,6 +120,7 @@ const Markets = () => {
                       <MarketTable 
                         data={trackedCoins} 
                         handleTrackToggle={handleTrackToggle} 
+                        isLoading={isLoading}
                       />
                     ) : (
                       <EmptyTrackedState />
@@ -114,6 +135,7 @@ const Markets = () => {
                     <MarketTable 
                       data={gainers} 
                       handleTrackToggle={handleTrackToggle} 
+                      isLoading={isLoading}
                     />
                   </CardContent>
                 </Card>
@@ -125,10 +147,10 @@ const Markets = () => {
             <ConnectionStatusPanel
               isConnected={isUsingLiveData}
               exchangeName="Kraken"
-              apiEndpoint={localStorage.getItem('apiEndpoint') || 'https://api.kraken.com'}
+              apiEndpoint={localStorage.getItem('apiEndpoint') || 'Using CORS proxy'}
               lastPing={isUsingLiveData ? 24 : 0}
               connectionQuality={isUsingLiveData ? 98 : 0}
-              onReconnect={retryConnection}
+              onReconnect={handleRetryConnection}
               onDisconnect={() => window.location.reload()}
               onTest={refreshData}
             />
@@ -137,20 +159,43 @@ const Markets = () => {
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle>Connection Required</CardTitle>
-                  <CardDescription>Set up API keys to view real market data</CardDescription>
+                  <CardDescription>
+                    {connectionError 
+                      ? "Connection failed - see error details below" 
+                      : "Set up API keys to view real market data"}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {connectionError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {connectionError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   <p className="text-sm text-muted-foreground mb-4">
-                    To use live market data, you need to configure your Kraken API keys. 
-                    Go to the Trading Bot page and click "Configure API Keys" to set them up.
+                    {connectionError 
+                      ? "The connection to Kraken API failed. You can try again or configure your API keys."
+                      : "To use live market data, you need to configure your Kraken API keys. Go to the Trading Bot page and click \"Configure API Keys\" to set them up."}
                   </p>
-                  <Button 
-                    variant="default" 
-                    className="w-full"
-                    onClick={() => window.location.href = '/tradingbot'}
-                  >
-                    Configure API Keys
-                  </Button>
+                  <div className="flex flex-col space-y-2">
+                    <Button 
+                      variant="default" 
+                      className="w-full"
+                      onClick={handleRetryConnection}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry Connection
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => window.location.href = '/tradingbot'}
+                    >
+                      Configure API Keys
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

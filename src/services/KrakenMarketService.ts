@@ -2,8 +2,8 @@
 import { MarketData } from '@/types/market';
 import { KrakenAPI } from '@/components/trading/KrakenAPI';
 
-// Default endpoint for Kraken API
-const DEFAULT_API_ENDPOINT = 'https://api.kraken.com';
+// Default endpoint for Kraken API - using a CORS proxy to avoid browser restrictions
+const DEFAULT_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
 
 export class KrakenMarketService {
   private api: KrakenAPI;
@@ -26,7 +26,7 @@ export class KrakenMarketService {
       const result = await this.api.testConnectionWithDetails();
       this.isConnected = result.success;
       this.connectionError = result.success ? null : result.message;
-      console.log(`Kraken market service connection: ${result.success ? 'connected' : 'failed'}`);
+      console.log(`Kraken market service connection: ${result.success ? 'connected' : 'failed'}, message: ${result.message}`);
     } catch (error) {
       console.error('Kraken market service connection error:', error);
       this.isConnected = false;
@@ -72,7 +72,7 @@ export class KrakenMarketService {
 
     try {
       // Use a simple public endpoint to get asset pairs info
-      const response = await fetch(`${DEFAULT_API_ENDPOINT}/0/public/AssetPairs`);
+      const response = await fetch(`${this.api.getApiEndpoint()}/0/public/AssetPairs`);
       if (!response.ok) {
         throw new Error(`Kraken API error: ${response.statusText}`);
       }
@@ -94,6 +94,7 @@ export class KrakenMarketService {
       return await this.updateMarketData(usdPairs);
     } catch (error) {
       console.error('Error fetching Kraken market pairs:', error);
+      this.connectionError = error instanceof Error ? error.message : String(error);
       return [];
     }
   }
@@ -107,7 +108,7 @@ export class KrakenMarketService {
     try {
       // Get ticker information for all pairs
       const pairs = markets.map(market => market.id).join(',');
-      const response = await fetch(`${DEFAULT_API_ENDPOINT}/0/public/Ticker?pair=${pairs}`);
+      const response = await fetch(`${this.api.getApiEndpoint()}/0/public/Ticker?pair=${pairs}`);
       
       if (!response.ok) {
         throw new Error(`Kraken API error: ${response.statusText}`);
@@ -139,6 +140,7 @@ export class KrakenMarketService {
       });
     } catch (error) {
       console.error('Error updating Kraken market data:', error);
+      this.connectionError = error instanceof Error ? error.message : String(error);
       return markets;
     }
   }

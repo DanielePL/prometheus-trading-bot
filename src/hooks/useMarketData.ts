@@ -3,11 +3,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { MarketData } from '@/types/market';
 import { marketData as mockMarketData } from '@/data/marketData';
 import { krakenMarketService } from '@/services/KrakenMarketService';
+import { useToast } from '@/hooks/use-toast';
 
 export const useMarketData = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [marketDataState, setMarketDataState] = useState<MarketData[]>(mockMarketData);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUsingLiveData, setIsUsingLiveData] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   
@@ -48,13 +50,27 @@ export const useMarketData = () => {
               dataWithTrackedStatus.filter(coin => coin.tracked).map(coin => coin.symbol)
             ));
             
+            toast({
+              title: "Connected to Kraken",
+              description: "Displaying live market data",
+              variant: "default"
+            });
+            
             // Set up refresh interval while using live data
             const intervalId = setInterval(async () => {
-              const updatedData = await krakenMarketService.updateMarketData(dataWithTrackedStatus);
-              setMarketDataState(updatedData);
+              try {
+                const updatedData = await krakenMarketService.updateMarketData(dataWithTrackedStatus);
+                setMarketDataState(updatedData);
+              } catch (err) {
+                console.error('Error during interval refresh:', err);
+                const errMessage = err instanceof Error ? err.message : String(err);
+                setConnectionError(errMessage);
+              }
             }, 30000); // Refresh every 30 seconds
             
             return () => clearInterval(intervalId);
+          } else {
+            setConnectionError('Connected to API but received no market data');
           }
         }
         
@@ -70,10 +86,25 @@ export const useMarketData = () => {
         
         setMarketDataState(updatedMockData);
         setIsUsingLiveData(false);
+        
+        if (error) {
+          toast({
+            title: "Connection Failed",
+            description: `Using demo data: ${error}`,
+            variant: "destructive"
+          });
+        }
       } catch (error) {
         console.error('Error fetching market data:', error);
         setIsUsingLiveData(false);
-        setConnectionError(error instanceof Error ? error.message : String(error));
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setConnectionError(errorMessage);
+        
+        toast({
+          title: "Connection Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -122,15 +153,27 @@ export const useMarketData = () => {
   
   // Force refresh data
   const refreshData = async () => {
-    if (!isUsingLiveData) return;
-    
     setIsLoading(true);
     try {
-      const updatedData = await krakenMarketService.updateMarketData(marketDataState);
-      setMarketDataState(updatedData);
+      if (isUsingLiveData) {
+        const updatedData = await krakenMarketService.updateMarketData(marketDataState);
+        setMarketDataState(updatedData);
+        toast({
+          title: "Data Refreshed",
+          description: "Market data has been updated",
+        });
+      } else {
+        await retryConnection();
+      }
     } catch (error) {
       console.error('Error refreshing market data:', error);
-      setConnectionError(error instanceof Error ? error.message : String(error));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setConnectionError(errorMessage);
+      toast({
+        title: "Refresh Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -142,7 +185,7 @@ export const useMarketData = () => {
     setConnectionError(null);
     
     try {
-      // Reinitialize Kraken service by reimporting it
+      // Create a new instance of KrakenMarketService
       const { krakenMarketService: refreshedService } = await import('@/services/KrakenMarketService?refresh=' + Date.now());
       
       if (refreshedService.isApiConnected()) {
@@ -163,16 +206,42 @@ export const useMarketData = () => {
           
           setMarketDataState(dataWithTrackedStatus);
           setIsUsingLiveData(true);
+          setConnectionError(null);
+          
+          toast({
+            title: "Connection Successful",
+            description: "Now displaying live market data",
+            variant: "default"
+          });
+          
           console.log('Using live market data from Kraken after retry');
         } else {
           setConnectionError('Connected to API but received no market data');
+          toast({
+            title: "Connection Issue",
+            description: "Connected but received no market data",
+            variant: "destructive"
+          });
         }
       } else {
-        setConnectionError(refreshedService.getConnectionError() || 'Failed to connect to Kraken API');
+        const error = refreshedService.getConnectionError() || 'Failed to connect to Kraken API';
+        setConnectionError(error);
+        toast({
+          title: "Connection Failed",
+          description: error,
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error on retry connection:', error);
-      setConnectionError(error instanceof Error ? error.message : String(error));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setConnectionError(errorMessage);
+      
+      toast({
+        title: "Connection Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

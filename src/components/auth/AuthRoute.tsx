@@ -8,6 +8,10 @@ interface AuthRouteProps {
 }
 
 export const AuthRoute: React.FC<AuthRouteProps> = ({ children }) => {
+  // Temporarily disabled auth check - always let users through
+  return <>{children}</>;
+  
+  /* Original code commented out until we need to re-enable
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
@@ -22,4 +26,5 @@ export const AuthRoute: React.FC<AuthRouteProps> = ({ children }) => {
   }
 
   return <>{children}</>;
+  */
 };

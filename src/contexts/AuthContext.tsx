@@ -14,7 +14,7 @@ const AuthContext = createContext<AuthContextProps>({
   session: null,
   user: null,
   isLoading: true,
-  isAuthenticated: false,
+  isAuthenticated: true, // Set default to true to bypass auth checks
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -26,7 +26,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Set to false to skip loading state
 
   useEffect(() => {
     const getSession = async () => {
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     session,
     user,
     isLoading,
-    isAuthenticated: !!session,
+    isAuthenticated: true, // Override to always return true
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

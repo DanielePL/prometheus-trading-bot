@@ -49,11 +49,7 @@ function App() {
             <Route path="/performance" element={<Performance />} />
             <Route path="/event-analysis" element={<EventAnalysis />} />
             <Route path="/news-scanner" element={<NewsScanner />} />
-            <Route path="/cloud" element={
-              <AuthRoute>
-                <Cloud />
-              </AuthRoute>
-            } />
+            <Route path="/cloud" element={<Cloud />} />
             <Route path="/connections" element={<Connections />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

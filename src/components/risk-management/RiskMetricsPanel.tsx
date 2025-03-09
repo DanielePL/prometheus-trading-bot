@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, TrendingDown, BadgePercent } from 'lucide-react';
+import { AlertTriangle, TrendingDown, BadgePercent, Pause, Scale, Activity } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 
 export const RiskMetricsPanel = () => {
   // These would typically be calculated from actual portfolio data
@@ -15,6 +18,10 @@ export const RiskMetricsPanel = () => {
     sharpeRatio: 1.85,
     sortinoRatio: 2.1
   };
+  
+  const [maxDrawdownLimit, setMaxDrawdownLimit] = useState<number>(15);
+  const [autoPauseEnabled, setAutoPauseEnabled] = useState<boolean>(true);
+  const [heatIndexLimit, setHeatIndexLimit] = useState<number>(80);
   
   const getRiskColor = (value: number, isInverse: boolean = false) => {
     const thresholds = isInverse 
@@ -70,6 +77,11 @@ export const RiskMetricsPanel = () => {
               '--progress-color': getProgressColor(metrics.portfolioHeatIndex) 
             } as React.CSSProperties} 
           />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Safe</span>
+            <span>Warning</span>
+            <span>Critical</span>
+          </div>
         </div>
         
         <div className="space-y-2">
@@ -87,6 +99,25 @@ export const RiskMetricsPanel = () => {
               '--progress-color': getProgressColor(metrics.drawdown) 
             } as React.CSSProperties} 
           />
+        </div>
+        
+        <div className="flex justify-between items-center bg-muted/50 p-3 rounded-md">
+          <div className="flex items-center">
+            <Pause className="h-4 w-4 mr-2 text-blue-500" />
+            <div>
+              <span className="text-sm font-medium">Auto-Pause Trading</span>
+              <p className="text-xs text-muted-foreground">Pause trading when drawdown exceeds limit</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <Switch 
+              checked={autoPauseEnabled} 
+              onCheckedChange={setAutoPauseEnabled} 
+            />
+            <span className="text-xs text-muted-foreground mt-1">
+              Limit: {maxDrawdownLimit}%
+            </span>
+          </div>
         </div>
         
         <div className="space-y-2">
@@ -115,6 +146,24 @@ export const RiskMetricsPanel = () => {
               '--progress-color': getProgressColor(metrics.volatility) 
             } as React.CSSProperties} 
           />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="heat-index-limit" className="flex justify-between text-sm">
+          <span>Heat Index Limit</span>
+          <span className="text-muted-foreground">{heatIndexLimit}%</span>
+        </Label>
+        <Slider
+          id="heat-index-limit"
+          value={[heatIndexLimit]}
+          min={50}
+          max={95}
+          step={5}
+          onValueChange={(values) => setHeatIndexLimit(values[0])}
+        />
+        <div className="text-xs text-muted-foreground">
+          Trading will be restricted when heat index exceeds this limit
         </div>
       </div>
       

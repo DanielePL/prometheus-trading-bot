@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Code, RefreshCw } from 'lucide-react';
+import { Code, RefreshCw, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface BotLogPanelProps {
   logs: string[];
@@ -15,19 +16,66 @@ export const BotLogPanel: React.FC<BotLogPanelProps> = ({
   isRunning,
   onRefreshData
 }) => {
+  const logContainerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  // Auto-scroll logs to bottom when new logs arrive
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logs]);
+  
+  const handleDownloadLogs = () => {
+    // Create a blob with the logs
+    const logText = logs.join('\n');
+    const blob = new Blob([logText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a link and trigger download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `prometheus-bot-logs-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Logs Downloaded",
+      description: "Bot logs have been saved to your computer",
+    });
+  };
+
   return (
     <Card className="lg:col-span-1">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Code className="h-5 w-5 text-amber-500" />
-          <div>
-            <CardTitle>Bot Logs</CardTitle>
-            <CardDescription>Real-time trading activity</CardDescription>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <Code className="h-5 w-5 text-amber-500" />
+            <div>
+              <CardTitle>Bot Logs</CardTitle>
+              <CardDescription>Real-time trading activity</CardDescription>
+            </div>
           </div>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleDownloadLogs}
+            disabled={logs.length === 0}
+            title="Download Logs"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[425px] rounded-md border bg-muted p-4 font-mono text-sm overflow-y-auto">
+        <div 
+          ref={logContainerRef}
+          className="h-[425px] rounded-md border bg-muted p-4 font-mono text-sm overflow-y-auto"
+        >
           {logs.length > 0 ? (
             logs.map((log, index) => (
               <div key={index} className="pb-1">

@@ -6,6 +6,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts';
 import { SettingsDrawer } from '@/components/dashboard/SettingsDrawer';
 import { SupabaseIntegrationGuide } from '@/components/dashboard/SupabaseIntegrationGuide';
+import { SupabaseConnectionTest } from '@/components/dashboard/SupabaseConnectionTest';
 import { RecentTrades } from '@/components/dashboard/RecentTrades';
 import { Button } from '@/components/ui/button';
 import { BotStatus } from '@/components/dashboard/BotStatus';
@@ -32,7 +33,8 @@ const Dashboard = () => {
           setActiveSymbol={setActiveSymbol}
         />
         
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SupabaseConnectionTest />
           <SupabaseIntegrationGuide />
         </div>
         

@@ -9,6 +9,7 @@ export const useMarketData = () => {
   const [marketDataState, setMarketDataState] = useState<MarketData[]>(mockMarketData);
   const [isLoading, setIsLoading] = useState(false);
   const [isUsingLiveData, setIsUsingLiveData] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   // Load market data on component mount
   useEffect(() => {
@@ -18,6 +19,8 @@ export const useMarketData = () => {
       try {
         // Try to get live data from Kraken
         const isConnected = krakenMarketService.isApiConnected();
+        const error = krakenMarketService.getConnectionError();
+        setConnectionError(error);
         
         if (isConnected) {
           const liveData = await krakenMarketService.getMarketPairs();
@@ -70,6 +73,7 @@ export const useMarketData = () => {
       } catch (error) {
         console.error('Error fetching market data:', error);
         setIsUsingLiveData(false);
+        setConnectionError(error instanceof Error ? error.message : String(error));
       } finally {
         setIsLoading(false);
       }
@@ -126,6 +130,49 @@ export const useMarketData = () => {
       setMarketDataState(updatedData);
     } catch (error) {
       console.error('Error refreshing market data:', error);
+      setConnectionError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Function to retry the connection to Kraken API
+  const retryConnection = async () => {
+    setIsLoading(true);
+    setConnectionError(null);
+    
+    try {
+      // Reinitialize Kraken service by reimporting it
+      const { krakenMarketService: refreshedService } = await import('@/services/KrakenMarketService?refresh=' + Date.now());
+      
+      if (refreshedService.isApiConnected()) {
+        const liveData = await refreshedService.getMarketPairs();
+        
+        if (liveData && liveData.length > 0) {
+          // Apply tracked status to new data
+          const trackedCoinsMap = new Map(
+            marketDataState
+              .filter(coin => coin.tracked)
+              .map(coin => [coin.symbol, true])
+          );
+          
+          const dataWithTrackedStatus = liveData.map(coin => ({
+            ...coin,
+            tracked: trackedCoinsMap.has(coin.symbol)
+          }));
+          
+          setMarketDataState(dataWithTrackedStatus);
+          setIsUsingLiveData(true);
+          console.log('Using live market data from Kraken after retry');
+        } else {
+          setConnectionError('Connected to API but received no market data');
+        }
+      } else {
+        setConnectionError(refreshedService.getConnectionError() || 'Failed to connect to Kraken API');
+      }
+    } catch (error) {
+      console.error('Error on retry connection:', error);
+      setConnectionError(error instanceof Error ? error.message : String(error));
     } finally {
       setIsLoading(false);
     }
@@ -140,6 +187,8 @@ export const useMarketData = () => {
     handleTrackToggle,
     isLoading,
     isUsingLiveData,
-    refreshData
+    refreshData,
+    connectionError,
+    retryConnection
   };
 };

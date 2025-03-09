@@ -8,6 +8,7 @@ const DEFAULT_API_ENDPOINT = 'https://api.kraken.com';
 export class KrakenMarketService {
   private api: KrakenAPI;
   private isConnected: boolean = false;
+  private connectionError: string | null = null;
 
   constructor() {
     // Get API keys from localStorage or use empty strings for public endpoints
@@ -24,15 +25,21 @@ export class KrakenMarketService {
     try {
       const result = await this.api.testConnectionWithDetails();
       this.isConnected = result.success;
+      this.connectionError = result.success ? null : result.message;
       console.log(`Kraken market service connection: ${result.success ? 'connected' : 'failed'}`);
     } catch (error) {
       console.error('Kraken market service connection error:', error);
       this.isConnected = false;
+      this.connectionError = error instanceof Error ? error.message : String(error);
     }
   }
 
   public isApiConnected(): boolean {
     return this.isConnected;
+  }
+
+  public getConnectionError(): string | null {
+    return this.connectionError;
   }
 
   // Convert Kraken symbol to our application format
@@ -48,7 +55,7 @@ export class KrakenMarketService {
       id: symbol,
       name: fullName || `${normalizedBase}/${quoteSymbol}`,
       symbol: normalizedBase,
-      price: 0,
+      price: "0",
       change24h: 0,
       volume: '0',
       marketCap: '0',

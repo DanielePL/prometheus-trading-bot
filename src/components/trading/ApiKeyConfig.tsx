@@ -1,10 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { KeyRound, X, Save, AlertCircle, ExternalLink, Eye, EyeOff } from 'lucide-react';
+
+// Test API credentials - FOR TESTING PURPOSES ONLY
+// These should match the ones in KrakenMarketService.ts
+const TEST_API_KEY = 'your_test_kraken_api_key_here';
+const TEST_API_SECRET = 'your_test_kraken_api_secret_here';
+const TEST_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
 
 interface ApiKeyConfigProps {
   apiKeys: {
@@ -21,16 +26,21 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
   onSave,
   onCancel
 }) => {
-  const [keys, setKeys] = useState(apiKeys);
+  const [keys, setKeys] = useState({
+    exchangeApiKey: TEST_API_KEY,
+    exchangeApiSecret: TEST_API_SECRET,
+    apiEndpoint: TEST_API_ENDPOINT
+  });
   const [showSecret, setShowSecret] = useState(false);
   const [savedKeys, setSavedKeys] = useState<{[key: string]: string}>({});
 
   // Load any previously saved credentials from localStorage on component mount
   useEffect(() => {
     const loadSavedCredentials = () => {
-      const savedApiKey = localStorage.getItem('exchangeApiKey');
-      const savedApiSecret = localStorage.getItem('exchangeApiSecret');
-      const savedApiEndpoint = localStorage.getItem('apiEndpoint');
+      // We're using hardcoded test keys, but still check localStorage for compatibility
+      const savedApiKey = localStorage.getItem('exchangeApiKey') || TEST_API_KEY;
+      const savedApiSecret = localStorage.getItem('exchangeApiSecret') || TEST_API_SECRET;
+      const savedApiEndpoint = localStorage.getItem('apiEndpoint') || TEST_API_ENDPOINT;
       
       const savedData: {[key: string]: string} = {};
       if (savedApiKey) savedData.exchangeApiKey = savedApiKey;
@@ -39,27 +49,12 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       
       setSavedKeys(savedData);
       
-      // Only set the initial values if they aren't already set
-      if (!keys.exchangeApiKey && savedApiKey) {
-        setKeys(prev => ({
-          ...prev,
-          exchangeApiKey: savedApiKey
-        }));
-      }
-      
-      if (!keys.exchangeApiSecret && savedApiSecret) {
-        setKeys(prev => ({
-          ...prev,
-          exchangeApiSecret: savedApiSecret
-        }));
-      }
-      
-      if (!keys.apiEndpoint && savedApiEndpoint) {
-        setKeys(prev => ({
-          ...prev,
-          apiEndpoint: savedApiEndpoint || 'https://cors-proxy.fringe.zone/https://api.kraken.com'
-        }));
-      }
+      // Set the keys from saved values or defaults
+      setKeys({
+        exchangeApiKey: savedApiKey,
+        exchangeApiSecret: savedApiSecret,
+        apiEndpoint: savedApiEndpoint
+      });
     };
     
     loadSavedCredentials();
@@ -117,8 +112,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <div className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-amber-500" />
               <div>
-                <CardTitle>Kraken API Configuration</CardTitle>
-                <CardDescription>Configure your Kraken API keys</CardDescription>
+                <CardTitle>Kraken API Configuration (TEST MODE)</CardTitle>
+                <CardDescription>Using test API keys - for development only</CardDescription>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onCancel}>
@@ -131,8 +126,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <div className="flex items-start gap-2">
               <AlertCircle className="h-4 w-4 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium">Security Notice</p>
-                <p>API keys are stored securely in your browser's local storage. They will persist across sessions and browser refreshes.</p>
+                <p className="font-medium">Test Environment Notice</p>
+                <p>Using hardcoded test API keys. In production, these would be securely stored.</p>
               </div>
             </div>
           </div>
@@ -157,7 +152,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               onChange={handleChange}
             />
             <p className="text-xs text-muted-foreground">
-              {savedKeys.apiEndpoint ? 'Using saved endpoint' : 'Default: https://cors-proxy.fringe.zone/https://api.kraken.com'}
+              Test endpoint: {TEST_API_ENDPOINT}
             </p>
           </div>
           
@@ -170,9 +165,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               value={keys.exchangeApiKey}
               onChange={handleChange}
             />
-            {savedKeys.exchangeApiKey && (
-              <p className="text-xs text-green-600 dark:text-green-400">API key saved</p>
-            )}
+            <p className="text-xs text-green-600 dark:text-green-400">Using test API key</p>
           </div>
           
           <div className="space-y-2">
@@ -196,9 +189,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
                 {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            {savedKeys.exchangeApiSecret && (
-              <p className="text-xs text-green-600 dark:text-green-400">API secret saved</p>
-            )}
+            <p className="text-xs text-green-600 dark:text-green-400">Using test API secret</p>
           </div>
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t px-6 py-4">

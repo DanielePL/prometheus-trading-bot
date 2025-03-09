@@ -1,4 +1,3 @@
-
 import { MarketData } from '@/types/market';
 import { KrakenAPI } from '@/components/trading/KrakenAPI';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +7,11 @@ const DEFAULT_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.
 // Fallback endpoint option if the main one fails
 const FALLBACK_API_ENDPOINT = 'https://api-pub.bitfinex.com';
 
+// Test API credentials - FOR TESTING PURPOSES ONLY
+// In production, these should be securely stored
+const TEST_API_KEY = 'your_test_kraken_api_key_here';
+const TEST_API_SECRET = 'your_test_kraken_api_secret_here';
+
 export class KrakenMarketService {
   private api: KrakenAPI;
   private isConnected: boolean = false;
@@ -16,16 +20,21 @@ export class KrakenMarketService {
   private usingFallbackEndpoint: boolean = false;
 
   constructor() {
-    // Get API keys from localStorage or use empty strings for public endpoints
-    const apiKey = localStorage.getItem('exchangeApiKey') || '';
-    const apiSecret = localStorage.getItem('exchangeApiSecret') || '';
-    const apiEndpoint = localStorage.getItem('apiEndpoint') || DEFAULT_API_ENDPOINT;
+    // Use hardcoded test keys for development/testing
+    // In production, these would come from a secure source
+    const apiKey = TEST_API_KEY;
+    const apiSecret = TEST_API_SECRET;
+    const apiEndpoint = DEFAULT_API_ENDPOINT;
     
     // Initialize the Kraken API
     this.api = new KrakenAPI(apiKey, apiSecret, apiEndpoint);
     
-    // Don't test connection in constructor to avoid blocking app initialization
-    // Connection will be tested on first data request
+    // Store keys in localStorage for compatibility with other components
+    if (apiKey && apiSecret) {
+      localStorage.setItem('exchangeApiKey', apiKey);
+      localStorage.setItem('exchangeApiSecret', apiSecret);
+      localStorage.setItem('apiEndpoint', apiEndpoint);
+    }
   }
 
   private async testConnection(): Promise<void> {

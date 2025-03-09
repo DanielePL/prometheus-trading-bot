@@ -1,7 +1,6 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
 import Markets from '@/pages/Markets';
 import Portfolio from '@/pages/Portfolio';
@@ -28,7 +27,7 @@ function App() {
     <Router>
       <div className="min-h-screen">
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/markets" element={<Markets />} />
           <Route path="/trades" element={<Trades />} />

@@ -57,7 +57,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       if (!keys.apiEndpoint && savedApiEndpoint) {
         setKeys(prev => ({
           ...prev,
-          apiEndpoint: savedApiEndpoint
+          apiEndpoint: savedApiEndpoint || 'https://cors-proxy.fringe.zone/https://api.kraken.com'
         }));
       }
     };
@@ -79,6 +79,34 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
 
   const toggleShowSecret = () => {
     setShowSecret(!showSecret);
+  };
+
+  const handleSave = () => {
+    // Save to localStorage for persistence
+    if (keys.exchangeApiKey) {
+      localStorage.setItem('exchangeApiKey', keys.exchangeApiKey);
+    }
+    
+    if (keys.exchangeApiSecret) {
+      localStorage.setItem('exchangeApiSecret', keys.exchangeApiSecret);
+    }
+    
+    if (keys.apiEndpoint) {
+      localStorage.setItem('apiEndpoint', keys.apiEndpoint);
+    }
+    
+    // Reset connection status to force a new connection attempt
+    localStorage.removeItem('krakenConnectionStatus');
+    localStorage.removeItem('krakenLastConnected');
+    localStorage.removeItem('krakenConnectionError');
+    
+    // Pass data to parent component
+    onSave(keys);
+    
+    // Force a page reload to properly initialize with new API keys
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   return (
@@ -124,12 +152,12 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <Input
               id="apiEndpoint"
               name="apiEndpoint"
-              placeholder="https://api.kraken.com"
+              placeholder="https://cors-proxy.fringe.zone/https://api.kraken.com"
               value={keys.apiEndpoint}
               onChange={handleChange}
             />
             <p className="text-xs text-muted-foreground">
-              {savedKeys.apiEndpoint ? 'Using saved endpoint' : 'Default: https://api.kraken.com'}
+              {savedKeys.apiEndpoint ? 'Using saved endpoint' : 'Default: https://cors-proxy.fringe.zone/https://api.kraken.com'}
             </p>
           </div>
           
@@ -177,7 +205,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={() => onSave(keys)}>
+          <Button onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />
             Save API Keys
           </Button>

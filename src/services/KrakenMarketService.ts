@@ -9,6 +9,7 @@ export class KrakenMarketService {
   private api: KrakenAPI;
   private isConnected: boolean = false;
   private connectionError: string | null = null;
+  private connectionAttempted: boolean = false;
 
   constructor() {
     // Get API keys from localStorage or use empty strings for public endpoints
@@ -18,10 +19,17 @@ export class KrakenMarketService {
     
     // Initialize the Kraken API
     this.api = new KrakenAPI(apiKey, apiSecret, apiEndpoint);
-    this.testConnection();
+    
+    // Don't test connection in constructor to avoid blocking app initialization
+    // Connection will be tested on first data request
   }
 
   private async testConnection(): Promise<void> {
+    if (this.connectionAttempted) return;
+    
+    this.connectionAttempted = true;
+    console.log('Testing connection to Kraken API...');
+    
     try {
       const result = await this.api.testConnectionWithDetails();
       this.isConnected = result.success;
@@ -45,6 +53,15 @@ export class KrakenMarketService {
       localStorage.setItem('krakenConnectionStatus', 'failed');
       localStorage.setItem('krakenConnectionError', this.connectionError);
     }
+  }
+
+  // Reset connection status and force a new connection attempt
+  public async resetConnection(): Promise<boolean> {
+    this.connectionAttempted = false;
+    this.isConnected = false;
+    this.connectionError = null;
+    await this.testConnection();
+    return this.isConnected;
   }
 
   public isApiConnected(): boolean {
@@ -83,9 +100,14 @@ export class KrakenMarketService {
 
   // Get all available trading pairs from Kraken
   public async getMarketPairs(): Promise<MarketData[]> {
+    // Always test connection before first request
+    if (!this.connectionAttempted) {
+      await this.testConnection();
+    }
+
     if (!this.isConnected) {
       console.warn('Kraken API not connected, falling back to mock data');
-      return [];
+      throw new Error(this.connectionError || 'Failed to connect to Kraken API');
     }
 
     try {
@@ -113,13 +135,21 @@ export class KrakenMarketService {
     } catch (error) {
       console.error('Error fetching Kraken market pairs:', error);
       this.connectionError = error instanceof Error ? error.message : String(error);
-      return [];
+      throw error; // Propagate error to caller
     }
   }
 
   // Update market data with current prices
   public async updateMarketData(markets: MarketData[]): Promise<MarketData[]> {
+    // Test connection if not already attempted
+    if (!this.connectionAttempted) {
+      await this.testConnection();
+    }
+    
     if (!this.isConnected || markets.length === 0) {
+      if (!this.isConnected) {
+        throw new Error(this.connectionError || 'Not connected to Kraken API');
+      }
       return markets;
     }
 
@@ -159,7 +189,7 @@ export class KrakenMarketService {
     } catch (error) {
       console.error('Error updating Kraken market data:', error);
       this.connectionError = error instanceof Error ? error.message : String(error);
-      return markets;
+      throw error; // Propagate error to caller
     }
   }
 }

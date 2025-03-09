@@ -1,4 +1,3 @@
-
 // This file contains the Kraken API integration
 import { 
   ExchangeAPI, 
@@ -13,11 +12,44 @@ export class KrakenAPI implements ExchangeAPI {
   private apiKey: string;
   private apiSecret: string;
   private apiEndpoint: string;
+  private isConnected: boolean = false;
 
   constructor(apiKey: string, apiSecret: string, apiEndpoint: string = 'https://api.kraken.com') {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
     this.apiEndpoint = apiEndpoint;
+    this.testConnection();
+  }
+
+  // Test if we can connect to Kraken API
+  private async testConnection(): Promise<void> {
+    try {
+      // Simple request to check if API is accessible
+      const response = await fetch(`${this.apiEndpoint}/0/public/Time`);
+      if (!response.ok) {
+        console.error('Kraken API test connection failed:', response.statusText);
+        this.isConnected = false;
+        return;
+      }
+      
+      const data = await response.json();
+      if (data.error && data.error.length > 0) {
+        console.error('Kraken API test connection error:', data.error.join(', '));
+        this.isConnected = false;
+        return;
+      }
+      
+      console.log('Kraken API connection successful', data.result);
+      this.isConnected = true;
+    } catch (error) {
+      console.error('Kraken API connection test failed:', error);
+      this.isConnected = false;
+    }
+  }
+
+  // Check if we're connected to the real Kraken API
+  public isApiConnected(): boolean {
+    return this.isConnected;
   }
 
   private async makePublicRequest(method: string, params: Record<string, string> = {}): Promise<any> {
@@ -56,9 +88,7 @@ export class KrakenAPI implements ExchangeAPI {
       // In a real implementation, this would include API key auth and signing
       console.log(`[PAPER] Making private Kraken API request: ${method}`, params);
       
-      // Return mock responses for now
-      // In a real implementation, this would make actual authenticated API calls
-      
+      // Return mock responses for paper trading
       if (method === 'AddOrder') {
         return {
           txid: [Math.random().toString(36).substring(2, 15)],
@@ -100,9 +130,14 @@ export class KrakenAPI implements ExchangeAPI {
 
   async fetchMarketData(symbol: string): Promise<MarketData> {
     try {
+      // If we're not connected to the API, use simulation
+      if (!this.isConnected) {
+        return this.generateSimulatedMarketData(symbol);
+      }
+      
       const krakenSymbol = this.formatSymbolForKraken(symbol);
       
-      // Get ticker information
+      // Get ticker information from real API
       const ticker = await this.makePublicRequest('Ticker', { pair: krakenSymbol });
       
       // Get the result for our pair (Kraken returns an object with the pair as key)
@@ -131,16 +166,27 @@ export class KrakenAPI implements ExchangeAPI {
       console.error('Error fetching Kraken market data:', error);
       
       // Fall back to mock data if API request fails
-      return {
-        symbol,
-        price: 40000 + Math.random() * 2000,
-        volume24h: 1000 + Math.random() * 5000,
-        high24h: 42000,
-        low24h: 39000,
-        change24h: (Math.random() * 10) - 5,
-        timestamp: Date.now()
-      };
+      return this.generateSimulatedMarketData(symbol);
     }
+  }
+
+  // Generate simulated market data when not connected to API
+  private generateSimulatedMarketData(symbol: string): MarketData {
+    console.log(`[SIMULATION] Generating simulated market data for ${symbol}`);
+    const basePrice = symbol.includes('BTC') ? 40000 : 
+                     symbol.includes('ETH') ? 2200 :
+                     symbol.includes('SOL') ? 150 :
+                     symbol.includes('DOGE') ? 0.12 : 1000;
+                     
+    return {
+      symbol,
+      price: basePrice + (Math.random() * basePrice * 0.05) - (basePrice * 0.025),
+      volume24h: 1000 + Math.random() * 5000,
+      high24h: basePrice * 1.05,
+      low24h: basePrice * 0.95,
+      change24h: (Math.random() * 10) - 5,
+      timestamp: Date.now()
+    };
   }
 
   async getOrderBook(symbol: string): Promise<OrderBook> {

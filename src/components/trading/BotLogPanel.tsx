@@ -2,19 +2,21 @@
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Code, RefreshCw, Download } from 'lucide-react';
+import { Code, RefreshCw, Download, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface BotLogPanelProps {
   logs: string[];
   isRunning: boolean;
   onRefreshData: () => void;
+  isExchangeConnected?: boolean;
 }
 
 export const BotLogPanel: React.FC<BotLogPanelProps> = ({
   logs,
   isRunning,
-  onRefreshData
+  onRefreshData,
+  isExchangeConnected = false
 }) => {
   const logContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -91,8 +93,24 @@ export const BotLogPanel: React.FC<BotLogPanelProps> = ({
       </CardContent>
       <CardFooter className="border-t bg-muted/30 px-6 py-4">
         <div className="flex justify-between items-center w-full">
-          <div className="text-sm text-muted-foreground">
-            {isRunning ? 'Bot is running' : 'Bot is stopped'}
+          <div className="text-sm text-muted-foreground flex items-center">
+            {isRunning ? (
+              <>
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                Bot is running
+              </>
+            ) : (
+              <>
+                <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+                Bot is stopped
+              </>
+            )}
+            {!isExchangeConnected && isRunning && (
+              <div className="ml-3 flex items-center text-amber-500">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                <span className="text-xs">Using simulated market data</span>
+              </div>
+            )}
           </div>
           <Button 
             variant="outline" 

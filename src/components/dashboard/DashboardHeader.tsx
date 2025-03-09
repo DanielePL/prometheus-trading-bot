@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { RefreshCw, Zap, Newspaper } from 'lucide-react';
+import { RefreshCw, Zap, Newspaper, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTradingBot } from '@/hooks/useTradingBot';
 
@@ -27,13 +27,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     setIsRefreshing(false);
   };
   
+  const handleStartBot = () => {
+    if (!botState.isRunning) {
+      botActions.startBot();
+      toast.success('Trading bot started');
+    }
+  };
+  
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Welcome back! Here's an overview of your Prometheus trading bot performance.
-        </p>
       </div>
       
       <div className="flex space-x-2 items-center">
@@ -47,6 +51,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
+        
+        {!botState.isRunning && (
+          <Button onClick={handleStartBot} variant="default">
+            <Play className="mr-2 h-4 w-4" />
+            Start Bot
+          </Button>
+        )}
         
         {!botState.isExchangeConnected && (
           <Button onClick={botActions.reconnectExchange} variant="default">

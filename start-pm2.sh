@@ -7,6 +7,12 @@ npm run build
 # Install serve if not already installed
 npm install -g serve
 
+# Stop any running instances
+pm2 stop all
+
+# Delete the previous processes
+pm2 delete all
+
 # Start with PM2
 pm2 start ecosystem.config.cjs
 

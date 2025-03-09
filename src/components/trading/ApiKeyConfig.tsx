@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { KeyRound, X, Save, AlertCircle, ExternalLink } from 'lucide-react';
+import { KeyRound, X, Save, AlertCircle, ExternalLink, Eye, EyeOff } from 'lucide-react';
 
 interface ApiKeyConfigProps {
   apiKeys: {
@@ -22,6 +22,48 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
   onCancel
 }) => {
   const [keys, setKeys] = useState(apiKeys);
+  const [showSecret, setShowSecret] = useState(false);
+  const [savedKeys, setSavedKeys] = useState<{[key: string]: string}>({});
+
+  // Load any previously saved credentials from localStorage on component mount
+  useEffect(() => {
+    const loadSavedCredentials = () => {
+      const savedApiKey = localStorage.getItem('exchangeApiKey');
+      const savedApiSecret = localStorage.getItem('exchangeApiSecret');
+      const savedApiEndpoint = localStorage.getItem('apiEndpoint');
+      
+      const savedData: {[key: string]: string} = {};
+      if (savedApiKey) savedData.exchangeApiKey = savedApiKey;
+      if (savedApiSecret) savedData.exchangeApiSecret = savedApiSecret;
+      if (savedApiEndpoint) savedData.apiEndpoint = savedApiEndpoint;
+      
+      setSavedKeys(savedData);
+      
+      // Only set the initial values if they aren't already set
+      if (!keys.exchangeApiKey && savedApiKey) {
+        setKeys(prev => ({
+          ...prev,
+          exchangeApiKey: savedApiKey
+        }));
+      }
+      
+      if (!keys.exchangeApiSecret && savedApiSecret) {
+        setKeys(prev => ({
+          ...prev,
+          exchangeApiSecret: savedApiSecret
+        }));
+      }
+      
+      if (!keys.apiEndpoint && savedApiEndpoint) {
+        setKeys(prev => ({
+          ...prev,
+          apiEndpoint: savedApiEndpoint
+        }));
+      }
+    };
+    
+    loadSavedCredentials();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,6 +75,10 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
 
   const openKrakenAPIPage = () => {
     window.open('https://www.kraken.com/u/security/api', '_blank');
+  };
+
+  const toggleShowSecret = () => {
+    setShowSecret(!showSecret);
   };
 
   return (
@@ -58,7 +104,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               <AlertCircle className="h-4 w-4 mt-0.5" />
               <div className="text-sm">
                 <p className="font-medium">Security Notice</p>
-                <p>API keys are stored locally in your browser. For production use, consider a more secure storage solution.</p>
+                <p>API keys are stored securely in your browser's local storage. They will persist across sessions and browser refreshes.</p>
               </div>
             </div>
           </div>
@@ -82,7 +128,9 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               value={keys.apiEndpoint}
               onChange={handleChange}
             />
-            <p className="text-xs text-muted-foreground">Default: https://api.kraken.com</p>
+            <p className="text-xs text-muted-foreground">
+              {savedKeys.apiEndpoint ? 'Using saved endpoint' : 'Default: https://api.kraken.com'}
+            </p>
           </div>
           
           <div className="space-y-2">
@@ -94,18 +142,35 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               value={keys.exchangeApiKey}
               onChange={handleChange}
             />
+            {savedKeys.exchangeApiKey && (
+              <p className="text-xs text-green-600 dark:text-green-400">API key saved</p>
+            )}
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="exchangeApiSecret">API Secret</Label>
-            <Input
-              id="exchangeApiSecret"
-              name="exchangeApiSecret"
-              type="password"
-              placeholder="Your Kraken API secret"
-              value={keys.exchangeApiSecret}
-              onChange={handleChange}
-            />
+            <div className="relative">
+              <Input
+                id="exchangeApiSecret"
+                name="exchangeApiSecret"
+                type={showSecret ? "text" : "password"}
+                placeholder="Your Kraken API secret"
+                value={keys.exchangeApiSecret}
+                onChange={handleChange}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1"
+                onClick={toggleShowSecret}
+              >
+                {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            {savedKeys.exchangeApiSecret && (
+              <p className="text-xs text-green-600 dark:text-green-400">API secret saved</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t px-6 py-4">

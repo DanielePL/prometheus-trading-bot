@@ -27,10 +27,23 @@ export class KrakenMarketService {
       this.isConnected = result.success;
       this.connectionError = result.success ? null : result.message;
       console.log(`Kraken market service connection: ${result.success ? 'connected' : 'failed'}, message: ${result.message}`);
+      
+      // Store connection status in localStorage for persistence
+      if (result.success) {
+        localStorage.setItem('krakenConnectionStatus', 'connected');
+        localStorage.setItem('krakenLastConnected', new Date().toISOString());
+      } else {
+        localStorage.setItem('krakenConnectionStatus', 'failed');
+        localStorage.setItem('krakenConnectionError', result.message);
+      }
     } catch (error) {
       console.error('Kraken market service connection error:', error);
       this.isConnected = false;
       this.connectionError = error instanceof Error ? error.message : String(error);
+      
+      // Store connection error in localStorage
+      localStorage.setItem('krakenConnectionStatus', 'failed');
+      localStorage.setItem('krakenConnectionError', this.connectionError);
     }
   }
 
@@ -40,6 +53,11 @@ export class KrakenMarketService {
 
   public getConnectionError(): string | null {
     return this.connectionError;
+  }
+
+  // Get the API endpoint for use in other components
+  public getApiEndpoint(): string {
+    return this.api.getApiEndpoint();
   }
 
   // Convert Kraken symbol to our application format

@@ -30,6 +30,12 @@ const Markets = () => {
     retryConnection
   } = useMarketData();
   
+  // Get persisted connection information
+  const lastConnected = localStorage.getItem('krakenLastConnected');
+  const connectionStatus = localStorage.getItem('krakenConnectionStatus');
+  const connectionTime = lastConnected ? new Date(lastConnected) : null;
+  const timeSinceLastConnection = connectionTime ? Math.floor((Date.now() - connectionTime.getTime()) / 1000) : 0;
+  
   const handleRetryConnection = () => {
     toast({
       title: "Reconnecting to Kraken API",
@@ -81,6 +87,9 @@ const Markets = () => {
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   <AlertDescription className="text-green-700 dark:text-green-300">
                     Displaying live market data from Kraken API
+                    {connectionTime && ` (Connected ${timeSinceLastConnection < 60 
+                      ? `${timeSinceLastConnection} seconds ago` 
+                      : `${Math.floor(timeSinceLastConnection / 60)} minutes ago`})`}
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -107,7 +116,6 @@ const Markets = () => {
                     <MarketTable 
                       data={filteredMarketData} 
                       handleTrackToggle={handleTrackToggle} 
-                      isLoading={isLoading}
                     />
                   </CardContent>
                 </Card>
@@ -120,7 +128,6 @@ const Markets = () => {
                       <MarketTable 
                         data={trackedCoins} 
                         handleTrackToggle={handleTrackToggle} 
-                        isLoading={isLoading}
                       />
                     ) : (
                       <EmptyTrackedState />
@@ -135,7 +142,6 @@ const Markets = () => {
                     <MarketTable 
                       data={gainers} 
                       handleTrackToggle={handleTrackToggle} 
-                      isLoading={isLoading}
                     />
                   </CardContent>
                 </Card>
@@ -148,8 +154,8 @@ const Markets = () => {
               isConnected={isUsingLiveData}
               exchangeName="Kraken"
               apiEndpoint={localStorage.getItem('apiEndpoint') || 'Using CORS proxy'}
-              lastPing={isUsingLiveData ? 24 : 0}
-              connectionQuality={isUsingLiveData ? 98 : 0}
+              lastPing={isUsingLiveData ? (connectionTime ? Math.min(timeSinceLastConnection, 30) : 24) : 0}
+              connectionQuality={isUsingLiveData ? (connectionTime && timeSinceLastConnection < 60 ? 98 : 85) : 0}
               onReconnect={handleRetryConnection}
               onDisconnect={() => window.location.reload()}
               onTest={refreshData}

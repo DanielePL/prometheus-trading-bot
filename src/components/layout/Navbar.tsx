@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, Menu, Moon, Search, Settings, Sun, User, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,10 +28,9 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
   const [apiKeys, setApiKeys] = useState({
     exchangeApiKey: localStorage.getItem('exchangeApiKey') || '',
     exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
-    apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://api.exchange.com'
+    apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://cors-proxy.fringe.zone/https://api.kraken.com'
   });
   
-  // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -40,7 +38,6 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
       
       if (user) {
         setUserEmail(user.email);
-        // Set user initials based on email
         if (user.email) {
           const parts = user.email.split('@')[0].split('.');
           if (parts.length >= 2) {
@@ -54,12 +51,10 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
     
     checkAuth();
     
-    // Subscribe to auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
       if (session?.user) {
         setUserEmail(session.user.email);
-        // Update initials when auth state changes
         if (session.user.email) {
           const parts = session.user.email.split('@')[0].split('.');
           if (parts.length >= 2) {
@@ -86,18 +81,27 @@ export const Navbar = ({ toggleSidebar, sidebarOpen }: NavbarProps) => {
 
   const handleSaveApiKeys = (keys: typeof apiKeys) => {
     setApiKeys(keys);
+    
     localStorage.setItem('exchangeApiKey', keys.exchangeApiKey);
     localStorage.setItem('exchangeApiSecret', keys.exchangeApiSecret);
     localStorage.setItem('apiEndpoint', keys.apiEndpoint);
+    
+    localStorage.removeItem('krakenConnectionStatus');
+    localStorage.removeItem('krakenConnectionError');
     
     setShowApiConfig(false);
     
     toast({
       title: "API Keys Saved",
-      description: "Your exchange API configuration has been saved",
+      description: "Your exchange API configuration has been saved. The page will refresh to apply changes.",
+      duration: 5000,
     });
     
     console.log("API configuration updated");
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
   };
 
   const handleMenuItemClick = (option: string) => {

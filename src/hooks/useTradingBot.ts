@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -71,6 +72,7 @@ export const tradingPairs = [
 ];
 
 export const tradingStrategies = [
+  { value: 'adaptivemomentum', label: 'Adaptive Momentum' },
   { value: 'dynamicstoploss', label: 'Dynamic Stop Loss + Bull Run Scanner' },
   { value: 'macrossover', label: 'Moving Average Crossover' },
   { value: 'rsioscillator', label: 'RSI Oscillator' },

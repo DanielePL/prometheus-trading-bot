@@ -204,6 +204,7 @@ export const exchangeAPI = new MockExchangeAPI();
 
 // Import the new strategy
 import { DynamicStopLossStrategy } from './strategies/DynamicStopLossStrategy';
+import { AdaptiveMomentumStrategy } from './strategies/AdaptiveMomentumStrategy';
 
 // Strategy implementations
 
@@ -552,6 +553,8 @@ export const getStrategyByName = (name: string): TradingStrategy => {
       return new BollingerBandsStrategy();
     case 'dynamicstoploss':
       return new DynamicStopLossStrategy();
+    case 'adaptivemomentum':
+      return new AdaptiveMomentumStrategy();
     case 'volumeprofile':
       // For now, we'll just return MA as a fallback
       // In a real implementation, this would be a Volume Profile strategy

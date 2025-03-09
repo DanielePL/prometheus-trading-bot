@@ -16,10 +16,19 @@ export const useCloudConnectionSupabase = () => {
   const [isRestarting, setIsRestarting] = useState<boolean>(false);
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [resourceUpdateInterval, setResourceUpdateInterval] = useState<number | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const { toast } = useToast();
 
-  // Load saved connection from Supabase on mount
+  // Check authentication status on mount
   useEffect(() => {
+    checkAuthStatus();
+    
+    // Subscribe to auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    // Load saved connection from Supabase on mount
     loadConnectionFromSupabase();
     
     // Cleanup interval on unmount
@@ -30,11 +39,21 @@ export const useCloudConnectionSupabase = () => {
     };
   }, []);
 
+  const checkAuthStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      setIsAuthenticated(false);
+    }
+  };
+
   const loadConnectionFromSupabase = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user.user) {
+      if (!user) {
         console.log('No authenticated user found');
         return;
       }
@@ -42,7 +61,7 @@ export const useCloudConnectionSupabase = () => {
       const { data: connections, error } = await supabase
         .from('cloud_connections')
         .select('*')
-        .eq('user_id', user.user.id)
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .order('last_connected_at', { ascending: false })
         .limit(1);
@@ -90,9 +109,9 @@ export const useCloudConnectionSupabase = () => {
   // Save connection to Supabase
   const saveConnectionToSupabase = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user.user) {
+      if (!user) {
         console.log('No authenticated user found');
         toast({
           title: "Authentication Required",
@@ -106,13 +125,13 @@ export const useCloudConnectionSupabase = () => {
       await supabase
         .from('cloud_connections')
         .update({ is_active: false })
-        .eq('user_id', user.user.id);
+        .eq('user_id', user.id);
       
       // Insert new connection
       const { data, error } = await supabase
         .from('cloud_connections')
         .insert({
-          user_id: user.user.id,
+          user_id: user.id,
           service_type: selectedService,
           ip_address: connectionConfig.ipAddress || '',
           port: connectionConfig.port || 22,
@@ -241,6 +260,16 @@ export const useCloudConnectionSupabase = () => {
   };
 
   const connectToService = async (config?: CloudConnectionConfig) => {
+    // Check if user is authenticated before proceeding
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to be logged in to save cloud connections.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (config) {
       setConnectionConfig(config);
     }
@@ -382,6 +411,7 @@ export const useCloudConnectionSupabase = () => {
     memoryUsage,
     lastSync,
     isRestarting,
+    isAuthenticated,
     connectToService,
     disconnectService,
     restartService

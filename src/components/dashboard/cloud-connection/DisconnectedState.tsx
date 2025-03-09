@@ -3,23 +3,26 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Cloud, Server } from 'lucide-react';
+import { Cloud, Server, AlertCircle } from 'lucide-react';
 import { CloudServiceType, CloudConnectionConfig } from './types';
 import { getServiceName, getServiceDescription } from './utils';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface DisconnectedStateProps {
   selectedService: CloudServiceType;
   setSelectedService: (service: CloudServiceType) => void;
   connectionConfig: CloudConnectionConfig;
   connectToService: (config?: CloudConnectionConfig) => void;
+  isAuthenticated?: boolean;
 }
 
 export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
   selectedService,
   setSelectedService,
   connectionConfig,
-  connectToService
+  connectToService,
+  isAuthenticated = false
 }) => {
   const [ipAddress, setIpAddress] = useState(connectionConfig?.ipAddress || '');
   const [port, setPort] = useState(connectionConfig?.port?.toString() || '22');
@@ -36,6 +39,18 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
       region: region.trim()
     });
   };
+
+  if (!isAuthenticated) {
+    return (
+      <Alert variant="destructive" className="bg-red-500/10">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Authentication Required</AlertTitle>
+        <AlertDescription>
+          You need to be logged in to save cloud connections.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4">

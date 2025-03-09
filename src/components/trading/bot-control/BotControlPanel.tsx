@@ -8,6 +8,8 @@ import { BotConfiguration } from './BotConfiguration';
 import { StatusIndicators } from './StatusIndicators';
 import { LastTradeInfo } from './LastTradeInfo';
 import { BotControls } from './BotControls';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface BotControlPanelProps {
   isRunning: boolean;
@@ -28,6 +30,7 @@ interface BotControlPanelProps {
   tradingPairs: { value: string, label: string }[];
   tradingStrategies: { value: string, label: string }[];
   hasApiKeys: boolean;
+  autoPaperTrade: boolean;
   onStartBot: () => void;
   onStopBot: () => void;
   onClearLogs: () => void;
@@ -37,6 +40,7 @@ interface BotControlPanelProps {
   onRiskLevelChange: (value: any) => void;
   onMaxTradingAmountChange: (value: string) => void;
   onConfigureApiKeys: () => void;
+  onToggleAutoPaperTrade: () => void;
 }
 
 export const BotControlPanel: React.FC<BotControlPanelProps> = (props) => {
@@ -45,8 +49,10 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = (props) => {
     tradeMode,
     lastTrade,
     hasApiKeys,
+    autoPaperTrade,
     onToggleTradingMode,
-    onConfigureApiKeys
+    onConfigureApiKeys,
+    onToggleAutoPaperTrade
   } = props;
 
   return (
@@ -78,6 +84,19 @@ export const BotControlPanel: React.FC<BotControlPanelProps> = (props) => {
           hasApiKeys={hasApiKeys}
           onConfigureApiKeys={onConfigureApiKeys}
         />
+        
+        {tradeMode === 'paper' && (
+          <div className="flex items-center space-x-2 px-1 pt-2">
+            <Switch 
+              id="auto-paper-trade" 
+              checked={autoPaperTrade} 
+              onCheckedChange={onToggleAutoPaperTrade}
+            />
+            <Label htmlFor="auto-paper-trade" className="text-sm font-medium">
+              Auto-execute paper trades on strong signals
+            </Label>
+          </div>
+        )}
         
         <BotConfiguration {...props} />
         

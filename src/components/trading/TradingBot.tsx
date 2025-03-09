@@ -6,7 +6,8 @@ import { ApiKeyConfig } from './ApiKeyConfig';
 import { ConnectionStatusPanel } from './ConnectionStatusPanel';
 import { useTradingBot, tradingPairs, tradingStrategies } from '@/hooks/useTradingBot';
 import { useToast } from '@/hooks/use-toast';
-import { WifiIcon } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export const TradingBot = () => {
   const [state, actions] = useTradingBot();
@@ -73,6 +74,8 @@ export const TradingBot = () => {
           onMaxTradingAmountChange={actions.setMaxTradingAmount}
           onConfigureApiKeys={actions.configureApiKeys}
           hasApiKeys={!!state.apiKeys.exchangeApiKey && !!state.apiKeys.exchangeApiSecret}
+          autoPaperTrade={state.autoPaperTrade}
+          onToggleAutoPaperTrade={actions.toggleAutoPaperTrade}
         />
         
         <ConnectionStatusPanel

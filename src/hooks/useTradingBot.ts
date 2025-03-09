@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -43,6 +42,7 @@ export interface TradingBotState {
   exchangeName: string;
   exchangeLatency: number;
   connectionQuality: number;
+  autoPaperTrade: boolean;
 }
 
 export interface TradingBotActions {
@@ -61,6 +61,7 @@ export interface TradingBotActions {
   reconnectExchange: () => void;
   disconnectExchange: () => void;
   testExchangeConnection: () => void;
+  toggleAutoPaperTrade: () => void;
 }
 
 export const tradingPairs = [
@@ -109,6 +110,7 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
   const [exchangeLatency, setExchangeLatency] = useState(0);
   const [connectionQuality, setConnectionQuality] = useState(0);
   const [connectionCheckInterval, setConnectionCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const [autoPaperTrade, setAutoPaperTrade] = useState(false);
   const { toast } = useToast();
 
   const addLog = (message: string) => {
@@ -200,8 +202,42 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
         if (tradeMode === 'live') {
           await executeTrade(signal);
         } else {
-          addLog(`[PAPER] Would execute ${signal.action} based on signal (Paper Trading Mode)`);
-          simulateTrade(signal);
+          if (autoPaperTrade) {
+            addLog(`[AUTO PAPER TRADE] Executing ${signal.action} based on strong signal`);
+            simulateTrade(signal);
+            
+            const paperTrades = JSON.parse(localStorage.getItem('paperTrades') || '[]');
+            const newTrade = {
+              id: Date.now().toString(),
+              symbol: tradingPair,
+              type: signal.action as 'buy' | 'sell',
+              price: data.price,
+              amount: parseFloat(maxTradingAmount) * 0.1,
+              total: data.price * (parseFloat(maxTradingAmount) * 0.1),
+              currentPrice: data.price,
+              profit: 0,
+              profitPercentage: 0,
+              timestamp: Date.now()
+            };
+            
+            paperTrades.push(newTrade);
+            localStorage.setItem('paperTrades', JSON.stringify(paperTrades));
+            
+            const currentBalance = parseFloat(localStorage.getItem('paperTradeBalance') || '100000');
+            const newBalance = signal.action === 'buy' 
+              ? currentBalance - newTrade.total 
+              : currentBalance + newTrade.total;
+            localStorage.setItem('paperTradeBalance', newBalance.toString());
+            
+            toast({
+              title: `Auto Paper ${signal.action === 'buy' ? 'Buy' : 'Sell'} Executed`,
+              description: `${newTrade.amount.toFixed(5)} ${tradingPair.split('-')[0]} at $${data.price.toFixed(2)}`,
+              variant: signal.action === 'buy' ? 'default' : 'destructive'
+            });
+          } else {
+            addLog(`[PAPER] Would execute ${signal.action} based on signal (Auto-trading disabled)`);
+            addLog(`[PAPER] Enable auto paper trading to automatically execute paper trades`);
+          }
         }
       }
     } catch (error) {
@@ -456,6 +492,25 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     }
   };
 
+  const toggleAutoPaperTrade = () => {
+    const newState = !autoPaperTrade;
+    setAutoPaperTrade(newState);
+    
+    if (newState) {
+      addLog('Auto paper trading enabled - will automatically execute paper trades on strong signals');
+      toast({
+        title: 'Auto Paper Trading Enabled',
+        description: 'Bot will automatically execute paper trades on strong signals'
+      });
+    } else {
+      addLog('Auto paper trading disabled - no automatic paper trades will be executed');
+      toast({
+        title: 'Auto Paper Trading Disabled',
+        description: 'Bot will no longer automatically execute paper trades'
+      });
+    }
+  };
+
   useEffect(() => {
     if (!isRunning) return;
     
@@ -510,7 +565,8 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     isExchangeConnected,
     exchangeName,
     exchangeLatency,
-    connectionQuality
+    connectionQuality,
+    autoPaperTrade
   };
 
   const actions: TradingBotActions = {
@@ -528,7 +584,8 @@ export const useTradingBot = (): [TradingBotState, TradingBotActions] => {
     setShowApiConfig,
     reconnectExchange,
     disconnectExchange,
-    testExchangeConnection
+    testExchangeConnection,
+    toggleAutoPaperTrade
   };
 
   return [state, actions];

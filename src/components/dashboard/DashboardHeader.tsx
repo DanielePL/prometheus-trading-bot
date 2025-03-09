@@ -2,9 +2,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { RefreshCw, Zap, Newspaper, Play } from 'lucide-react';
+import { RefreshCw, Zap, Newspaper, Play, FileText, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTradingBot } from '@/hooks/useTradingBot';
+import { Badge } from '@/components/ui/badge';
 
 interface DashboardHeaderProps {
   isRefreshing: boolean;
@@ -33,6 +34,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       toast.success('Trading bot started');
     }
   };
+
+  const handleToggleTradingMode = () => {
+    botActions.toggleTradingMode(botState.tradeMode === 'paper' ? 'live' : 'paper');
+  };
   
   return (
     <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
@@ -41,6 +46,24 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       </div>
       
       <div className="flex space-x-2 items-center">
+        <Badge 
+          variant={botState.tradeMode === 'paper' ? 'outline' : 'destructive'}
+          className="cursor-pointer mr-1"
+          onClick={handleToggleTradingMode}
+        >
+          {botState.tradeMode === 'paper' ? (
+            <>
+              <FileText className="mr-1 h-3 w-3" />
+              Paper Trading
+            </>
+          ) : (
+            <>
+              <Wallet className="mr-1 h-3 w-3" />
+              Live Trading
+            </>
+          )}
+        </Badge>
+        
         <Button 
           variant="outline" 
           size="sm" 

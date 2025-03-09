@@ -3,7 +3,6 @@ import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SettingsDrawer } from '@/components/dashboard/SettingsDrawer';
 
 const AdvancedTrading = () => {
   return (
@@ -84,9 +83,6 @@ const AdvancedTrading = () => {
             </Card>
           </TabsContent>
         </Tabs>
-        
-        {/* Add the settings drawer */}
-        <SettingsDrawer />
       </div>
     </AppLayout>
   );

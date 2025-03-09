@@ -26,13 +26,36 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ApiKeyConfig } from '@/components/trading/ApiKeyConfig';
 
 export function Sidebar({ className }: { className?: string }) {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  
+  const [apiKeys, setApiKeys] = useState({
+    exchangeApiKey: localStorage.getItem('exchangeApiKey') || '',
+    exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
+    apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://cors-proxy.fringe.zone/https://api.kraken.com'
+  });
+  
+  const handleSaveApiKeys = (keys: typeof apiKeys) => {
+    setApiKeys(keys);
+    setShowApiConfig(false);
+    
+    // Force a page reload to apply changes
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
 
-  const handleNavLinkClick = () => {
+  const handleNavLinkClick = (title?: string) => {
+    if (title === 'Settings') {
+      setShowApiConfig(true);
+      return;
+    }
+    
     if (isMobile) {
       setIsSidebarOpen(false);
     }
@@ -132,7 +155,7 @@ export function Sidebar({ className }: { className?: string }) {
     },
     {
       title: "Settings",
-      href: "/settings",
+      href: "#", // Changed from "/settings" to "#" to prevent navigation
       icon: <Settings className="w-5 h-5" />,
     },
   ];
@@ -149,7 +172,7 @@ export function Sidebar({ className }: { className?: string }) {
               <NavLink
                 key={item.href}
                 to={item.href}
-                onClick={handleNavLinkClick}
+                onClick={() => handleNavLinkClick(item.title)}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center justify-start w-full px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
@@ -172,7 +195,7 @@ export function Sidebar({ className }: { className?: string }) {
               <NavLink
                 key={item.href}
                 to={item.href}
-                onClick={handleNavLinkClick}
+                onClick={() => handleNavLinkClick(item.title)}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center justify-start w-full px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
@@ -194,12 +217,12 @@ export function Sidebar({ className }: { className?: string }) {
             {accountNavItems.map((item) => (
               <NavLink
                 key={item.href}
-                to={item.href}
-                onClick={handleNavLinkClick}
+                to={item.title === "Settings" ? "#" : item.href}
+                onClick={() => handleNavLinkClick(item.title)}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center justify-start w-full px-2 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground",
-                    isActive ? "bg-accent text-accent-foreground" : "transparent",
+                    (isActive || (item.title === "Settings" && location.pathname === "/settings")) ? "bg-accent text-accent-foreground" : "transparent",
                   )
                 }
               >
@@ -210,6 +233,14 @@ export function Sidebar({ className }: { className?: string }) {
           </div>
         </div>
       </div>
+      
+      {showApiConfig && (
+        <ApiKeyConfig
+          apiKeys={apiKeys}
+          onSave={handleSaveApiKeys}
+          onCancel={() => setShowApiConfig(false)}
+        />
+      )}
     </div>
   );
 }

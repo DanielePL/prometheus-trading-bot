@@ -99,6 +99,17 @@ const strategies: Strategy[] = [
     profitFactor: 0,
     trades: 0,
     pairs: ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
+  },
+  {
+    id: '5',
+    name: 'Adaptive Momentum',
+    description: 'Adapts to market volatility and identifies momentum shifts with trend confirmation',
+    status: 'active',
+    performanceScore: 79,
+    winRate: 64.3,
+    profitFactor: 2.1,
+    trades: 87,
+    pairs: ['BTC/USDT', 'ETH/USDT', 'SOL/USDT']
   }
 ];
 

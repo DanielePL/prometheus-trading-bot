@@ -9,8 +9,8 @@ const FALLBACK_API_ENDPOINT = 'https://api-pub.bitfinex.com';
 
 // Test API credentials - FOR TESTING PURPOSES ONLY
 // In production, these should be securely stored
-const TEST_API_KEY = 'your_test_kraken_api_key_here';
-const TEST_API_SECRET = 'your_test_kraken_api_secret_here';
+const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
+const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
 
 export class KrakenMarketService {
   private api: KrakenAPI;
@@ -83,7 +83,6 @@ export class KrakenMarketService {
     }
   }
 
-  // Try using a fallback endpoint if the primary one fails
   private async tryFallbackEndpoint(): Promise<void> {
     try {
       console.log('Switching to fallback API endpoint...');
@@ -123,7 +122,6 @@ export class KrakenMarketService {
     }
   }
 
-  // Reset connection status and force a new connection attempt
   public async resetConnection(): Promise<boolean> {
     this.connectionAttempted = false;
     this.isConnected = false;
@@ -149,23 +147,18 @@ export class KrakenMarketService {
     return this.connectionError;
   }
 
-  // Get the API endpoint for use in other components
   public getApiEndpoint(): string {
     return this.api.getApiEndpoint();
   }
 
-  // Is the service using a fallback endpoint?
   public isUsingFallback(): boolean {
     return this.usingFallbackEndpoint;
   }
 
-  // Convert Kraken symbol to our application format
   private formatKrakenPair(symbol: string, fullName: string): MarketData {
-    // Convert Kraken format (XXBTZUSD) to our format (BTC-USD)
     const baseSymbol = symbol.startsWith('X') ? symbol.substring(1, 4) : symbol.substring(0, 3);
     const quoteSymbol = symbol.endsWith('ZUSD') ? 'USD' : symbol.substring(symbol.length - 3);
     
-    // Special case for Bitcoin (XBT → BTC)
     const normalizedBase = baseSymbol === 'XBT' ? 'BTC' : baseSymbol;
     
     return {
@@ -180,9 +173,7 @@ export class KrakenMarketService {
     };
   }
 
-  // Get all available trading pairs from Kraken
   public async getMarketPairs(): Promise<MarketData[]> {
-    // Always test connection before first request
     if (!this.connectionAttempted) {
       await this.testConnection();
     }
@@ -193,7 +184,6 @@ export class KrakenMarketService {
     }
 
     try {
-      // Use a simple public endpoint to get asset pairs info
       const response = await fetch(`${this.api.getApiEndpoint()}/0/public/AssetPairs`);
       if (!response.ok) {
         throw new Error(`Kraken API error: ${response.statusText}`);
@@ -205,25 +195,21 @@ export class KrakenMarketService {
         throw new Error(`Kraken API error: ${data.error.join(', ')}`);
       }
       
-      // Filter for pairs that end with USD and convert to our format
       const usdPairs = Object.entries(data.result)
         .filter(([pair]) => pair.endsWith('USD') || pair.endsWith('ZUSD'))
         .map(([pair, info]: [string, any]) => {
           return this.formatKrakenPair(pair, info.wsname);
         });
       
-      // Get current prices and info for these pairs
       return await this.updateMarketData(usdPairs);
     } catch (error) {
       console.error('Error fetching Kraken market pairs:', error);
       this.connectionError = error instanceof Error ? error.message : String(error);
-      throw error; // Propagate error to caller
+      throw error;
     }
   }
 
-  // Update market data with current prices
   public async updateMarketData(markets: MarketData[]): Promise<MarketData[]> {
-    // Test connection if not already attempted
     if (!this.connectionAttempted) {
       await this.testConnection();
     }
@@ -236,7 +222,6 @@ export class KrakenMarketService {
     }
 
     try {
-      // Get ticker information for all pairs
       const pairs = markets.map(market => market.id).join(',');
       const response = await fetch(`${this.api.getApiEndpoint()}/0/public/Ticker?pair=${pairs}`);
       
@@ -250,7 +235,6 @@ export class KrakenMarketService {
         throw new Error(`Kraken API error: ${data.error.join(', ')}`);
       }
       
-      // Update each market with real data
       return markets.map(market => {
         const tickerData = data.result[market.id];
         if (!tickerData) return market;
@@ -265,16 +249,15 @@ export class KrakenMarketService {
           price: `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           change24h: parseFloat(change24h.toFixed(2)),
           volume: `$${(volume24h * price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-          marketCap: 'N/A' // Kraken doesn't provide market cap data
+          marketCap: 'N/A'
         };
       });
     } catch (error) {
       console.error('Error updating Kraken market data:', error);
       this.connectionError = error instanceof Error ? error.message : String(error);
-      throw error; // Propagate error to caller
+      throw error;
     }
   }
 }
 
-// Create singleton instance
 export const krakenMarketService = new KrakenMarketService();

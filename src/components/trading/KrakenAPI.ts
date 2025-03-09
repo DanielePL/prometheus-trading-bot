@@ -18,6 +18,8 @@ export class KrakenAPI implements ExchangeAPI {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
     this.apiEndpoint = apiEndpoint;
+    console.log('KrakenAPI initialized with endpoint:', apiEndpoint);
+    console.log('Using API key:', apiKey ? `${apiKey.substring(0, 5)}...` : 'none');
   }
 
   // Get the API endpoint
@@ -28,6 +30,7 @@ export class KrakenAPI implements ExchangeAPI {
   // Test if we can connect to Kraken API
   private async testConnection(): Promise<void> {
     try {
+      console.log('Testing connection to endpoint:', this.apiEndpoint);
       // Simple request to check if API is accessible - with timeout to prevent long waits
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -71,11 +74,12 @@ export class KrakenAPI implements ExchangeAPI {
     message: string;
   }> {
     try {
+      console.log('Testing detailed connection to:', this.apiEndpoint);
       const startTime = Date.now();
       
       // Simple request to check if API is accessible - with timeout to prevent long waits
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (increased from 5s)
       
       const response = await fetch(`${this.apiEndpoint}/0/public/Time`, {
         signal: controller.signal,
@@ -90,6 +94,8 @@ export class KrakenAPI implements ExchangeAPI {
       const endTime = Date.now();
       const latency = endTime - startTime;
       
+      console.log('Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
         this.isConnected = false;
         return {
@@ -100,6 +106,7 @@ export class KrakenAPI implements ExchangeAPI {
       }
       
       const data = await response.json();
+      console.log('API response data:', data);
       
       if (data.error && data.error.length > 0) {
         this.isConnected = false;
@@ -115,6 +122,7 @@ export class KrakenAPI implements ExchangeAPI {
       
       // Format server time
       const serverTime = new Date(data.result.unixtime * 1000).toISOString();
+      console.log('Connected successfully, server time:', serverTime);
       
       return {
         success: true,
@@ -123,18 +131,19 @@ export class KrakenAPI implements ExchangeAPI {
         message: 'Successfully connected to Kraken API'
       };
     } catch (error) {
+      console.error('Connection test error:', error);
       this.isConnected = false;
       
       // Check for specific error types to provide better error messages
       if (error instanceof DOMException && error.name === 'AbortError') {
         return {
           success: false,
-          latency: 5000, // Timeout duration
-          message: 'Connection timed out after 5 seconds'
+          latency: 10000, // Timeout duration (increased from 5000)
+          message: 'Connection timed out after 10 seconds'
         };
       }
       
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         return {
           success: false,
           latency: 0,

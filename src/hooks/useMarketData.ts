@@ -43,7 +43,9 @@ export const useMarketData = () => {
         setMarketDataState(dataWithTrackedStatus);
         setIsUsingLiveData(true);
         setConnectionError(null);
-        console.log('Using live market data from Kraken');
+        
+        const usingFallback = krakenMarketService.isUsingFallback();
+        console.log(`Using ${usingFallback ? 'fallback' : 'live'} market data from ${usingFallback ? 'alternative source' : 'Kraken'}`);
         
         // Save tracked status to localStorage
         localStorage.setItem('trackedCoins', JSON.stringify(
@@ -51,9 +53,11 @@ export const useMarketData = () => {
         ));
         
         toast({
-          title: "Connected to Kraken",
-          description: "Displaying live market data",
-          variant: "default"
+          title: usingFallback ? "Connected to Fallback API" : "Connected to Kraken",
+          description: usingFallback 
+            ? "Primary API failed, using fallback for market data" 
+            : "Displaying live market data",
+          variant: usingFallback ? "warning" : "default"
         });
       }
     } catch (error) {
@@ -126,9 +130,14 @@ export const useMarketData = () => {
       if (isUsingLiveData) {
         const updatedData = await krakenMarketService.updateMarketData(marketDataState);
         setMarketDataState(updatedData);
+        
+        const usingFallback = krakenMarketService.isUsingFallback();
         toast({
           title: "Data Refreshed",
-          description: "Market data has been updated",
+          description: usingFallback 
+            ? "Market data has been updated from fallback source" 
+            : "Market data has been updated from Kraken API",
+          variant: usingFallback ? "warning" : "default"
         });
       } else {
         await retryConnection();
@@ -160,10 +169,13 @@ export const useMarketData = () => {
         // If successfully connected, fetch market data
         await fetchMarketData();
         
+        const usingFallback = krakenMarketService.isUsingFallback();
         toast({
-          title: "Connection Successful",
-          description: "Now displaying live market data",
-          variant: "default"
+          title: usingFallback ? "Fallback Connection Successful" : "Connection Successful",
+          description: usingFallback 
+            ? "Now displaying market data from fallback source" 
+            : "Now displaying live market data from Kraken API",
+          variant: usingFallback ? "warning" : "default"
         });
       } else {
         const error = krakenMarketService.getConnectionError() || 'Failed to connect to Kraken API';

@@ -9,10 +9,11 @@ import { MarketTabs } from '@/components/markets/MarketTabs';
 import { EmptyTrackedState } from '@/components/markets/EmptyTrackedState';
 import { useMarketData } from '@/hooks/useMarketData';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertCircle, WifiOff, CheckCircle, Info } from 'lucide-react';
+import { RefreshCw, AlertCircle, WifiOff, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConnectionStatusPanel } from '@/components/trading/ConnectionStatusPanel';
 import { useToast } from '@/hooks/use-toast';
+import { krakenMarketService } from '@/services/KrakenMarketService';
 
 const Markets = () => {
   const { toast } = useToast();
@@ -35,6 +36,7 @@ const Markets = () => {
   const connectionStatus = localStorage.getItem('krakenConnectionStatus');
   const connectionTime = lastConnected ? new Date(lastConnected) : null;
   const timeSinceLastConnection = connectionTime ? Math.floor((Date.now() - connectionTime.getTime()) / 1000) : 0;
+  const usingFallback = connectionStatus === 'connected_fallback';
   
   const handleRetryConnection = () => {
     toast({
@@ -64,7 +66,7 @@ const Markets = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={refreshData}
-                    disabled={isLoading || !isUsingLiveData}
+                    disabled={isLoading}
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                     Refresh
@@ -82,7 +84,16 @@ const Markets = () => {
                 </Alert>
               )}
               
-              {isUsingLiveData ? (
+              {isUsingLiveData && usingFallback && (
+                <Alert className="mb-4 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-900">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                    Using fallback connection - primary Kraken API connection failed
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {isUsingLiveData && !usingFallback && (
                 <Alert className="mb-4 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   <AlertDescription className="text-green-700 dark:text-green-300">
@@ -92,7 +103,9 @@ const Markets = () => {
                       : `${Math.floor(timeSinceLastConnection / 60)} minutes ago`})`}
                   </AlertDescription>
                 </Alert>
-              ) : (
+              )}
+              
+              {!isUsingLiveData && (
                 <Alert variant="destructive" className="mb-4">
                   <WifiOff className="h-4 w-4" />
                   <AlertDescription>
@@ -154,8 +167,9 @@ const Markets = () => {
               isConnected={isUsingLiveData}
               exchangeName="Kraken"
               apiEndpoint={localStorage.getItem('apiEndpoint') || 'Using CORS proxy'}
+              usingFallback={usingFallback}
               lastPing={isUsingLiveData ? (connectionTime ? Math.min(timeSinceLastConnection, 30) : 24) : 0}
-              connectionQuality={isUsingLiveData ? (connectionTime && timeSinceLastConnection < 60 ? 98 : 85) : 0}
+              connectionQuality={isUsingLiveData ? (usingFallback ? 70 : (connectionTime && timeSinceLastConnection < 60 ? 98 : 85)) : 0}
               onReconnect={handleRetryConnection}
               onDisconnect={() => window.location.reload()}
               onTest={refreshData}

@@ -3,13 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Wifi, WifiOff, RefreshCw, Server, CheckCircle } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Server, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ConnectionStatusPanelProps {
   isConnected: boolean;
   exchangeName: string;
   apiEndpoint: string;
+  usingFallback?: boolean;
   lastPing?: number; // ms
   connectionQuality?: number; // 0-100
   onReconnect: () => void;
@@ -21,6 +22,7 @@ export const ConnectionStatusPanel: React.FC<ConnectionStatusPanelProps> = ({
   isConnected,
   exchangeName,
   apiEndpoint,
+  usingFallback = false,
   lastPing = 0,
   connectionQuality = 100,
   onReconnect,
@@ -41,19 +43,35 @@ export const ConnectionStatusPanel: React.FC<ConnectionStatusPanelProps> = ({
           <Badge 
             variant="outline" 
             className={isConnected 
-              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+              ? usingFallback 
+                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
               : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
             }
           >
-            {isConnected ? "Connected" : "Disconnected"}
+            {isConnected 
+              ? usingFallback 
+                ? "Fallback Connected" 
+                : "Connected" 
+              : "Disconnected"
+            }
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {isConnected && (
-          <div className="flex items-center text-green-600 mb-2">
-            <CheckCircle className="h-5 w-5 mr-2" />
-            <span>Connected to {exchangeName} API</span>
+          <div className={`flex items-center mb-2 ${usingFallback ? 'text-yellow-600' : 'text-green-600'}`}>
+            {usingFallback ? (
+              <>
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                <span>Connected to fallback API</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-5 w-5 mr-2" />
+                <span>Connected to {exchangeName} API</span>
+              </>
+            )}
           </div>
         )}
         
@@ -95,6 +113,13 @@ export const ConnectionStatusPanel: React.FC<ConnectionStatusPanelProps> = ({
             </>
           )}
         </div>
+        
+        {usingFallback && isConnected && (
+          <div className="p-2 rounded bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 text-sm">
+            <AlertTriangle className="h-4 w-4 inline-block mr-1" />
+            Using fallback endpoint due to connection issues with primary endpoint.
+          </div>
+        )}
         
         <div className="flex gap-2 pt-4 mt-2 border-t">
           {isConnected ? (

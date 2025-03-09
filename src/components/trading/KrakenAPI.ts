@@ -1,4 +1,3 @@
-
 // This file contains the Kraken API integration
 import { 
   ExchangeAPI, 
@@ -19,7 +18,6 @@ export class KrakenAPI implements ExchangeAPI {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
     this.apiEndpoint = apiEndpoint;
-    this.testConnection();
   }
 
   // Get the API endpoint
@@ -30,8 +28,20 @@ export class KrakenAPI implements ExchangeAPI {
   // Test if we can connect to Kraken API
   private async testConnection(): Promise<void> {
     try {
-      // Simple request to check if API is accessible
-      const response = await fetch(`${this.apiEndpoint}/0/public/Time`);
+      // Simple request to check if API is accessible - with timeout to prevent long waits
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(`${this.apiEndpoint}/0/public/Time`, {
+        signal: controller.signal,
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
         console.error('Kraken API test connection failed:', response.statusText);
         this.isConnected = false;
@@ -63,8 +73,19 @@ export class KrakenAPI implements ExchangeAPI {
     try {
       const startTime = Date.now();
       
-      // Simple request to check if API is accessible
-      const response = await fetch(`${this.apiEndpoint}/0/public/Time`);
+      // Simple request to check if API is accessible - with timeout to prevent long waits
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(`${this.apiEndpoint}/0/public/Time`, {
+        signal: controller.signal,
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
       
       const endTime = Date.now();
       const latency = endTime - startTime;
@@ -103,6 +124,24 @@ export class KrakenAPI implements ExchangeAPI {
       };
     } catch (error) {
       this.isConnected = false;
+      
+      // Check for specific error types to provide better error messages
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return {
+          success: false,
+          latency: 5000, // Timeout duration
+          message: 'Connection timed out after 5 seconds'
+        };
+      }
+      
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        return {
+          success: false,
+          latency: 0,
+          message: 'Network error: CORS issue or API endpoint unreachable'
+        };
+      }
+      
       return {
         success: false,
         latency: 0,
@@ -126,8 +165,19 @@ export class KrakenAPI implements ExchangeAPI {
       // Construct URL
       const url = `${this.apiEndpoint}/0/public/${method}${queryString ? '?' + queryString : ''}`;
       
+      // Add timeout to prevent long waits
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       // Make request
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`Kraken API error: ${response.statusText}`);
@@ -169,7 +219,6 @@ export class KrakenAPI implements ExchangeAPI {
     }
   }
 
-  // Map Kraken symbol format to our trading pair format and vice versa
   private formatSymbolForKraken(symbol: string): string {
     // BTC-USD -> XBTUSD
     const [base, quote] = symbol.split('-');

@@ -1,15 +1,19 @@
 
 import { MarketData } from '@/types/market';
 import { KrakenAPI } from '@/components/trading/KrakenAPI';
+import { useToast } from '@/hooks/use-toast';
 
 // Default endpoint for Kraken API - using a CORS proxy to avoid browser restrictions
 const DEFAULT_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
+// Fallback endpoint option if the main one fails
+const FALLBACK_API_ENDPOINT = 'https://api-pub.bitfinex.com';
 
 export class KrakenMarketService {
   private api: KrakenAPI;
   private isConnected: boolean = false;
   private connectionError: string | null = null;
   private connectionAttempted: boolean = false;
+  private usingFallbackEndpoint: boolean = false;
 
   constructor() {
     // Get API keys from localStorage or use empty strings for public endpoints
@@ -36,10 +40,18 @@ export class KrakenMarketService {
       this.connectionError = result.success ? null : result.message;
       console.log(`Kraken market service connection: ${result.success ? 'connected' : 'failed'}, message: ${result.message}`);
       
+      // If connection failed and we're not already using the fallback, try the fallback
+      if (!result.success && !this.usingFallbackEndpoint) {
+        console.log('Attempting to use fallback API endpoint...');
+        await this.tryFallbackEndpoint();
+        return;
+      }
+      
       // Store connection status in localStorage for persistence
       if (result.success) {
         localStorage.setItem('krakenConnectionStatus', 'connected');
         localStorage.setItem('krakenLastConnected', new Date().toISOString());
+        localStorage.removeItem('krakenConnectionError');
       } else {
         localStorage.setItem('krakenConnectionStatus', 'failed');
         localStorage.setItem('krakenConnectionError', result.message);
@@ -48,6 +60,53 @@ export class KrakenMarketService {
       console.error('Kraken market service connection error:', error);
       this.isConnected = false;
       this.connectionError = error instanceof Error ? error.message : String(error);
+      
+      // Try fallback endpoint if we're not already using it
+      if (!this.usingFallbackEndpoint) {
+        console.log('Connection error caught, attempting to use fallback API endpoint...');
+        await this.tryFallbackEndpoint();
+        return;
+      }
+      
+      // Store connection error in localStorage
+      localStorage.setItem('krakenConnectionStatus', 'failed');
+      localStorage.setItem('krakenConnectionError', this.connectionError);
+    }
+  }
+
+  // Try using a fallback endpoint if the primary one fails
+  private async tryFallbackEndpoint(): Promise<void> {
+    try {
+      console.log('Switching to fallback API endpoint...');
+      this.usingFallbackEndpoint = true;
+      
+      // Get the current API key and secret
+      const apiKey = localStorage.getItem('exchangeApiKey') || '';
+      const apiSecret = localStorage.getItem('exchangeApiSecret') || '';
+      
+      // Create a new API instance with the fallback endpoint
+      this.api = new KrakenAPI(apiKey, apiSecret, FALLBACK_API_ENDPOINT);
+      
+      // Test the connection with the fallback endpoint
+      const result = await this.api.testConnectionWithDetails();
+      this.isConnected = result.success;
+      this.connectionError = result.success ? null : `Fallback connection: ${result.message}`;
+      
+      console.log(`Fallback connection: ${result.success ? 'connected' : 'failed'}, message: ${result.message}`);
+      
+      // Store connection status in localStorage
+      if (result.success) {
+        localStorage.setItem('krakenConnectionStatus', 'connected_fallback');
+        localStorage.setItem('krakenLastConnected', new Date().toISOString());
+        localStorage.setItem('apiEndpoint', FALLBACK_API_ENDPOINT);
+      } else {
+        localStorage.setItem('krakenConnectionStatus', 'failed');
+        localStorage.setItem('krakenConnectionError', `Primary and fallback connection failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Fallback connection error:', error);
+      this.isConnected = false;
+      this.connectionError = `Both primary and fallback connections failed: ${error instanceof Error ? error.message : String(error)}`;
       
       // Store connection error in localStorage
       localStorage.setItem('krakenConnectionStatus', 'failed');
@@ -60,6 +119,15 @@ export class KrakenMarketService {
     this.connectionAttempted = false;
     this.isConnected = false;
     this.connectionError = null;
+    this.usingFallbackEndpoint = false;
+    
+    // Reset to the default endpoint or stored endpoint
+    const apiKey = localStorage.getItem('exchangeApiKey') || '';
+    const apiSecret = localStorage.getItem('exchangeApiSecret') || '';
+    const apiEndpoint = localStorage.getItem('apiEndpoint') || DEFAULT_API_ENDPOINT;
+    
+    this.api = new KrakenAPI(apiKey, apiSecret, apiEndpoint);
+    
     await this.testConnection();
     return this.isConnected;
   }
@@ -75,6 +143,11 @@ export class KrakenMarketService {
   // Get the API endpoint for use in other components
   public getApiEndpoint(): string {
     return this.api.getApiEndpoint();
+  }
+
+  // Is the service using a fallback endpoint?
+  public isUsingFallback(): boolean {
+    return this.usingFallbackEndpoint;
   }
 
   // Convert Kraken symbol to our application format

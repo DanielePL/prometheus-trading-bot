@@ -57,7 +57,7 @@ export const useMarketData = () => {
           description: usingFallback 
             ? "Primary API failed, using fallback for market data" 
             : "Displaying live market data",
-          variant: usingFallback ? "warning" : "default"
+          variant: "default" // Changed from "warning" to "default"
         });
       }
     } catch (error) {
@@ -137,7 +137,7 @@ export const useMarketData = () => {
           description: usingFallback 
             ? "Market data has been updated from fallback source" 
             : "Market data has been updated from Kraken API",
-          variant: usingFallback ? "warning" : "default"
+          variant: "default" // Changed from "warning" to "default"
         });
       } else {
         await retryConnection();
@@ -175,7 +175,7 @@ export const useMarketData = () => {
           description: usingFallback 
             ? "Now displaying market data from fallback source" 
             : "Now displaying live market data from Kraken API",
-          variant: usingFallback ? "warning" : "default"
+          variant: "default" // Changed from "warning" to "default"
         });
       } else {
         const error = krakenMarketService.getConnectionError() || 'Failed to connect to Kraken API';

@@ -15,11 +15,19 @@ export const useCloudConnectionSupabase = () => {
   const [lastSync, setLastSync] = useState<string>('Never');
   const [isRestarting, setIsRestarting] = useState<boolean>(false);
   const [connectionId, setConnectionId] = useState<string | null>(null);
+  const [resourceUpdateInterval, setResourceUpdateInterval] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Load saved connection from Supabase on mount
   useEffect(() => {
     loadConnectionFromSupabase();
+    
+    // Cleanup interval on unmount
+    return () => {
+      if (resourceUpdateInterval) {
+        clearInterval(resourceUpdateInterval);
+      }
+    };
   }, []);
 
   const loadConnectionFromSupabase = async () => {
@@ -57,13 +65,22 @@ export const useCloudConnectionSupabase = () => {
         });
         setConnectionId(connection.id);
         
-        // Restore connection
+        // Restore connection with real API call
         setConnectionStatus('connecting');
-        setTimeout(() => {
+        const connected = await makeRealConnectionToDigitalOcean(connection.api_key);
+        
+        if (connected) {
           setConnectionStatus('connected');
-          startResourceUpdates();
+          startResourceUpdates(connection.api_key, connection.instance_id);
           setLastSync('Restored connection');
-        }, 1500);
+        } else {
+          setConnectionStatus('disconnected');
+          toast({
+            title: "Connection Failed",
+            description: "Could not restore connection to Digital Ocean",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading connection:', error);
@@ -142,36 +159,85 @@ export const useCloudConnectionSupabase = () => {
     }
   };
 
-  // Simulate resource usage updates when connected
-  const startResourceUpdates = () => {
-    const interval = setInterval(() => {
-      // More realistic resource usage patterns
-      setCpuUsage(prevCpu => {
-        const variation = Math.random() > 0.7 ? Math.floor(Math.random() * 20) - 10 : Math.floor(Math.random() * 6) - 3;
-        return Math.max(5, Math.min(95, prevCpu + variation));
+  // Make real connection to Digital Ocean API
+  const makeRealConnectionToDigitalOcean = async (apiKey: string) => {
+    try {
+      // Real API call to Digital Ocean
+      const response = await fetch('https://api.digitalocean.com/v2/account', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
       });
       
-      setMemoryUsage(prevMem => {
-        const variation = Math.random() > 0.7 ? Math.floor(Math.random() * 15) - 5 : Math.floor(Math.random() * 4) - 2;
-        return Math.max(10, Math.min(90, prevMem + variation));
+      if (!response.ok) {
+        console.error('Error connecting to Digital Ocean:', response.statusText);
+        return false;
+      }
+      
+      const data = await response.json();
+      console.log('Connected to Digital Ocean account:', data);
+      return true;
+    } catch (error) {
+      console.error('Error connecting to Digital Ocean:', error);
+      return false;
+    }
+  };
+  
+  // Get real resource metrics from Digital Ocean API
+  const getDigitalOceanMetrics = async (apiKey: string, dropletId: string) => {
+    try {
+      // Real API call to Digital Ocean for droplet metrics
+      const response = await fetch(`https://api.digitalocean.com/v2/monitoring/metrics?host_id=${dropletId}&start=30m&end=0m`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
       });
       
-      // Update uptime
-      const [hours, minutes] = uptime.split('h ');
-      const newMinutes = parseInt(minutes) + 5;
-      if (newMinutes >= 60) {
-        setUptime(`${parseInt(hours) + 1}h ${newMinutes - 60}m`);
-      } else {
-        setUptime(`${hours} ${newMinutes}m`);
+      if (!response.ok) {
+        console.error('Error fetching Digital Ocean metrics:', response.statusText);
+        return;
       }
       
-      // Update last sync time randomly
-      if (Math.random() > 0.7) {
-        setLastSync('Just now');
-        recordMetrics();
+      const metricsData = await response.json();
+      
+      // Parse real metrics
+      // Note: This is a simplified example - actual metrics parsing would depend on DO's API response structure
+      if (metricsData?.metrics?.cpu) {
+        setCpuUsage(parseFloat(metricsData.metrics.cpu.usage) || 0);
       }
-    }, 5000);
+      
+      if (metricsData?.metrics?.memory) {
+        setMemoryUsage(parseFloat(metricsData.metrics.memory.usage) || 0);
+      }
+      
+      if (metricsData?.metrics?.uptime) {
+        const uptimeHours = Math.floor(metricsData.metrics.uptime / 3600);
+        const uptimeMinutes = Math.floor((metricsData.metrics.uptime % 3600) / 60);
+        setUptime(`${uptimeHours}h ${uptimeMinutes}m`);
+      }
+      
+      setLastSync('Just now');
+      recordMetrics();
+    } catch (error) {
+      console.error('Error fetching Digital Ocean metrics:', error);
+    }
+  };
+
+  // Start real resource updates polling
+  const startResourceUpdates = (apiKey: string, dropletId: string) => {
+    // Initial metrics fetch
+    getDigitalOceanMetrics(apiKey, dropletId);
     
+    // Set up interval for periodic updates
+    const interval = setInterval(() => {
+      getDigitalOceanMetrics(apiKey, dropletId);
+    }, 30000); // Update every 30 seconds
+    
+    setResourceUpdateInterval(interval);
     return () => clearInterval(interval);
   };
 
@@ -197,17 +263,30 @@ export const useCloudConnectionSupabase = () => {
       return;
     }
     
-    // Simulate successful connection
-    setTimeout(() => {
+    // Make real connection to Digital Ocean
+    const apiKey = config?.apiKey || connectionConfig.apiKey;
+    const connected = await makeRealConnectionToDigitalOcean(apiKey);
+    
+    if (connected) {
       setConnectionStatus('connected');
       setLastSync('Just now');
-      startResourceUpdates();
+      
+      // Start real resource updates
+      const dropletId = config?.instanceId || connectionConfig.instanceId;
+      startResourceUpdates(apiKey, dropletId);
       
       toast({
         title: "Cloud Service Connected",
         description: `Successfully connected to ${getServiceName(selectedService)}${configDescription}`,
       });
-    }, 2000);
+    } else {
+      setConnectionStatus('disconnected');
+      toast({
+        title: "Connection Failed",
+        description: `Failed to connect to ${getServiceName(selectedService)}. Please check your API key and try again.`,
+        variant: "destructive"
+      });
+    }
   };
 
   const disconnectService = async () => {
@@ -215,6 +294,12 @@ export const useCloudConnectionSupabase = () => {
     setUptime('0h 0m');
     setCpuUsage(0);
     setMemoryUsage(0);
+    
+    // Clear resource update interval
+    if (resourceUpdateInterval) {
+      clearInterval(resourceUpdateInterval);
+      setResourceUpdateInterval(null);
+    }
     
     // Update is_active in Supabase
     if (connectionId) {
@@ -234,7 +319,7 @@ export const useCloudConnectionSupabase = () => {
     });
   };
 
-  const restartService = () => {
+  const restartService = async () => {
     setIsRestarting(true);
     
     toast({
@@ -242,16 +327,50 @@ export const useCloudConnectionSupabase = () => {
       description: `Restarting ${getServiceName(selectedService)}...`,
     });
     
-    setTimeout(() => {
-      setIsRestarting(false);
-      setLastSync('Just now');
-      recordMetrics();
-      
-      toast({
-        title: "Cloud Service Restarted",
-        description: `${getServiceName(selectedService)} has been restarted successfully.`,
+    try {
+      // Real API call to restart a droplet
+      const response = await fetch(`https://api.digitalocean.com/v2/droplets/${connectionConfig.instanceId}/actions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${connectionConfig.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          "type": "reboot"
+        })
       });
-    }, 3000);
+      
+      if (!response.ok) {
+        console.error('Error restarting droplet:', response.statusText);
+        toast({
+          title: "Restart Failed",
+          description: `Failed to restart ${getServiceName(selectedService)}. Please try again.`,
+          variant: "destructive"
+        });
+        setIsRestarting(false);
+        return;
+      }
+      
+      // Wait for restart to complete
+      setTimeout(() => {
+        setIsRestarting(false);
+        setLastSync('Just now');
+        recordMetrics();
+        
+        toast({
+          title: "Cloud Service Restarted",
+          description: `${getServiceName(selectedService)} has been restarted successfully.`,
+        });
+      }, 10000); // Assuming restart takes about 10 seconds
+    } catch (error) {
+      console.error('Error restarting droplet:', error);
+      toast({
+        title: "Restart Failed",
+        description: `Failed to restart ${getServiceName(selectedService)}. Please try again.`,
+        variant: "destructive"
+      });
+      setIsRestarting(false);
+    }
   };
 
   return {

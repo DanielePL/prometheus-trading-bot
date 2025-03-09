@@ -1,11 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CloudConnection as CloudConnectionWrapper } from './cloud-connection';
 import { useCloudConnectionSupabase } from './cloud-connection/useCloudConnectionSupabase';
+import { CloudServiceType } from './cloud-connection/types';
 
 export const CloudConnection = () => {
   const cloudConnection = useCloudConnectionSupabase();
+  
+  // Create a properly typed wrapper for setSelectedService
+  const handleSetSelectedService = (service: CloudServiceType) => {
+    cloudConnection.setSelectedService(service as CloudServiceType);
+  };
 
   return (
     <Card>
@@ -18,6 +24,7 @@ export const CloudConnection = () => {
       <CardContent>
         <CloudConnectionWrapper 
           {...cloudConnection}
+          setSelectedService={handleSetSelectedService}
         />
       </CardContent>
     </Card>

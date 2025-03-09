@@ -5,11 +5,12 @@ import { ConnectedState } from './ConnectedState';
 import { getStatusBadgeClass } from './utils';
 import { Badge } from '@/components/ui/badge';
 import { Cloud } from 'lucide-react';
+import { CloudServiceType, ConnectionStatusType } from './types';
 
 interface CloudConnectionProps {
-  connectionStatus: 'connected' | 'connecting' | 'disconnected';
-  selectedService: string;
-  setSelectedService: (service: string) => void;
+  connectionStatus: ConnectionStatusType;
+  selectedService: CloudServiceType;
+  setSelectedService: (service: CloudServiceType) => void;
   connectionConfig: any;
   uptime: string;
   cpuUsage: number;

@@ -80,7 +80,10 @@ export const BotLogPanel: React.FC<BotLogPanelProps> = ({
         >
           {logs.length > 0 ? (
             logs.map((log, index) => (
-              <div key={index} className="pb-1">
+              <div 
+                key={index} 
+                className={`pb-1 ${log.includes('[SIMULATION]') ? 'text-amber-500' : ''}`}
+              >
                 {log}
               </div>
             ))

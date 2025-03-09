@@ -91,6 +91,7 @@ export const TradingBot = () => {
         logs={state.logs}
         isRunning={state.isRunning}
         onRefreshData={actions.refreshData}
+        isExchangeConnected={state.isExchangeConnected}
       />
 
       {state.showApiConfig && (

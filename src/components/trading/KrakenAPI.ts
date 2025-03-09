@@ -47,6 +47,64 @@ export class KrakenAPI implements ExchangeAPI {
     }
   }
 
+  // Public method to test connection and return detailed results
+  public async testConnectionWithDetails(): Promise<{
+    success: boolean;
+    latency: number;
+    serverTime?: string;
+    message: string;
+  }> {
+    try {
+      const startTime = Date.now();
+      
+      // Simple request to check if API is accessible
+      const response = await fetch(`${this.apiEndpoint}/0/public/Time`);
+      
+      const endTime = Date.now();
+      const latency = endTime - startTime;
+      
+      if (!response.ok) {
+        this.isConnected = false;
+        return {
+          success: false,
+          latency,
+          message: `HTTP error: ${response.status} ${response.statusText}`
+        };
+      }
+      
+      const data = await response.json();
+      
+      if (data.error && data.error.length > 0) {
+        this.isConnected = false;
+        return {
+          success: false,
+          latency,
+          message: `API error: ${data.error.join(', ')}`
+        };
+      }
+      
+      // If we got here, the connection was successful
+      this.isConnected = true;
+      
+      // Format server time
+      const serverTime = new Date(data.result.unixtime * 1000).toISOString();
+      
+      return {
+        success: true,
+        latency,
+        serverTime,
+        message: 'Successfully connected to Kraken API'
+      };
+    } catch (error) {
+      this.isConnected = false;
+      return {
+        success: false,
+        latency: 0,
+        message: `Connection error: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+  }
+
   // Check if we're connected to the real Kraken API
   public isApiConnected(): boolean {
     return this.isConnected;
@@ -132,6 +190,7 @@ export class KrakenAPI implements ExchangeAPI {
     try {
       // If we're not connected to the API, use simulation
       if (!this.isConnected) {
+        console.log(`[SIMULATION] No connection to Kraken API, using simulated market data for ${symbol}`);
         return this.generateSimulatedMarketData(symbol);
       }
       
@@ -166,6 +225,7 @@ export class KrakenAPI implements ExchangeAPI {
       console.error('Error fetching Kraken market data:', error);
       
       // Fall back to mock data if API request fails
+      console.log(`[SIMULATION] API request failed, using simulated market data for ${symbol}`);
       return this.generateSimulatedMarketData(symbol);
     }
   }
@@ -191,6 +251,12 @@ export class KrakenAPI implements ExchangeAPI {
 
   async getOrderBook(symbol: string): Promise<OrderBook> {
     try {
+      // If we're not connected to the API, use simulation
+      if (!this.isConnected) {
+        console.log(`[SIMULATION] No connection to Kraken API, using simulated order book for ${symbol}`);
+        return this.generateSimulatedOrderBook(symbol);
+      }
+      
       const krakenSymbol = this.formatSymbolForKraken(symbol);
       
       // Get order book data
@@ -218,32 +284,50 @@ export class KrakenAPI implements ExchangeAPI {
       console.error('Error fetching Kraken order book:', error);
       
       // Fall back to mock data
-      const currentPrice = 40000 + Math.random() * 2000;
-      
-      // Generate synthetic order book data
-      const bids: [number, number][] = [];
-      const asks: [number, number][] = [];
-      
-      // Generate 10 bid levels
-      for (let i = 0; i < 10; i++) {
-        const price = currentPrice * (1 - 0.001 * (i + 1));
-        const amount = 0.1 + Math.random() * 2;
-        bids.push([price, amount]);
-      }
-      
-      // Generate 10 ask levels
-      for (let i = 0; i < 10; i++) {
-        const price = currentPrice * (1 + 0.001 * (i + 1));
-        const amount = 0.1 + Math.random() * 2;
-        asks.push([price, amount]);
-      }
-      
-      return { bids, asks };
+      console.log(`[SIMULATION] API request failed, using simulated order book for ${symbol}`);
+      return this.generateSimulatedOrderBook(symbol);
     }
+  }
+
+  // Generate simulated order book when not connected to API
+  private generateSimulatedOrderBook(symbol: string): OrderBook {
+    // Generate realistic price based on symbol
+    const basePrice = symbol.includes('BTC') ? 40000 : 
+                    symbol.includes('ETH') ? 2200 :
+                    symbol.includes('SOL') ? 150 :
+                    symbol.includes('DOGE') ? 0.12 : 1000;
+                    
+    const currentPrice = basePrice + Math.random() * (basePrice * 0.05);
+    
+    // Generate synthetic order book data
+    const bids: [number, number][] = [];
+    const asks: [number, number][] = [];
+    
+    // Generate 10 bid levels
+    for (let i = 0; i < 10; i++) {
+      const price = currentPrice * (1 - 0.001 * (i + 1));
+      const amount = 0.1 + Math.random() * 2;
+      bids.push([price, amount]);
+    }
+    
+    // Generate 10 ask levels
+    for (let i = 0; i < 10; i++) {
+      const price = currentPrice * (1 + 0.001 * (i + 1));
+      const amount = 0.1 + Math.random() * 2;
+      asks.push([price, amount]);
+    }
+    
+    return { bids, asks };
   }
 
   async fetchCandles(symbol: string, timeframe: string): Promise<Candle[]> {
     try {
+      // If we're not connected to the API, use simulation
+      if (!this.isConnected) {
+        console.log(`[SIMULATION] No connection to Kraken API, using simulated candles for ${symbol}`);
+        return this.generateSimulatedCandles(symbol, timeframe);
+      }
+      
       const krakenSymbol = this.formatSymbolForKraken(symbol);
       
       // Map timeframe to Kraken interval
@@ -275,33 +359,45 @@ export class KrakenAPI implements ExchangeAPI {
       console.error('Error fetching Kraken candles:', error);
       
       // Fall back to mock data
-      const candles: Candle[] = [];
-      const periods = timeframe === '1h' ? 24 : timeframe === '1d' ? 30 : 60;
-      let lastClose = 40000 * 0.9;
-      
-      for (let i = 0; i < periods; i++) {
-        const timestamp = Date.now() - (i * 60 * 60 * 1000);
-        const change = lastClose * (Math.random() * 0.04 - 0.02);
-        const close = lastClose + change;
-        const open = lastClose;
-        const high = Math.max(open, close) + Math.random() * Math.abs(close - open);
-        const low = Math.min(open, close) - Math.random() * Math.abs(close - open);
-        const volume = 10 + Math.random() * 90;
-        
-        candles.unshift({
-          timestamp,
-          open,
-          high,
-          low,
-          close,
-          volume
-        });
-        
-        lastClose = close;
-      }
-      
-      return candles;
+      console.log(`[SIMULATION] API request failed, using simulated candles for ${symbol}`);
+      return this.generateSimulatedCandles(symbol, timeframe);
     }
+  }
+
+  // Generate simulated candles when not connected to API
+  private generateSimulatedCandles(symbol: string, timeframe: string): Candle[] {
+    // Generate realistic price based on symbol
+    const basePrice = symbol.includes('BTC') ? 40000 : 
+                    symbol.includes('ETH') ? 2200 :
+                    symbol.includes('SOL') ? 150 :
+                    symbol.includes('DOGE') ? 0.12 : 1000;
+                    
+    const candles: Candle[] = [];
+    const periods = timeframe === '1h' ? 24 : timeframe === '1d' ? 30 : 60;
+    let lastClose = basePrice * 0.9;
+    
+    for (let i = 0; i < periods; i++) {
+      const timestamp = Date.now() - (i * 60 * 60 * 1000);
+      const change = lastClose * (Math.random() * 0.04 - 0.02);
+      const close = lastClose + change;
+      const open = lastClose;
+      const high = Math.max(open, close) + Math.random() * Math.abs(close - open);
+      const low = Math.min(open, close) - Math.random() * Math.abs(close - open);
+      const volume = 10 + Math.random() * 90;
+      
+      candles.unshift({
+        timestamp,
+        open,
+        high,
+        low,
+        close,
+        volume
+      });
+      
+      lastClose = close;
+    }
+    
+    return candles;
   }
 
   async executeOrder(order: OrderPayload): Promise<OrderResult> {

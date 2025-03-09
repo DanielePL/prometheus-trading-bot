@@ -233,12 +233,11 @@ export const useCloudConnectionSupabase = () => {
     getDigitalOceanMetrics(apiKey, dropletId);
     
     // Set up interval for periodic updates
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       getDigitalOceanMetrics(apiKey, dropletId);
     }, 30000); // Update every 30 seconds
     
     setResourceUpdateInterval(interval);
-    return () => clearInterval(interval);
   };
 
   const connectToService = async (config?: CloudConnectionConfig) => {

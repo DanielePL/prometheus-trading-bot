@@ -24,12 +24,16 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
   const [ipAddress, setIpAddress] = useState(connectionConfig?.ipAddress || '');
   const [port, setPort] = useState(connectionConfig?.port?.toString() || '22');
   const [apiKey, setApiKey] = useState(connectionConfig?.apiKey || '');
+  const [instanceId, setInstanceId] = useState(connectionConfig?.instanceId || '');
+  const [region, setRegion] = useState(connectionConfig?.region || '');
   
   const handleConnect = () => {
     connectToService({
       ipAddress: ipAddress.trim(),
       port: parseInt(port),
-      apiKey: apiKey.trim()
+      apiKey: apiKey.trim(),
+      instanceId: instanceId.trim(),
+      region: region.trim()
     });
   };
 
@@ -56,6 +60,39 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
       </div>
       
       <div className="space-y-2">
+        <Label className="text-sm font-medium">API Key / Access Token</Label>
+        <Input 
+          type="password" 
+          placeholder="Enter DigitalOcean API key" 
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">Your Digital Ocean API key with read/write permissions</p>
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Droplet ID</Label>
+        <Input 
+          type="text" 
+          placeholder="Enter Droplet ID" 
+          value={instanceId}
+          onChange={(e) => setInstanceId(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">The ID of your Digital Ocean Droplet (found in Droplet settings)</p>
+      </div>
+      
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Region</Label>
+        <Input 
+          type="text" 
+          placeholder="E.g., nyc1, sfo2, etc." 
+          value={region}
+          onChange={(e) => setRegion(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">Your Droplet's region code (e.g., nyc1, sfo2)</p>
+      </div>
+      
+      <div className="space-y-2">
         <Label className="text-sm font-medium">IP Address or Hostname</Label>
         <Input 
           type="text" 
@@ -76,21 +113,10 @@ export const DisconnectedState: React.FC<DisconnectedStateProps> = ({
         <p className="text-xs text-muted-foreground">The default SSH port is 22, only change if you're using a custom port</p>
       </div>
       
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">API Key / Access Token <span className="text-xs text-muted-foreground">(optional)</span></Label>
-        <Input 
-          type="password" 
-          placeholder="Enter DigitalOcean API key" 
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-        />
-        <p className="text-xs text-muted-foreground">For additional functionality like remote server management</p>
-      </div>
-      
       <Button 
         className="w-full" 
         onClick={handleConnect}
-        disabled={!ipAddress.trim()}
+        disabled={!apiKey.trim() || !instanceId.trim()}
       >
         <Server className="mr-2 h-4 w-4" />
         Connect to {getServiceName(selectedService)}

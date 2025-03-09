@@ -10,7 +10,7 @@ export const CloudConnection = () => {
   
   // Create a properly typed wrapper for setSelectedService
   const handleSetSelectedService = (service: CloudServiceType) => {
-    cloudConnection.setSelectedService(service as CloudServiceType);
+    cloudConnection.setSelectedService(service);
   };
 
   return (

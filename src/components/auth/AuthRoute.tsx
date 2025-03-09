@@ -8,7 +8,7 @@ interface AuthRouteProps {
 }
 
 export const AuthRoute: React.FC<AuthRouteProps> = ({ children }) => {
-  // Temporarily disabled auth check - always let users through
+  // Authentication check completely disabled - always let users through
   return <>{children}</>;
   
   /* Original code commented out until we need to re-enable

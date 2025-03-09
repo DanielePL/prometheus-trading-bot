@@ -1,11 +1,82 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MarketData } from '@/types/market';
-import { marketData } from '@/data/marketData';
+import { marketData as mockMarketData } from '@/data/marketData';
+import { krakenMarketService } from '@/services/KrakenMarketService';
 
 export const useMarketData = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [marketDataState, setMarketDataState] = useState<MarketData[]>(marketData);
+  const [marketDataState, setMarketDataState] = useState<MarketData[]>(mockMarketData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUsingLiveData, setIsUsingLiveData] = useState(false);
+  
+  // Load market data on component mount
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Try to get live data from Kraken
+        const isConnected = krakenMarketService.isApiConnected();
+        
+        if (isConnected) {
+          const liveData = await krakenMarketService.getMarketPairs();
+          
+          if (liveData && liveData.length > 0) {
+            // Get tracked status from localStorage or existing state
+            const trackedCoinsMap = new Map(
+              marketDataState
+                .filter(coin => coin.tracked)
+                .map(coin => [coin.symbol, true])
+            );
+            
+            // Apply tracked status to new data
+            const dataWithTrackedStatus = liveData.map(coin => ({
+              ...coin,
+              tracked: trackedCoinsMap.has(coin.symbol)
+            }));
+            
+            setMarketDataState(dataWithTrackedStatus);
+            setIsUsingLiveData(true);
+            console.log('Using live market data from Kraken');
+            
+            // Save tracked status to localStorage
+            localStorage.setItem('trackedCoins', JSON.stringify(
+              dataWithTrackedStatus.filter(coin => coin.tracked).map(coin => coin.symbol)
+            ));
+            
+            // Set up refresh interval while using live data
+            const intervalId = setInterval(async () => {
+              const updatedData = await krakenMarketService.updateMarketData(dataWithTrackedStatus);
+              setMarketDataState(updatedData);
+            }, 30000); // Refresh every 30 seconds
+            
+            return () => clearInterval(intervalId);
+          }
+        }
+        
+        // Fall back to mock data if API not connected or no data received
+        console.log('Using mock market data');
+        
+        // Load tracked status from localStorage
+        const trackedCoinsFromStorage = JSON.parse(localStorage.getItem('trackedCoins') || '[]');
+        const updatedMockData = mockMarketData.map(coin => ({
+          ...coin,
+          tracked: trackedCoinsFromStorage.includes(coin.symbol) || coin.tracked
+        }));
+        
+        setMarketDataState(updatedMockData);
+        setIsUsingLiveData(false);
+      } catch (error) {
+        console.error('Error fetching market data:', error);
+        setIsUsingLiveData(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMarketData();
+  }, []);
   
   // Filter market data based on search term
   const filteredMarketData = useMemo(() => {
@@ -31,11 +102,33 @@ export const useMarketData = () => {
   
   // Handle track toggle
   const handleTrackToggle = (id: string) => {
-    setMarketDataState(prevData => 
-      prevData.map(item => 
+    setMarketDataState(prevData => {
+      const newData = prevData.map(item => 
         item.id === id ? { ...item, tracked: !item.tracked } : item
-      )
-    );
+      );
+      
+      // Save tracked coins to localStorage
+      localStorage.setItem('trackedCoins', JSON.stringify(
+        newData.filter(coin => coin.tracked).map(coin => coin.symbol)
+      ));
+      
+      return newData;
+    });
+  };
+  
+  // Force refresh data
+  const refreshData = async () => {
+    if (!isUsingLiveData) return;
+    
+    setIsLoading(true);
+    try {
+      const updatedData = await krakenMarketService.updateMarketData(marketDataState);
+      setMarketDataState(updatedData);
+    } catch (error) {
+      console.error('Error refreshing market data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return {
@@ -44,6 +137,9 @@ export const useMarketData = () => {
     filteredMarketData,
     trackedCoins,
     gainers,
-    handleTrackToggle
+    handleTrackToggle,
+    isLoading,
+    isUsingLiveData,
+    refreshData
   };
 };

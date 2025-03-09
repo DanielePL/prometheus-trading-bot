@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +8,9 @@ import { MarketSearch } from '@/components/markets/MarketSearch';
 import { MarketTabs } from '@/components/markets/MarketTabs';
 import { EmptyTrackedState } from '@/components/markets/EmptyTrackedState';
 import { useMarketData } from '@/hooks/useMarketData';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Markets = () => {
   const {
@@ -15,7 +19,10 @@ const Markets = () => {
     filteredMarketData,
     trackedCoins,
     gainers,
-    handleTrackToggle
+    handleTrackToggle,
+    isLoading,
+    isUsingLiveData,
+    refreshData
   } = useMarketData();
   
   return (
@@ -31,8 +38,35 @@ const Markets = () => {
         <Tabs defaultValue="all" className="w-full">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
             <MarketTabs />
-            <MarketSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={refreshData}
+                disabled={isLoading || !isUsingLiveData}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <MarketSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            </div>
           </div>
+          
+          {isUsingLiveData ? (
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Displaying live market data from Kraken API
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Using demonstration data. Connect to Kraken API for live data.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <TabsContent value="all" className="space-y-4">
             <Card>

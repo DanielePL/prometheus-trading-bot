@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Star } from 'lucide-react';
 import { MarketData } from '@/types/market';
 
 interface MarketTableProps {
@@ -21,7 +21,7 @@ export const MarketTable = ({ data, handleTrackToggle }: MarketTableProps) => {
           <TableHead>24h Change</TableHead>
           <TableHead className="hidden md:table-cell">Volume (24h)</TableHead>
           <TableHead className="hidden lg:table-cell">Market Cap</TableHead>
-          <TableHead className="text-right">Action</TableHead>
+          <TableHead className="text-right">Track</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -58,12 +58,12 @@ export const MarketTable = ({ data, handleTrackToggle }: MarketTableProps) => {
               <TableCell className="hidden lg:table-cell">{market.marketCap}</TableCell>
               <TableCell className="text-right">
                 <Button 
-                  variant={market.tracked ? "default" : "outline"} 
+                  variant={market.tracked ? "secondary" : "outline"} 
                   size="sm"
-                  className={market.tracked ? "bg-primary" : ""}
+                  className={market.tracked ? "bg-secondary" : ""}
                   onClick={() => handleTrackToggle(market.id)}
                 >
-                  {market.tracked ? "Tracked" : "Track"}
+                  <Star className={`h-4 w-4 ${market.tracked ? "text-yellow-500 fill-yellow-500" : ""}`} />
                 </Button>
               </TableCell>
             </TableRow>

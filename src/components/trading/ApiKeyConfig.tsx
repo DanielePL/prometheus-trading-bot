@@ -4,14 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { KeyRound, X, Save, AlertCircle, ExternalLink, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { KeyRound, X, Save, AlertCircle, ExternalLink, Eye, EyeOff, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 // Test API credentials - FOR TESTING PURPOSES ONLY
-// These should match the ones in KrakenMarketService.ts
-const TEST_API_KEY = '';
-const TEST_API_SECRET = '';
+const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
+const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
 const TEST_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
+const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';
 
 interface ApiKeyConfigProps {
   apiKeys: {
@@ -28,6 +29,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
   onSave,
   onCancel
 }) => {
+  const { toast } = useToast();
   const [keys, setKeys] = useState({
     exchangeApiKey: TEST_API_KEY,
     exchangeApiSecret: TEST_API_SECRET,
@@ -37,14 +39,20 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
   const [savedKeys, setSavedKeys] = useState<{[key: string]: string}>({});
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null);
+  const [useFallbackEndpoint, setUseFallbackEndpoint] = useState(false);
 
   // Load any previously saved credentials from localStorage on component mount
   useEffect(() => {
     const loadSavedCredentials = () => {
+      // Check if we should use the fallback endpoint
+      const usingFallback = localStorage.getItem('krakenConnectionStatus') === 'connected_fallback';
+      setUseFallbackEndpoint(usingFallback);
+      
       // We're using hardcoded test keys, but still check localStorage for compatibility
       const savedApiKey = localStorage.getItem('exchangeApiKey') || TEST_API_KEY;
       const savedApiSecret = localStorage.getItem('exchangeApiSecret') || TEST_API_SECRET;
-      const savedApiEndpoint = localStorage.getItem('apiEndpoint') || TEST_API_ENDPOINT;
+      const savedApiEndpoint = localStorage.getItem('apiEndpoint') || 
+                               (usingFallback ? FALLBACK_API_ENDPOINT : TEST_API_ENDPOINT);
       
       const savedData: {[key: string]: string} = {};
       if (savedApiKey) savedData.exchangeApiKey = savedApiKey;
@@ -72,6 +80,14 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     }));
   };
 
+  const handleEndpointToggle = () => {
+    setUseFallbackEndpoint(!useFallbackEndpoint);
+    setKeys(prev => ({
+      ...prev,
+      apiEndpoint: !useFallbackEndpoint ? FALLBACK_API_ENDPOINT : TEST_API_ENDPOINT
+    }));
+  };
+
   const openKrakenAPIPage = () => {
     window.open('https://www.kraken.com/u/security/api', '_blank');
   };
@@ -85,10 +101,33 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     setTestResult(null);
     
     try {
-      const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 15000);
+      const endpoint = keys.apiEndpoint;
+      console.log(`Testing connection to endpoint: ${endpoint}`);
       
-      const response = await fetch(`${keys.apiEndpoint}/0/public/Time`, {
+      // Increase timeout for better reliability
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 30000);
+      
+      // First try a preflight OPTIONS request to check CORS setup
+      try {
+        const preflightResponse = await fetch(endpoint, {
+          method: 'OPTIONS',
+          signal: abortController.signal,
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'TradingBot/1.0'
+          }
+        });
+        
+        console.log(`Preflight response status: ${preflightResponse.status}`);
+        // If preflight fails, we'll get an error and jump to the catch block
+      } catch (prefError) {
+        console.warn(`Preflight request failed: ${prefError instanceof Error ? prefError.message : String(prefError)}`);
+        // Continue anyway, as some CORS proxies don't handle OPTIONS properly
+      }
+      
+      // Now try the actual API call
+      const response = await fetch(`${endpoint}/0/public/Time`, {
         signal: abortController.signal,
         headers: {
           'Accept': 'application/json',
@@ -97,6 +136,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       });
       
       clearTimeout(timeoutId);
+      
+      console.log(`API response status: ${response.status}`);
       
       if (!response.ok) {
         setTestResult({
@@ -107,6 +148,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       }
       
       const data = await response.json();
+      console.log('API response data:', data);
+      
       if (data.error && data.error.length > 0) {
         setTestResult({
           success: false,
@@ -119,20 +162,33 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
         success: true,
         message: `Connection successful! Server time: ${new Date(data.result.unixtime * 1000).toLocaleString()}`
       });
+      
+      toast({
+        title: "Connection Successful",
+        description: "Successfully connected to Kraken API"
+      });
     } catch (error) {
       let errorMessage = "Connection failed";
       
       if (error instanceof DOMException && error.name === 'AbortError') {
-        errorMessage = "Connection timed out after 15 seconds";
+        errorMessage = "Connection timed out after 30 seconds";
       } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        errorMessage = "Network error: CORS issue or API endpoint unreachable";
+        errorMessage = "Network error: CORS issue or API endpoint unreachable. Check your browser's console for more details.";
       } else {
         errorMessage = `Error: ${error instanceof Error ? error.message : String(error)}`;
       }
       
+      console.error('Connection test error:', error);
+      
       setTestResult({
         success: false,
         message: errorMessage
+      });
+      
+      toast({
+        title: "Connection Failed",
+        description: errorMessage,
+        variant: "destructive"
       });
     } finally {
       setTestingConnection(false);
@@ -153,18 +209,30 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       localStorage.setItem('apiEndpoint', keys.apiEndpoint);
     }
     
+    // Store fallback status if using fallback
+    if (useFallbackEndpoint) {
+      localStorage.setItem('krakenConnectionStatus', 'connected_fallback');
+    } else {
+      localStorage.removeItem('krakenConnectionStatus');
+    }
+    
     // Reset connection status to force a new connection attempt
-    localStorage.removeItem('krakenConnectionStatus');
     localStorage.removeItem('krakenLastConnected');
     localStorage.removeItem('krakenConnectionError');
     
     // Pass data to parent component
     onSave(keys);
     
+    toast({
+      title: "API Keys Saved",
+      description: "Your API configuration has been saved. The page will refresh to apply changes.",
+      duration: 3000,
+    });
+    
     // Force a page reload to properly initialize with new API keys
     setTimeout(() => {
       window.location.reload();
-    }, 500);
+    }, 1000);
   };
 
   return (
@@ -175,8 +243,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <div className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-amber-500" />
               <div>
-                <CardTitle>Kraken API Configuration (TEST MODE)</CardTitle>
-                <CardDescription>Using test API keys - for development only</CardDescription>
+                <CardTitle>Kraken API Configuration</CardTitle>
+                <CardDescription>Configure your Kraken API connection</CardDescription>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={onCancel}>
@@ -191,34 +259,49 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               <div className="text-sm">
                 <p className="font-medium">Test Environment Notice</p>
                 <p>
-                  Using hardcoded test API keys. In production, these would be securely stored.
-                  If your API connection is failing, try using the "Test Connection" button below to diagnose issues.
+                  Using hardcoded test API keys by default. In production, these would be securely stored.
+                  {useFallbackEndpoint && (
+                    <strong className="block mt-1">Using fallback endpoint due to connection issues with the primary endpoint.</strong>
+                  )}
                 </p>
               </div>
             </div>
           </div>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full" 
-            onClick={openKrakenAPIPage}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open Kraken API Management
-          </Button>
+          <div className="flex justify-between">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-auto" 
+              onClick={openKrakenAPIPage}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Kraken API Docs
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-auto" 
+              onClick={handleEndpointToggle}
+            >
+              {useFallbackEndpoint ? "Use Primary Endpoint" : "Try Fallback Endpoint"}
+            </Button>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="apiEndpoint">API Endpoint</Label>
             <Input
               id="apiEndpoint"
               name="apiEndpoint"
-              placeholder="https://cors-proxy.fringe.zone/https://api.kraken.com"
+              placeholder={TEST_API_ENDPOINT}
               value={keys.apiEndpoint}
               onChange={handleChange}
             />
             <p className="text-xs text-muted-foreground">
-              Using CORS proxy is necessary for browser-based access. Default: {TEST_API_ENDPOINT}
+              {useFallbackEndpoint 
+                ? "Using fallback endpoint for alternative access" 
+                : "Using CORS proxy is necessary for browser-based access"}
             </p>
           </div>
           
@@ -231,7 +314,9 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
               value={keys.exchangeApiKey}
               onChange={handleChange}
             />
-            <p className="text-xs text-green-600 dark:text-green-400">Using test API key</p>
+            {keys.exchangeApiKey === TEST_API_KEY && (
+              <p className="text-xs text-green-600 dark:text-green-400">Using test API key</p>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -255,7 +340,9 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
                 {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
-            <p className="text-xs text-green-600 dark:text-green-400">Using test API secret</p>
+            {keys.exchangeApiSecret === TEST_API_SECRET && (
+              <p className="text-xs text-green-600 dark:text-green-400">Using test API secret</p>
+            )}
           </div>
           
           <Button
@@ -274,10 +361,21 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
           
           {testResult && (
             <Alert variant={testResult.success ? "default" : "destructive"}>
+              {testResult.success ? (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4" />
+              )}
               <AlertDescription>
                 {testResult.message}
               </AlertDescription>
             </Alert>
+          )}
+          
+          {!testResult && testingConnection && (
+            <div className="flex justify-center py-2">
+              <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+            </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-end gap-2 border-t px-6 py-4">

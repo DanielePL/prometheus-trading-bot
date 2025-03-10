@@ -1,3 +1,4 @@
+
 import { MarketData } from '@/types/market';
 import { KrakenAPI } from '@/components/trading/KrakenAPI';
 
@@ -146,7 +147,7 @@ export class KrakenMarketService {
     // Reset to the default endpoint or stored endpoint
     const apiKey = localStorage.getItem('exchangeApiKey') || '';
     const apiSecret = localStorage.getItem('exchangeApiSecret') || '';
-    const apiEndpoint = localStorage.getItem('apiEndpoint') || DEFAULT_API_ENDPOINT;
+    const apiEndpoint = localStorage.getItem('apiEndpoint') || DIRECT_API_ENDPOINT;
     
     this.api = new KrakenAPI(apiKey, apiSecret, apiEndpoint);
     

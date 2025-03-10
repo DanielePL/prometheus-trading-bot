@@ -9,8 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Test API credentials - FOR TESTING PURPOSES ONLY
 // These should match the ones in KrakenMarketService.ts
-const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
-const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
+const TEST_API_KEY = '';
+const TEST_API_SECRET = '';
 const TEST_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
 
 interface ApiKeyConfigProps {

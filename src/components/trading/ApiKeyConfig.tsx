@@ -14,6 +14,9 @@ const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1
 const TEST_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
 const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';
 
+// The correct path for public API endpoints
+const PUBLIC_API_PATH = '/0/public/';
+
 interface ApiKeyConfigProps {
   apiKeys: {
     exchangeApiKey: string;
@@ -96,6 +99,28 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     setShowSecret(!showSecret);
   };
 
+  const constructApiUrl = (endpoint: string, path: string): string => {
+    // Ensure the endpoint doesn't end with a slash and path starts with a slash
+    const cleanEndpoint = endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    
+    // For the CORS proxy, we need to ensure the target URL is properly encoded
+    if (cleanEndpoint.includes('cors-proxy.fringe.zone')) {
+      // Extract the target URL from the CORS proxy URL
+      const proxyParts = cleanEndpoint.split('/https://');
+      if (proxyParts.length >= 2) {
+        const proxyBase = proxyParts[0];
+        const targetBase = `https://${proxyParts[1]}`;
+        
+        // Return the properly formatted URL
+        return `${proxyBase}/https://${targetBase.replace(/^https:\/\//, '')}${cleanPath}`;
+      }
+    }
+    
+    // For regular endpoints or if CORS proxy parsing fails
+    return `${cleanEndpoint}${cleanPath}`;
+  };
+
   const testConnection = async () => {
     setTestingConnection(true);
     setTestResult(null);
@@ -104,13 +129,18 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       const endpoint = keys.apiEndpoint;
       console.log(`Testing connection to endpoint: ${endpoint}`);
       
+      // Construct the proper URL for the Time API call
+      const timeEndpoint = constructApiUrl(endpoint, PUBLIC_API_PATH + 'Time');
+      console.log(`Constructed Time API URL: ${timeEndpoint}`);
+      
       // Increase timeout for better reliability
       const abortController = new AbortController();
       const timeoutId = setTimeout(() => abortController.abort(), 30000);
       
       // First try a preflight OPTIONS request to check CORS setup
       try {
-        const preflightResponse = await fetch(endpoint, {
+        console.log(`Sending OPTIONS preflight request to: ${timeEndpoint}`);
+        const preflightResponse = await fetch(timeEndpoint, {
           method: 'OPTIONS',
           signal: abortController.signal,
           headers: {
@@ -127,7 +157,8 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       }
       
       // Now try the actual API call
-      const response = await fetch(`${endpoint}/0/public/Time`, {
+      console.log(`Sending GET request to: ${timeEndpoint}`);
+      const response = await fetch(timeEndpoint, {
         signal: abortController.signal,
         headers: {
           'Accept': 'application/json',

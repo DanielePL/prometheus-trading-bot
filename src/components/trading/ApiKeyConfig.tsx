@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 // Test API credentials - FOR TESTING PURPOSES ONLY
 const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
 const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
-// Using direct API endpoint without proxy by default
-const TEST_API_ENDPOINT = 'wss://futures.kraken.com/ws/v2';
-// Adding multiple fallback options including a CORS proxy
-const CORS_PROXY_ENDPOINT = 'https://corsproxy.io/?';
+
+// API endpoints with reliable CORS proxies
+const DIRECT_API_ENDPOINT = 'https://api.kraken.com';
+const CORS_PROXY_ENDPOINT = 'https://corsproxy.io/?https://api.kraken.com';
 const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';
+
+// API paths
+const PUBLIC_API_PATH = '/0/public/';
 
 interface ApiKeyConfigProps {
   apiKeys: {
@@ -35,22 +39,22 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
   const [keys, setKeys] = useState({
     exchangeApiKey: TEST_API_KEY,
     exchangeApiSecret: TEST_API_SECRET,
-    apiEndpoint: TEST_API_ENDPOINT
+    apiEndpoint: CORS_PROXY_ENDPOINT // Default to CORS proxy for better browser compatibility
   });
   const [showSecret, setShowSecret] = useState(false);
   const [savedKeys, setSavedKeys] = useState<{[key: string]: string}>({});
   const [testingConnection, setTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null);
-  const [endpointMode, setEndpointMode] = useState<'direct' | 'cors-proxy' | 'fallback'>('direct');
+  const [endpointMode, setEndpointMode] = useState<'direct' | 'cors-proxy' | 'fallback'>('cors-proxy');
 
   // Load any previously saved credentials from localStorage on component mount
   useEffect(() => {
     const loadSavedCredentials = () => {
       const connectionStatus = localStorage.getItem('krakenConnectionStatus');
-      let mode: 'direct' | 'cors-proxy' | 'fallback' = 'direct';
+      let mode: 'direct' | 'cors-proxy' | 'fallback' = 'cors-proxy'; // Default to CORS proxy
       
-      if (connectionStatus === 'connected_cors_proxy') {
-        mode = 'cors-proxy';
+      if (connectionStatus === 'connected_direct') {
+        mode = 'direct';
       } else if (connectionStatus === 'connected_fallback') {
         mode = 'fallback';
       }
@@ -64,11 +68,11 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       // Set endpoint based on mode
       let savedApiEndpoint;
       if (mode === 'cors-proxy') {
-        savedApiEndpoint = `${CORS_PROXY_ENDPOINT}${encodeURIComponent(TEST_API_ENDPOINT)}`;
+        savedApiEndpoint = CORS_PROXY_ENDPOINT;
       } else if (mode === 'fallback') {
         savedApiEndpoint = FALLBACK_API_ENDPOINT;
       } else {
-        savedApiEndpoint = localStorage.getItem('apiEndpoint') || TEST_API_ENDPOINT;
+        savedApiEndpoint = DIRECT_API_ENDPOINT;
       }
       
       const savedData: {[key: string]: string} = {};
@@ -104,13 +108,13 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     // Cycle through the connection modes
     if (endpointMode === 'direct') {
       newMode = 'cors-proxy';
-      newEndpoint = `${CORS_PROXY_ENDPOINT}${encodeURIComponent(TEST_API_ENDPOINT)}`;
+      newEndpoint = CORS_PROXY_ENDPOINT;
     } else if (endpointMode === 'cors-proxy') {
       newMode = 'fallback';
       newEndpoint = FALLBACK_API_ENDPOINT;
     } else {
       newMode = 'direct';
-      newEndpoint = TEST_API_ENDPOINT;
+      newEndpoint = DIRECT_API_ENDPOINT;
     }
     
     setEndpointMode(newMode);
@@ -118,6 +122,11 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
       ...prev,
       apiEndpoint: newEndpoint
     }));
+    
+    toast({
+      title: "Endpoint Changed",
+      description: `Now using ${newMode === 'direct' ? 'direct' : newMode === 'cors-proxy' ? 'CORS proxy' : 'fallback'} endpoint`,
+    });
   };
 
   const openKrakenAPIPage = () => {
@@ -128,22 +137,18 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     setShowSecret(!showSecret);
   };
 
-  // Helper to normalize URLs for API requests
-  const buildApiUrl = (base: string, path: string): string => {
-    // Remove trailing slashes from base
-    const cleanBase = base.replace(/\/+$/, '');
-    
-    // Handle CORS proxy URLs specially
-    if (base.includes(CORS_PROXY_ENDPOINT)) {
-      // For corsproxy.io, we need to ensure the encoded URL is properly formed
-      const encodedApiUrl = encodeURIComponent(`${TEST_API_ENDPOINT}${path}`);
-      return `${CORS_PROXY_ENDPOINT}${encodedApiUrl}`;
+  // Helper to construct API URLs correctly
+  const constructApiUrl = (endpoint: string, path: string): string => {
+    if (endpointMode === 'cors-proxy') {
+      // For CORS proxy, we need the full URL already encoded in the endpoint
+      return endpoint;
+    } else if (endpointMode === 'fallback') {
+      // Fallback endpoint uses a different API structure
+      return `${endpoint}/api/v3/time`;
+    } else {
+      // Direct endpoint - standard Kraken API
+      return `${endpoint}${path}`;
     }
-    
-    // Add leading slash to path if needed
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    
-    return `${cleanBase}${cleanPath}`;
   };
 
   const testConnection = async () => {
@@ -151,31 +156,28 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     setTestResult(null);
     
     try {
-      const endpoint = keys.apiEndpoint;
-      console.log(`Testing connection to endpoint mode: ${endpointMode}`);
-      console.log(`Using endpoint: ${endpoint}`);
+      console.log(`Testing connection using ${endpointMode} mode`);
+      console.log(`API endpoint: ${keys.apiEndpoint}`);
       
-      // Create the correct URL for the API call
-      const apiPath = '/0/public/Time';
-      const apiUrl = endpointMode === 'fallback' 
-        ? `${endpoint}/api/v3/time` // Different path for fallback endpoint
-        : buildApiUrl(endpoint, apiPath);
-      
+      // Use the Time endpoint to test connection
+      const apiUrl = constructApiUrl(keys.apiEndpoint, PUBLIC_API_PATH + 'Time');
       console.log(`Making request to: ${apiUrl}`);
       
-      // Set up fetch with timeout
+      // Set up fetch with a reasonable timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
       
+      // Make the request with proper headers
       const response = await fetch(apiUrl, {
         method: 'GET',
         signal: controller.signal,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'User-Agent': 'TradingBot/1.0'
         },
-        // Omitting credentials to avoid preflight requests
         mode: 'cors',
+        cache: 'no-cache',
       });
       
       clearTimeout(timeoutId);
@@ -186,36 +188,54 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
         throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
-      console.log('API response data:', data);
+      // Parse the response
+      const text = await response.text();
+      console.log('Raw API response:', text);
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        throw new Error(`Failed to parse response as JSON: ${text.substring(0, 100)}...`);
+      }
+      
+      console.log('Parsed API response:', data);
       
       if (data.error && data.error.length > 0) {
         throw new Error(`API error: ${data.error.join(', ')}`);
       }
       
-      let successMessage = "Connection successful!";
-      
-      // Format differs between main API and fallback
+      // Format success message based on response
+      let serverTime = 'unknown';
       if (endpointMode === 'fallback') {
-        successMessage += ` Server time: ${new Date(data.result || data.timestamp).toLocaleString()}`;
+        serverTime = new Date(data.timestamp || Date.now()).toLocaleString();
       } else {
-        successMessage += ` Server time: ${new Date((data.result?.unixtime || data.result?.rfc1123) * 1000).toLocaleString()}`;
+        serverTime = new Date((data.result?.unixtime || 0) * 1000).toLocaleString();
       }
+      
+      const successMessage = `Connection successful! Server time: ${serverTime}`;
       
       setTestResult({
         success: true,
         message: successMessage
       });
+
+      // Store connection status
+      localStorage.setItem('krakenConnectionStatus', `connected_${endpointMode}`);
+      localStorage.setItem('krakenLastConnected', new Date().toISOString());
+      localStorage.removeItem('krakenConnectionError');
       
       toast({
         title: "Connection Successful",
         description: "Successfully connected to Kraken API"
       });
     } catch (error) {
+      console.error('Connection test error:', error);
+      
       let errorMessage = "Connection failed";
       
       if (error instanceof DOMException && error.name === 'AbortError') {
-        errorMessage = "Connection timed out after 15 seconds";
+        errorMessage = "Connection timed out after 20 seconds";
       } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         errorMessage = "Network error: CORS issue or API endpoint unreachable";
         
@@ -223,20 +243,22 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
         if (endpointMode === 'direct') {
           errorMessage += ". Try using the CORS proxy option.";
         } else if (endpointMode === 'cors-proxy') {
-          errorMessage += ". Try using the fallback endpoint or check if the CORS proxy is working.";
+          errorMessage += ". Try the fallback endpoint.";
         } else {
-          errorMessage += ". Try a different API endpoint.";
+          errorMessage += ". Check your network connection.";
         }
       } else {
         errorMessage = `Error: ${error instanceof Error ? error.message : String(error)}`;
       }
       
-      console.error('Connection test error:', error);
-      
       setTestResult({
         success: false,
         message: errorMessage
       });
+      
+      // Store error in localStorage
+      localStorage.setItem('krakenConnectionStatus', 'failed');
+      localStorage.setItem('krakenConnectionError', errorMessage);
       
       toast({
         title: "Connection Failed",
@@ -263,13 +285,7 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
     }
     
     // Store connection mode status
-    if (endpointMode === 'cors-proxy') {
-      localStorage.setItem('krakenConnectionStatus', 'connected_cors_proxy');
-    } else if (endpointMode === 'fallback') {
-      localStorage.setItem('krakenConnectionStatus', 'connected_fallback');
-    } else {
-      localStorage.removeItem('krakenConnectionStatus');
-    }
+    localStorage.setItem('krakenConnectionStatus', `connected_${endpointMode}`);
     
     // Reset connection status to force a new connection attempt
     localStorage.removeItem('krakenLastConnected');
@@ -375,9 +391,9 @@ export const ApiKeyConfig: React.FC<ApiKeyConfigProps> = ({
             <Input
               id="apiEndpoint"
               name="apiEndpoint"
-              placeholder={TEST_API_ENDPOINT}
               value={keys.apiEndpoint}
               onChange={handleChange}
+              disabled={true}
             />
             <p className="text-xs text-muted-foreground">
               {getEndpointDescription()}

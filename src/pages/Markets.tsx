@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,6 +15,9 @@ import { ConnectionStatusPanel } from '@/components/trading/ConnectionStatusPane
 import { useToast } from '@/hooks/use-toast';
 import { krakenMarketService } from '@/services/KrakenMarketService';
 import { ApiKeyConfig } from '@/components/trading/ApiKeyConfig';
+
+// Constants for API endpoints
+const CORS_PROXY_ENDPOINT = 'https://corsproxy.io/?https://api.kraken.com';
 
 const Markets = () => {
   const { toast } = useToast();
@@ -38,6 +42,7 @@ const Markets = () => {
   const connectionTime = lastConnected ? new Date(lastConnected) : null;
   const timeSinceLastConnection = connectionTime ? Math.floor((Date.now() - connectionTime.getTime()) / 1000) : 0;
   const usingFallback = connectionStatus === 'connected_fallback';
+  const usingCorsProxy = connectionStatus === 'connected_cors_proxy';
   
   const handleRetryConnection = () => {
     toast({
@@ -100,6 +105,7 @@ const Markets = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={handleApiKeysConfiguration}
+                          className="mr-2"
                         >
                           Configure API Keys
                         </Button>
@@ -127,7 +133,16 @@ const Markets = () => {
                 </Alert>
               )}
               
-              {isUsingLiveData && !usingFallback && (
+              {isUsingLiveData && usingCorsProxy && (
+                <Alert className="mb-4 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-900">
+                  <Info className="h-4 w-4 text-blue-500" />
+                  <AlertDescription className="text-blue-700 dark:text-blue-300">
+                    Using CORS proxy to access Kraken API
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {isUsingLiveData && !usingFallback && !usingCorsProxy && (
                 <Alert className="mb-4 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   <AlertDescription className="text-green-700 dark:text-green-300">
@@ -200,7 +215,7 @@ const Markets = () => {
             <ConnectionStatusPanel
               isConnected={isUsingLiveData}
               exchangeName="Kraken"
-              apiEndpoint={localStorage.getItem('apiEndpoint') || 'Using CORS proxy'}
+              apiEndpoint={localStorage.getItem('apiEndpoint') || CORS_PROXY_ENDPOINT}
               usingFallback={usingFallback}
               lastPing={isUsingLiveData ? (connectionTime ? Math.min(timeSinceLastConnection, 30) : 24) : 0}
               connectionQuality={isUsingLiveData ? (usingFallback ? 70 : (connectionTime && timeSinceLastConnection < 60 ? 98 : 85)) : 0}
@@ -230,7 +245,7 @@ const Markets = () => {
                   )}
                   <p className="text-sm text-muted-foreground mb-4">
                     {connectionError 
-                      ? "The connection to Kraken API failed. You can try again or configure your API keys."
+                      ? "The connection to Kraken API failed. Try using a different connection method."
                       : "To use live market data, you need to configure your Kraken API keys."}
                   </p>
                   <div className="flex flex-col space-y-2">
@@ -262,7 +277,7 @@ const Markets = () => {
           apiKeys={{
             exchangeApiKey: localStorage.getItem('exchangeApiKey') || '',
             exchangeApiSecret: localStorage.getItem('exchangeApiSecret') || '',
-            apiEndpoint: localStorage.getItem('apiEndpoint') || 'https://cors-proxy.fringe.zone/https://api.kraken.com'
+            apiEndpoint: localStorage.getItem('apiEndpoint') || CORS_PROXY_ENDPOINT
           }}
           onSave={handleSaveApiKeys}
           onCancel={() => setShowApiConfig(false)}

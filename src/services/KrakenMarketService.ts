@@ -1,15 +1,12 @@
 import { MarketData } from '@/types/market';
 import { KrakenAPI } from '@/components/trading/KrakenAPI';
-import { useToast } from '@/hooks/use-toast';
 
-// Default endpoint for Kraken API - using a CORS proxy to avoid browser restrictions
-// Updated to use a more reliable endpoint pattern
-const DEFAULT_API_ENDPOINT = 'https://cors-proxy.fringe.zone/https://api.kraken.com';
-// Fallback endpoint option if the main one fails
+// API endpoints with reliable CORS proxies
+const DIRECT_API_ENDPOINT = 'https://api.kraken.com';
+const CORS_PROXY_ENDPOINT = 'https://corsproxy.io/?https://api.kraken.com';
 const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';
 
 // Test API credentials - FOR TESTING PURPOSES ONLY
-// In production, these should be securely stored
 const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
 const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
 
@@ -19,25 +16,40 @@ export class KrakenMarketService {
   private connectionError: string | null = null;
   private connectionAttempted: boolean = false;
   private usingFallbackEndpoint: boolean = false;
+  private usingCorsProxy: boolean = false;
 
   constructor() {
-    // Use hardcoded test keys for development/testing
-    // In production, these would come from a secure source
-    const apiKey = TEST_API_KEY;
-    const apiSecret = TEST_API_SECRET;
-    const apiEndpoint = DEFAULT_API_ENDPOINT;
+    // Check localStorage for previously saved connection info
+    const connectionStatus = localStorage.getItem('krakenConnectionStatus');
+    const savedApiKey = localStorage.getItem('exchangeApiKey') || TEST_API_KEY;
+    const savedApiSecret = localStorage.getItem('exchangeApiSecret') || TEST_API_SECRET;
+    
+    // Determine which endpoint to use
+    let apiEndpoint = CORS_PROXY_ENDPOINT; // Default to CORS proxy
+    this.usingCorsProxy = true;
+    
+    if (connectionStatus === 'connected_direct') {
+      apiEndpoint = DIRECT_API_ENDPOINT;
+      this.usingCorsProxy = false;
+    } else if (connectionStatus === 'connected_fallback') {
+      apiEndpoint = FALLBACK_API_ENDPOINT;
+      this.usingFallbackEndpoint = true;
+      this.usingCorsProxy = false;
+    } else if (connectionStatus === 'connected_cors_proxy') {
+      apiEndpoint = CORS_PROXY_ENDPOINT;
+      this.usingCorsProxy = true;
+    }
+    
+    // Override with localStorage value if exists
+    const savedEndpoint = localStorage.getItem('apiEndpoint');
+    if (savedEndpoint) {
+      apiEndpoint = savedEndpoint;
+    }
     
     console.log('Initializing KrakenMarketService with endpoint:', apiEndpoint);
     
     // Initialize the Kraken API
-    this.api = new KrakenAPI(apiKey, apiSecret, apiEndpoint);
-    
-    // Store keys in localStorage for compatibility with other components
-    if (apiKey && apiSecret) {
-      localStorage.setItem('exchangeApiKey', apiKey);
-      localStorage.setItem('exchangeApiSecret', apiSecret);
-      localStorage.setItem('apiEndpoint', apiEndpoint);
-    }
+    this.api = new KrakenAPI(savedApiKey, savedApiSecret, apiEndpoint);
   }
 
   private async testConnection(): Promise<void> {

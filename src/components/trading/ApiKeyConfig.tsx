@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 const TEST_API_KEY = 'p1XiHHWQiJzxpZpeXj5I52pMiJVsBGzyYVF7KqMz13cGKv0gjJCIhpDN';
 const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1f1u1U3qOIxHDxjIlvzl0TPCPZCC7s9Q==';
 // Using direct API endpoint without proxy by default
-const TEST_API_ENDPOINT = 'https://api.kraken.com';
+const TEST_API_ENDPOINT = 'wss://futures.kraken.com/ws/v2';
 // Adding multiple fallback options including a CORS proxy
 const CORS_PROXY_ENDPOINT = 'https://corsproxy.io/?';
 const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';

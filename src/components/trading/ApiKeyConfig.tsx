@@ -15,7 +15,7 @@ const TEST_API_SECRET = 'yB5FRqbIwOqyzUoxtkdHHCqSnk8N8vfmGeRnBJwItmUHAVLuNtsYic1
 // API endpoints with reliable CORS proxies
 const DIRECT_API_ENDPOINT = 'https://api.kraken.com';
 const CORS_PROXY_ENDPOINT = 'https://corsproxy.io/?https://api.kraken.com';
-const FALLBACK_API_ENDPOINT = 'https://demo-futures.kraken.com/derivatives';
+const FALLBACK_API_ENDPOINT = 'https://futures.kraken.com/derivatives/api/v3';
 
 // API paths
 const PUBLIC_API_PATH = '/0/public/';
